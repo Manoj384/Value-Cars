@@ -1,0 +1,64 @@
+import uuid
+from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import desc, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import get_db
+from app.models.car import Car, CarStatus
+from app.models.test_drive import TestDrive, TestDriveStatus
+from app.schemas.test_drive import TestDriveCreate, TestDriveResponse, TestDriveUpdate
+
+router = APIRouter()
+
+
+@router.post("", response_model=TestDriveResponse, status_code=status.HTTP_201_CREATED, summary="Book a Test Drive")
+async def book_test_drive(booking_in: TestDriveCreate, db: AsyncSession = Depends(get_db)):
+    """Customer books a home delivery or hub test drive."""
+    # Check if car exists
+    car_query = select(Car).where(Car.id == booking_in.car_id)
+    car_res = await db.execute(car_query)
+    car = car_res.scalar_one_or_none()
+    if not car:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target vehicle not found")
+
+    booking = TestDrive(**booking_in.model_dump())
+    db.add(booking)
+    await db.commit()
+    await db.refresh(booking)
+    return booking
+
+
+@router.get("", response_model=List[TestDriveResponse], summary="List Test Drive Bookings")
+async def list_test_drives(
+    status: Optional[TestDriveStatus] = None,
+    limit: int = Query(50, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieve test drive bookings for customer service & hub operations."""
+    query = select(TestDrive).order_by(desc(TestDrive.booking_date)).limit(limit)
+    if status:
+        query = query.where(TestDrive.status == status)
+    result = await db.execute(query)
+    return list(result.scalars().all())
+
+
+@router.patch("/{booking_id}", response_model=TestDriveResponse, summary="Update Test Drive Status")
+async def update_test_drive(
+    booking_id: uuid.UUID,
+    booking_update: TestDriveUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Confirm, complete, or cancel a test drive."""
+    query = select(TestDrive).where(TestDrive.id == booking_id)
+    result = await db.execute(query)
+    booking = result.scalar_one_or_none()
+    if not booking:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
+
+    for field, value in booking_update.model_dump(exclude_unset=True).items():
+        setattr(booking, field, value)
+
+    await db.commit()
+    await db.refresh(booking)
+    return booking
