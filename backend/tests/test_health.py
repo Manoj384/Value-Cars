@@ -6,9 +6,8 @@ from httpx import AsyncClient
 async def test_root_endpoint(client: AsyncClient):
     response = await client.get("/")
     assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "online"
-    assert "docs_url" in data
+    # Root now serves the Interactive HTML Web App
+    assert "Value Cars" in response.text
 
 
 @pytest.mark.asyncio

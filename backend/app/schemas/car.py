@@ -64,6 +64,12 @@ class CarBase(BaseModel):
     status: CarStatus = CarStatus.PUBLISHED
     description: Optional[str] = None
 
+    # Seller & Approval Tracking
+    seller_email: Optional[str] = None
+    seller_phone: Optional[str] = None
+    seller_name: Optional[str] = None
+    is_verified_seller: bool = False
+
 
 class CarCreate(CarBase):
     images: Optional[List[CarImageCreate]] = []
@@ -78,6 +84,7 @@ class CarUpdate(BaseModel):
     status: Optional[CarStatus] = None
     description: Optional[str] = None
     hub_location: Optional[str] = None
+    is_verified_seller: Optional[bool] = None
 
 
 class CarResponse(CarBase):
@@ -111,6 +118,47 @@ class CarFilterParams(BaseModel):
     max_year: Optional[int] = None
     max_km: Optional[int] = None
     min_score: Optional[float] = None
-    sort_by: Optional[str] = "created_at"  # price_asc, price_desc, km_asc, year_desc, score_desc
+    status: Optional[CarStatus] = None
+    seller_email: Optional[str] = None
+    sort_by: Optional[str] = "created_at"
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=12, ge=1, le=100)
+
+
+class SellerCarSubmitRequest(BaseModel):
+    seller_email: str
+    seller_name: str
+    seller_phone: str
+    title: str
+    reg_number: str
+    make: str
+    model: str
+    variant: str
+    year: int
+    kilometers_driven: int
+    fuel_type: FuelType
+    transmission: TransmissionType
+    ownership: OwnershipType
+    body_type: BodyType
+    color: str
+    city: str
+    price: float
+    description: Optional[str] = None
+    image_urls: Optional[List[str]] = []
+    features: Optional[List[str]] = []
+
+
+class ApproveEmailRequest(BaseModel):
+    email: str
+    notes: Optional[str] = "Approved verified seller"
+
+
+class ApprovedEmailResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    email: str
+    approved_by: str
+    notes: Optional[str] = None
+    is_active: bool
+    created_at: datetime

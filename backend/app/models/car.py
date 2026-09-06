@@ -1,7 +1,7 @@
 import enum
 import uuid
 from typing import List, Optional
-from sqlalchemy import Boolean, Enum, Float, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Boolean, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base, GUID
 
@@ -37,6 +37,7 @@ class BodyType(str, enum.Enum):
 
 class CarStatus(str, enum.Enum):
     DRAFT = "DRAFT"
+    PENDING_APPROVAL = "PENDING_APPROVAL"
     INSPECTION_PENDING = "INSPECTION_PENDING"
     REFURBISHMENT = "REFURBISHMENT"
     PUBLISHED = "PUBLISHED"
@@ -70,14 +71,20 @@ class Car(Base):
 
     # Pricing & Valuation
     price: Mapped[float] = mapped_column(Float, index=True, nullable=False)  # Selling price
-    original_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # New car ex-showroom
+    original_price: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     estimated_market_min: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     estimated_market_max: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
-    # Inspection
+    # Inspection & Certification
     inspection_score: Mapped[float] = mapped_column(Float, default=0.0, index=True, nullable=False)
     is_spinny_certified: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     warranty_months: Mapped[int] = mapped_column(Integer, default=12, nullable=False)
+
+    # Seller & Approval Tracking
+    seller_email: Mapped[Optional[str]] = mapped_column(String(255), index=True, nullable=True)
+    seller_phone: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    seller_name: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    is_verified_seller: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Operational Status
     status: Mapped[CarStatus] = mapped_column(
@@ -100,7 +107,7 @@ class CarImage(Base):
         GUID(), ForeignKey("cars.id", ondelete="CASCADE"), nullable=False, index=True
     )
     image_url: Mapped[str] = mapped_column(String(500), nullable=False)
-    tag: Mapped[str] = mapped_column(String(50), default="EXTERIOR")  # EXTERIOR, INTERIOR, ENGINE, TYRES, DEFECT
+    tag: Mapped[str] = mapped_column(String(50), default="EXTERIOR")
     display_order: Mapped[int] = mapped_column(Integer, default=0)
     is_cover: Mapped[bool] = mapped_column(Boolean, default=False)
 
@@ -113,7 +120,7 @@ class CarFeature(Base):
     car_id: Mapped[uuid.UUID] = mapped_column(
         GUID(), ForeignKey("cars.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    category: Mapped[str] = mapped_column(String(50), nullable=False)  # SAFETY, COMFORT, INFOTAINMENT
+    category: Mapped[str] = mapped_column(String(50), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
 
     car = relationship("Car", back_populates="features")

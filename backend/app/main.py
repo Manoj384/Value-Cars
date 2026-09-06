@@ -1,12 +1,16 @@
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.api_router import api_router
 from app.core.config import settings
 from app.core.database import Base, engine, AsyncSessionLocal
 from app.services.seed_service import seed_database
+
+STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 
 @asynccontextmanager
@@ -42,10 +46,10 @@ app = FastAPI(
 Production-ready backend for a modern Spinny-inspired used-car marketplace and inventory platform.
 
 ### Core Capabilities:
-- **Authentication**: JWT & Simulated Mobile OTP login.
-- **Car Catalog**: Multi-criteria filters, high-resolution galleries, and 360 specs.
+- **Car Catalog & Search**: Multi-criteria filters, high-resolution galleries, and 360 specs.
 - **Valuation Engine**: Intelligent rules-based used-car price estimator.
 - **Digital Inspection**: 100+ checkpoint evaluation report with categorical scoring.
+- **Seller Submissions**: Online car addition with Admin Email Verification & Whitelist approval.
 - **CRM & Leads**: Sell car requests, test drive bookings, and conversion pipeline.
 - **Orders & Payments**: Token reservations and checkout handling.
 """,
@@ -60,12 +64,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files if directory exists
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
-@app.get("/", summary="Root Welcome")
+@app.get("/", summary="Web Application Home")
 async def root():
+    """Serves the Value Cars Interactive Web Application UI."""
+    index_file = os.path.join(STATIC_DIR, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
     return JSONResponse(
         content={
             "app": settings.PROJECT_NAME,

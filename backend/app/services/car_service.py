@@ -57,9 +57,12 @@ class CarService:
             query = query.where(Car.kilometers_driven <= filters.max_km)
         if filters.min_score is not None:
             query = query.where(Car.inspection_score >= filters.min_score)
+        if filters.seller_email:
+            query = query.where(Car.seller_email.ilike(f"%{filters.seller_email.strip()}%"))
 
-        # Always filter published cars unless explicitly querying admin
-        query = query.where(Car.status == CarStatus.PUBLISHED)
+        # Status filtering
+        target_status = filters.status or CarStatus.PUBLISHED
+        query = query.where(Car.status == target_status)
 
         # Sorting
         if filters.sort_by == "price_asc":
@@ -76,11 +79,13 @@ class CarService:
             query = query.order_by(desc(Car.created_at))
 
         # Total count query
-        count_query = select(func.count(Car.id)).where(Car.status == CarStatus.PUBLISHED)
+        count_query = select(func.count(Car.id)).where(Car.status == target_status)
         if filters.make:
             count_query = count_query.where(Car.make.ilike(f"%{filters.make.strip()}%"))
         if filters.city:
             count_query = count_query.where(Car.city.ilike(f"%{filters.city.strip()}%"))
+        if filters.seller_email:
+            count_query = count_query.where(Car.seller_email.ilike(f"%{filters.seller_email.strip()}%"))
 
         count_result = await db.execute(count_query)
         total_count = count_result.scalar_one()

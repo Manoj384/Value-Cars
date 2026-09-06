@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.car import Car, CarImage, CarFeature, FuelType, TransmissionType, OwnershipType, BodyType, CarStatus
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, ApprovedSellerEmail
 from app.models.inspection import Inspection, InspectionItem, InspectionStatus, CheckpointCondition
 from app.core.security import get_password_hash
 
@@ -31,6 +31,10 @@ SAMPLE_CARS = [
         "is_spinny_certified": True,
         "warranty_months": 12,
         "status": CarStatus.PUBLISHED,
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
+        "seller_phone": "9876543210",
+        "is_verified_seller": True,
         "description": "Pristine single owner Hyundai Creta SX(O) top model with Panoramic Sunroof, ventilated seats, Bose audio, and full service history at authorized Hyundai service center.",
         "images": [
             {"image_url": "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80", "tag": "EXTERIOR", "display_order": 1, "is_cover": True},
@@ -68,6 +72,10 @@ SAMPLE_CARS = [
         "is_spinny_certified": True,
         "warranty_months": 12,
         "status": CarStatus.PUBLISHED,
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
+        "seller_phone": "9876543210",
+        "is_verified_seller": True,
         "description": "5-Star Global NCAP safety rated Tata Nexon with electronic sunroof, 360-degree camera, and sequential LED DRLs. Zero insurance claims.",
         "images": [
             {"image_url": "https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=1200&q=80", "tag": "EXTERIOR", "display_order": 1, "is_cover": True},
@@ -103,6 +111,10 @@ SAMPLE_CARS = [
         "is_spinny_certified": True,
         "warranty_months": 12,
         "status": CarStatus.PUBLISHED,
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
+        "seller_phone": "9876543210",
+        "is_verified_seller": True,
         "description": "Executive sedan perfection with Honda LaneWatch Camera, LED headlights, plush leather upholstery, and buttery smooth 1.5L i-VTEC engine.",
         "images": [
             {"image_url": "https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=1200&q=80", "tag": "EXTERIOR", "display_order": 1, "is_cover": True},
@@ -138,6 +150,10 @@ SAMPLE_CARS = [
         "is_spinny_certified": True,
         "warranty_months": 12,
         "status": CarStatus.PUBLISHED,
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
+        "seller_phone": "9876543210",
+        "is_verified_seller": True,
         "description": "True 4x4 capability with shift-on-fly transfer case, factory hard top, all-terrain alloys, and immaculate mechanical health.",
         "images": [
             {"image_url": "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1200&q=80", "tag": "EXTERIOR", "display_order": 1, "is_cover": True},
@@ -171,6 +187,10 @@ SAMPLE_CARS = [
         "is_spinny_certified": True,
         "warranty_months": 12,
         "status": CarStatus.PUBLISHED,
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
+        "seller_phone": "9876543210",
+        "is_verified_seller": True,
         "description": "Super fuel-efficient city hatchback delivering 23+ kmpl with SmartPlay Pro touchscreen, cruise control, and precision AMT transmission.",
         "images": [
             {"image_url": "https://images.unsplash.com/photo-1590362891991-f776e747a588?auto=format&fit=crop&w=1200&q=80", "tag": "EXTERIOR", "display_order": 1, "is_cover": True},
@@ -185,7 +205,7 @@ SAMPLE_CARS = [
 
 
 async def seed_database(db: AsyncSession) -> None:
-    """Seeds default admin user and initial sample car inventory if empty."""
+    """Seeds default admin user, approved emails, and initial sample car inventory."""
     # 1. Seed Admin User
     admin_query = select(User).where(User.email == "admin@valuecars.com")
     admin_res = await db.execute(admin_query)
@@ -199,11 +219,33 @@ async def seed_database(db: AsyncSession) -> None:
             role=UserRole.ADMIN,
             is_active=True,
             is_verified=True,
+            is_approved_seller=True,
             city="Bangalore",
         )
         db.add(admin)
 
-    # 2. Seed Inspector User
+    # 2. Seed Pre-approved Seller Email
+    apprv_query = select(ApprovedSellerEmail).where(ApprovedSellerEmail.email == "verified.seller@valuecars.com")
+    apprv_res = await db.execute(apprv_query)
+    if not apprv_res.scalar_one_or_none():
+        db.add(
+            ApprovedSellerEmail(
+                email="verified.seller@valuecars.com",
+                approved_by="Superadmin",
+                notes="Authorized Premium Partner Dealer",
+                is_active=True,
+            )
+        )
+        db.add(
+            ApprovedSellerEmail(
+                email="admin@valuecars.com",
+                approved_by="Superadmin",
+                notes="Primary Platform Admin",
+                is_active=True,
+            )
+        )
+
+    # 3. Seed Inspector User
     insp_query = select(User).where(User.email == "inspector@valuecars.com")
     insp_res = await db.execute(insp_query)
     inspector = insp_res.scalar_one_or_none()
@@ -222,7 +264,7 @@ async def seed_database(db: AsyncSession) -> None:
 
     await db.flush()
 
-    # 3. Seed Cars if table is empty
+    # 4. Seed Cars if table is empty
     cars_count_query = select(Car)
     existing_cars = await db.execute(cars_count_query)
     if not existing_cars.first():

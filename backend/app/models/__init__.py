@@ -1,5 +1,5 @@
 from app.core.database import Base
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, ApprovedSellerEmail
 from app.models.car import Car, CarImage, CarFeature, FuelType, TransmissionType, OwnershipType, BodyType, CarStatus
 from app.models.inspection import Inspection, InspectionItem, InspectionStatus, CheckpointCondition
 from app.models.lead import Lead, LeadType, LeadStatus
@@ -10,6 +10,7 @@ __all__ = [
     "Base",
     "User",
     "UserRole",
+    "ApprovedSellerEmail",
     "Car",
     "CarImage",
     "CarFeature",
