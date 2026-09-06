@@ -1,7 +1,10 @@
 import React from 'react';
 import CarDetailClient from './CarDetailClient';
 
-// Static params for static export
+export const dynamic = 'force-static';
+export const dynamicParams = false;
+
+// Static params for static export build
 export async function generateStaticParams() {
   return [
     { id: '1' },

@@ -25,20 +25,3 @@
     "tailwindcss": "^3.4.1"
   }
 }
-
-{
-  "name": "value-cars",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "next": "latest",
-    "react": "^18",
-    "react-dom": "^18"
-  }
-}
