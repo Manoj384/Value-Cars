@@ -7,6 +7,7 @@ from app.api.v1.leads import router as leads_router
 from app.api.v1.test_drives import router as test_drives_router
 from app.api.v1.inspections import router as inspections_router
 from app.api.v1.orders import router as orders_router
+from app.api.v1.admin import router as admin_router
 
 api_router = APIRouter()
 
@@ -17,3 +18,4 @@ api_router.include_router(leads_router, prefix="/leads", tags=["CRM & Valuation"
 api_router.include_router(test_drives_router, prefix="/test-drives", tags=["Test Drive Bookings"])
 api_router.include_router(inspections_router, prefix="/inspections", tags=["Digital Inspection"])
 api_router.include_router(orders_router, prefix="/orders", tags=["Reservations & Orders"])
+api_router.include_router(admin_router, prefix="/admin", tags=["Admin Operations & Metrics"])
