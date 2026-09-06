@@ -42,6 +42,18 @@
     .badge-certified { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .brand-card {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .brand-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+    }
+    .brand-card.active-brand {
+      border-color: #e11d48;
+      background-color: #fff1f2;
+      box-shadow: 0 0 0 2px #e11d48;
+    }
   </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
@@ -153,6 +165,160 @@
         </div>
       </div>
 
+      <!-- BRAND SELECTOR SECTION (MATCHING SCREENSHOT REFERENCE) -->
+      <section class="mb-10 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+          <div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-700 mb-1.5">
+              <i class="fa-solid fa-tags mr-1.5 text-brand-600"></i> Explore by Manufacturer
+            </span>
+            <h2 class="text-2xl font-black text-slate-900 tracking-tight">Select Your Car Brand</h2>
+            <p class="text-xs text-slate-500 font-semibold mt-0.5">Click any brand below to instantly view its verified models</p>
+          </div>
+          <button onclick="selectBrand('')" id="brand-clear-btn" class="self-start sm:self-auto text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3.5 py-1.5 rounded-full transition flex items-center">
+            <i class="fa-solid fa-layer-group mr-1.5"></i> Show All Brands
+          </button>
+        </div>
+
+        <!-- 12-Brand Grid (Maruti, Hyundai, Tata, Mahindra, Toyota, Kia, Honda, Skoda, Volkswagen, Nissan, Renault, View All) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4" id="brandGrid">
+          
+          <!-- 1. Maruti Suzuki -->
+          <button onclick="selectBrand('Maruti')" id="brand-Maruti" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+                <path d="M78 28L60 46H22l18-18h38zm-56 44l18-18h38l-18 18H22z" fill="#003366"/>
+                <path d="M40 46l20 20H42L22 46h18z" fill="#c00"/>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Maruti Suzuki</span>
+          </button>
+
+          <!-- 2. Hyundai -->
+          <button onclick="selectBrand('Hyundai')" id="brand-Hyundai" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
+                <ellipse cx="50" cy="50" rx="42" ry="24" fill="none" stroke="#002c5f" stroke-width="6"/>
+                <path d="M38 34c4 10 7 22 7 32M62 34c-4 10-7 22-7 32M40 50h20" fill="none" stroke="#002c5f" stroke-width="6" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Hyundai</span>
+          </button>
+
+          <!-- 3. Tata -->
+          <button onclick="selectBrand('Tata')" id="brand-Tata" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
+                <ellipse cx="50" cy="50" rx="42" ry="24" fill="#004b87"/>
+                <path d="M28 42h44M50 42v28" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+                <circle cx="34" cy="42" r="5" fill="#fff"/>
+                <circle cx="66" cy="42" r="5" fill="#fff"/>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Tata</span>
+          </button>
+
+          <!-- 4. Mahindra -->
+          <button onclick="selectBrand('Mahindra')" id="brand-Mahindra" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
+                <path d="M22 68L42 32l8 14-6 10 12-24 14 24-6-10 8-14 20 36H22z" fill="#d32f2f"/>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Mahindra</span>
+          </button>
+
+          <!-- 5. Toyota -->
+          <button onclick="selectBrand('Toyota')" id="brand-Toyota" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
+                <ellipse cx="50" cy="50" rx="44" ry="32" fill="none" stroke="#eb0a1e" stroke-width="5"/>
+                <ellipse cx="50" cy="42" rx="30" ry="14" fill="none" stroke="#eb0a1e" stroke-width="5"/>
+                <ellipse cx="50" cy="54" rx="14" ry="24" fill="none" stroke="#eb0a1e" stroke-width="5"/>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Toyota</span>
+          </button>
+
+          <!-- 6. Kia -->
+          <button onclick="selectBrand('Kia')" id="brand-Kia" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 60" class="w-12 h-10 transition group-hover:scale-110">
+                <path d="M12 45V15l16 30V15M34 15v30M56 15l-14 30h28L84 15" fill="none" stroke="#05141f" stroke-width="8" stroke-linecap="square"/>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Kia</span>
+          </button>
+
+          <!-- 7. Honda -->
+          <button onclick="selectBrand('Honda')" id="brand-Honda" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+                <rect x="15" y="15" width="70" height="70" rx="14" fill="none" stroke="#e40521" stroke-width="6"/>
+                <path d="M32 30v40l8-4V50h20v16l8 4V30L60 34v10H40V34z" fill="#e40521"/>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Honda</span>
+          </button>
+
+          <!-- 8. Skoda -->
+          <button onclick="selectBrand('Skoda')" id="brand-Skoda" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#4ba82e" stroke-width="6"/>
+                <path d="M50 25c12 0 20 10 20 20 0 8-6 16-16 16l-8-6 10-6-16-4 10-20z" fill="#4ba82e"/>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Skoda</span>
+          </button>
+
+          <!-- 9. Volkswagen -->
+          <button onclick="selectBrand('Volkswagen')" id="brand-Volkswagen" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#001e50" stroke-width="6"/>
+                <path d="M26 30l16 28 8-16 8 16 16-28M34 46l16 28 16-28" fill="none" stroke="#001e50" stroke-width="5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Volkswagen</span>
+          </button>
+
+          <!-- 10. Nissan -->
+          <button onclick="selectBrand('Nissan')" id="brand-Nissan" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#c3002f" stroke-width="6"/>
+                <rect x="15" y="42" width="70" height="16" rx="3" fill="#c3002f"/>
+                <text x="50" y="54" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">NISSAN</text>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Nissan</span>
+          </button>
+
+          <!-- 11. Renault -->
+          <button onclick="selectBrand('Renault')" id="brand-Renault" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-14 h-14 flex items-center justify-center mb-2">
+              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+                <path d="M50 15L74 50 50 85 26 50z" fill="none" stroke="#ffcc00" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M50 32L62 50 50 68 38 50z" fill="#ffcc00"/>
+              </svg>
+            </div>
+            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Renault</span>
+          </button>
+
+          <!-- 12. View All Brands Action Tile -->
+          <button onclick="selectBrand('')" class="brand-card bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+            <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-2 group-hover:scale-110 transition">
+              <i class="fa-solid fa-angles-right text-lg"></i>
+            </div>
+            <span class="text-xs font-extrabold text-amber-700 flex items-center">
+              View All <i class="fa-solid fa-chevron-right text-[10px] ml-1"></i>
+            </span>
+          </button>
+
+        </div>
+      </section>
+
       <!-- CATALOG WORKSPACE (SIDEBAR + GRID) -->
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
@@ -164,6 +330,17 @@
             </h3>
             <button onclick="resetFilters()" class="text-xs font-bold text-brand-600 hover:text-brand-700">
               Reset All
+            </button>
+          </div>
+
+          <!-- Active Brand Badge (if filtered) -->
+          <div id="activeBrandBanner" class="hidden mb-5 bg-brand-50 border border-brand-200 rounded-xl p-3 flex justify-between items-center text-xs">
+            <div>
+              <span class="text-slate-400 block text-[10px] uppercase font-bold">Active Brand</span>
+              <strong id="activeBrandName" class="text-brand-700 font-extrabold text-sm">Hyundai</strong>
+            </div>
+            <button onclick="selectBrand('')" class="text-brand-600 hover:text-brand-800 font-bold text-xs">
+              <i class="fa-solid fa-xmark"></i> Clear
             </button>
           </div>
 
@@ -224,7 +401,7 @@
           <!-- Header stats & sorting -->
           <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <div>
-              <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Available Verified Cars</h2>
+              <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight" id="catalogTitle">Available Verified Cars</h2>
               <p id="resultsCount" class="text-xs text-slate-500 font-semibold mt-0.5">Showing verified vehicles</p>
             </div>
 
@@ -514,6 +691,7 @@
   <script>
     const API_BASE = '/api/v1';
     let currentFilters = {
+      make: null,
       fuel_type: null,
       transmission: null,
       body_type: null,
@@ -531,6 +709,28 @@
         return '₹' + (amount / 100000).toFixed(2) + ' Lakh';
       }
       return '₹' + amount.toLocaleString('en-IN');
+    }
+
+    // Select Brand Filter
+    function selectBrand(brandName) {
+      // Remove active class from all brand cards
+      document.querySelectorAll('.brand-card').forEach(b => b.classList.remove('active-brand'));
+
+      if (!brandName || currentFilters.make === brandName) {
+        currentFilters.make = null;
+        document.getElementById('activeBrandBanner').classList.add('hidden');
+        document.getElementById('catalogTitle').innerText = 'Available Verified Cars';
+      } else {
+        currentFilters.make = brandName;
+        const targetBtn = document.getElementById(`brand-${brandName}`);
+        if (targetBtn) targetBtn.classList.add('active-brand');
+        
+        document.getElementById('activeBrandBanner').classList.remove('hidden');
+        document.getElementById('activeBrandName').innerText = brandName;
+        document.getElementById('catalogTitle').innerText = `Available Verified ${brandName} Cars`;
+      }
+
+      loadCars();
     }
 
     // Switch between Marketplace & Admin Tab
@@ -558,6 +758,7 @@
       `;
 
       const params = new URLSearchParams();
+      if (currentFilters.make) params.append('make', currentFilters.make);
       if (currentFilters.city) params.append('city', currentFilters.city);
       if (currentFilters.fuel_type) params.append('fuel_type', currentFilters.fuel_type);
       if (currentFilters.transmission) params.append('transmission', currentFilters.transmission);
@@ -571,14 +772,17 @@
         const res = await fetch(`${API_BASE}/cars?${params.toString()}`);
         const data = await res.json();
 
-        document.getElementById('resultsCount').innerText = `Showing ${data.total} verified vehicle${data.total === 1 ? '' : 's'}`;
+        const countText = currentFilters.make 
+          ? `Showing ${data.total} verified ${currentFilters.make} vehicle${data.total === 1 ? '' : 's'}`
+          : `Showing ${data.total} verified vehicle${data.total === 1 ? '' : 's'}`;
+        document.getElementById('resultsCount').innerText = countText;
 
         if (!data.items || data.items.length === 0) {
           grid.innerHTML = `
             <div class="col-span-full py-16 text-center bg-white rounded-3xl border border-slate-200">
               <i class="fa-solid fa-car-tunnel text-4xl text-slate-300 mb-3"></i>
-              <h4 class="font-bold text-slate-700 text-lg">No cars match the selected filters</h4>
-              <p class="text-xs text-slate-400 mt-1">Try resetting your filters or adjusting budget range.</p>
+              <h4 class="font-bold text-slate-700 text-lg">No ${currentFilters.make ? currentFilters.make + ' ' : ''}cars match the selected filters</h4>
+              <p class="text-xs text-slate-400 mt-1">Try resetting your filters or selecting another brand.</p>
               <button onclick="resetFilters()" class="mt-4 bg-brand-600 text-white font-bold px-4 py-2 rounded-xl text-xs">Reset All Filters</button>
             </div>
           `;
@@ -829,6 +1033,7 @@
 
     function resetFilters() {
       currentFilters = {
+        make: null,
         fuel_type: null,
         transmission: null,
         body_type: null,
@@ -838,6 +1043,9 @@
         search: '',
         sort_by: 'created_at'
       };
+      document.querySelectorAll('.brand-card').forEach(b => b.classList.remove('active-brand'));
+      document.getElementById('activeBrandBanner').classList.add('hidden');
+      document.getElementById('catalogTitle').innerText = 'Available Verified Cars';
       document.getElementById('priceRange').value = 3000000;
       document.getElementById('priceLabel').innerText = 'Up to ₹30.0 L';
       document.getElementById('globalSearch').value = '';
