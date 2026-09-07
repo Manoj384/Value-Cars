@@ -241,7 +241,7 @@ function ListingCard({
           <div className="flex items-start justify-between gap-3">
             <div>
               <Link
-                href={`/cars/${car.id}`}
+                href={`/cars?id=${car.id}`}
                 className="text-base font-black text-slate-900 hover:text-rose-600 transition line-clamp-1"
               >
                 {car.title}
