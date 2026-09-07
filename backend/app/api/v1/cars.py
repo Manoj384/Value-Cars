@@ -21,6 +21,7 @@ from app.schemas.car import (
 )
 from app.services.car_service import CarService
 from app.services.valuation_engine import ValuationEngine
+from app.services.notification_service import NotificationService
 
 router = APIRouter()
 
@@ -99,6 +100,17 @@ async def approve_car_listing(
     car.is_verified_seller = True
     await db.commit()
     await db.refresh(car)
+
+    # Notify seller that car is approved and live
+    if car.seller_phone:
+        await NotificationService.send_seller_car_approved_alert(
+            seller_name=car.seller_name or "Seller",
+            seller_phone=car.seller_phone,
+            seller_email=car.seller_email or "",
+            car_title=car.title,
+            reg_number=car.reg_number,
+        )
+
     return CarResponse.model_validate(car)
 
 
@@ -129,12 +141,25 @@ async def approve_seller_email(
     # Automatically mark any pending cars from this seller email as published & verified
     pending_query = select(Car).where(Car.seller_email == clean_email, Car.status == CarStatus.PENDING_APPROVAL)
     pending_cars = await db.execute(pending_query)
-    for car in pending_cars.scalars().all():
+    all_pending = pending_cars.scalars().all()
+    for car in all_pending:
         car.status = CarStatus.PUBLISHED
         car.is_verified_seller = True
 
     await db.commit()
     await db.refresh(record)
+
+    # Send approval alert for each car that was just approved
+    for car in all_pending:
+        if car.seller_phone:
+            await NotificationService.send_seller_car_approved_alert(
+                seller_name=car.seller_name or "Seller",
+                seller_phone=car.seller_phone,
+                seller_email=car.seller_email or "",
+                car_title=car.title,
+                reg_number=car.reg_number,
+            )
+
     return ApprovedEmailResponse.model_validate(record)
 
 
@@ -197,9 +222,18 @@ async def submit_car_online(payload: SellerCarSubmitRequest, db: AsyncSession = 
         inspection_score=8.8,
     )
 
+    # Check for duplicate registration number
+    clean_reg = payload.reg_number.strip().upper()
+    existing_car = await db.execute(select(Car).where(Car.reg_number == clean_reg))
+    if existing_car.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"A vehicle with registration number '{clean_reg}' is already registered.",
+        )
+
     car = Car(
         title=payload.title,
-        reg_number=payload.reg_number.upper(),
+        reg_number=clean_reg,
         make=payload.make,
         model=payload.model,
         variant=payload.variant,
@@ -268,6 +302,28 @@ async def submit_car_online(payload: SellerCarSubmitRequest, db: AsyncSession = 
 
     await db.commit()
     await db.refresh(car)
+
+    # Trigger automated SMS & WhatsApp notifications
+    # 1. Alert seller on submission status
+    if payload.seller_phone:
+        await NotificationService.send_seller_car_submitted_alert(
+            seller_name=payload.seller_name,
+            seller_phone=payload.seller_phone,
+            seller_email=clean_email,
+            car_title=car.title,
+            reg_number=car.reg_number,
+            is_published=is_approved,
+        )
+
+    # 2. Alert admin operations team if listing is pending review
+    if not is_approved:
+        await NotificationService.send_admin_new_car_alert(
+            car_title=car.title,
+            seller_name=payload.seller_name,
+            seller_email=clean_email,
+            reg_number=car.reg_number,
+            price=car.price,
+        )
 
     return {
         "success": True,

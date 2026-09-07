@@ -10,6 +10,7 @@ from app.core.database import get_db
 from app.models.car import Car, CarStatus
 from app.models.order import Order, OrderStatus, Payment, PaymentStatus
 from app.schemas.order import OrderCreate, OrderResponse, PaymentCreate, PaymentResponse
+from app.services.notification_service import NotificationService
 
 router = APIRouter()
 
@@ -63,6 +64,16 @@ async def reserve_car(order_in: OrderCreate, db: AsyncSession = Depends(get_db))
     car.status = CarStatus.RESERVED
 
     await db.commit()
+
+    # Trigger automated SMS & WhatsApp notification
+    await NotificationService.send_car_reserved_alert(
+        customer_name=order.customer_name,
+        customer_phone=order.customer_phone,
+        order_number=order.order_number,
+        car_title=car.title,
+        token_amount=order.token_amount,
+        balance_amount=order.balance_amount,
+    )
 
     # Reload order with payments
     query = select(Order).where(Order.id == order.id).options(selectinload(Order.payments))

@@ -41,7 +41,7 @@ async def test_get_single_car_details(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_seller_submission_and_approval_flow(client: AsyncClient):
+async def test_seller_submission_and_approval_flow(client: AsyncClient, admin_headers: dict):
     # 1. Check verified email
     chk1 = await client.get("/api/v1/cars/check-seller-email?email=verified.seller@valuecars.com")
     assert chk1.status_code == 200
@@ -98,7 +98,7 @@ async def test_seller_submission_and_approval_flow(client: AsyncClient):
     unverified_car_id = sub2.json()["car_id"]
 
     # 4. Admin views pending cars
-    pending_res = await client.get("/api/v1/cars/admin/pending")
+    pending_res = await client.get("/api/v1/cars/admin/pending", headers=admin_headers)
     assert pending_res.status_code == 200
     pending_list = pending_res.json()
     assert any(c["id"] == unverified_car_id for c in pending_list)
@@ -107,6 +107,7 @@ async def test_seller_submission_and_approval_flow(client: AsyncClient):
     apprv_res = await client.post(
         "/api/v1/cars/admin/approve-seller-email",
         json={"email": "newuser@example.com", "notes": "Approved by Manoj"},
+        headers=admin_headers,
     )
     assert apprv_res.status_code == 200
     assert apprv_res.json()["is_active"] is True

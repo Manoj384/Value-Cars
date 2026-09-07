@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.models.car import Car, CarStatus
 from app.models.test_drive import TestDrive, TestDriveStatus
 from app.schemas.test_drive import TestDriveCreate, TestDriveResponse, TestDriveUpdate
+from app.services.notification_service import NotificationService
 
 router = APIRouter()
 
@@ -26,6 +27,19 @@ async def book_test_drive(booking_in: TestDriveCreate, db: AsyncSession = Depend
     db.add(booking)
     await db.commit()
     await db.refresh(booking)
+
+    # Trigger automated SMS & WhatsApp notification
+    await NotificationService.send_test_drive_booked_alert(
+        customer_name=booking.customer_name,
+        customer_phone=booking.customer_phone,
+        car_title=car.title,
+        booking_date=str(booking.booking_date),
+        time_slot=booking.booking_time_slot,
+        location_type=booking.location_type.value if hasattr(booking.location_type, "value") else str(booking.location_type),
+        address=booking.delivery_address,
+        hub_city=booking.hub_name or car.city,
+    )
+
     return booking
 
 
@@ -56,9 +70,24 @@ async def update_test_drive(
     if not booking:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Booking not found")
 
+    status_changed = booking_update.status is not None and booking_update.status != booking.status
+
     for field, value in booking_update.model_dump(exclude_unset=True).items():
         setattr(booking, field, value)
 
     await db.commit()
     await db.refresh(booking)
+
+    if status_changed:
+        car_query = select(Car).where(Car.id == booking.car_id)
+        car_res = await db.execute(car_query)
+        car = car_res.scalar_one_or_none()
+        car_title = car.title if car else "Selected Vehicle"
+        await NotificationService.send_test_drive_status_update(
+            customer_name=booking.customer_name,
+            customer_phone=booking.customer_phone,
+            car_title=car_title,
+            new_status=booking.status.value if hasattr(booking.status, "value") else str(booking.status),
+        )
+
     return booking

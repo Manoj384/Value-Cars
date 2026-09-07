@@ -46,6 +46,19 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
+    # Notifications & Alerts
+    NOTIFICATIONS_ENABLED: bool = True
+    SMS_PROVIDER: str = "mock"  # "mock" | "twilio" | "fast2sms"
+    WHATSAPP_PROVIDER: str = "mock"  # "mock" | "twilio" | "meta"
+    TWILIO_ACCOUNT_SID: str = ""
+    TWILIO_AUTH_TOKEN: str = ""
+    TWILIO_PHONE_NUMBER: str = ""
+    TWILIO_WHATSAPP_NUMBER: str = ""
+    FAST2SMS_API_KEY: str = ""
+    META_WHATSAPP_TOKEN: str = ""
+    META_WHATSAPP_PHONE_NUMBER_ID: str = ""
+    ADMIN_ALERT_PHONE: str = "+919876543210"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
