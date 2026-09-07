@@ -308,6 +308,38 @@ export default function CarDetail({ carId }: CarDetailProps) {
               >
                 <span>📞</span> Schedule Hub Viewing & Call
               </button>
+              <a
+                href={`https://wa.me/918050966025?text=${encodeURIComponent(`Hi Value Cars! I am interested in viewing / purchasing this ${car.year} ${car.make} ${car.model} (${car.variant}, Reg: ${car.reg_number}). Please share details.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-emerald-700/20"
+              >
+                <span>💬</span> Chat on WhatsApp (8050966025)
+              </a>
+            </div>
+
+            {/* Experience Hub & Google Maps */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">📍 Experience Hub</span>
+                <span className="text-emerald-600 font-bold text-[10px]">Open 9 AM - 8 PM</span>
+              </div>
+              <p className="text-slate-600 text-xs leading-relaxed">
+                Near Bangalore university, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056
+              </p>
+              <div className="pt-1 flex items-center justify-between">
+                <a
+                  href="https://maps.google.com/?q=Near+Bangalore+university,+Kengunte,+Mallathahalli,+Bengaluru,+Karnataka+560056"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-rose-600 hover:text-rose-700 font-black text-xs inline-flex items-center gap-1 underline underline-offset-2"
+                >
+                  View on Google Maps →
+                </a>
+                <a href="tel:8050966025" className="text-slate-700 font-bold hover:text-slate-900 text-xs">
+                  Call: 8050966025
+                </a>
+              </div>
             </div>
           </div>
         </div>

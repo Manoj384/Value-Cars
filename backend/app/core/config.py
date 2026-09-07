@@ -57,7 +57,10 @@ class Settings(BaseSettings):
     FAST2SMS_API_KEY: str = ""
     META_WHATSAPP_TOKEN: str = ""
     META_WHATSAPP_PHONE_NUMBER_ID: str = ""
-    ADMIN_ALERT_PHONE: str = "+919876543210"
+    ADMIN_ALERT_PHONE: str = "+918050966025"
+    ADMIN_SECONDARY_PHONE: str = "+918310166040"
+    OFFICIAL_ADDRESS: str = "Near Bangalore university, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056"
+    MAPS_URL: str = "https://maps.google.com/?q=Near+Bangalore+university,+Kengunte,+Mallathahalli,+Bengaluru,+Karnataka+560056"
 
     model_config = SettingsConfigDict(
         env_file=".env",

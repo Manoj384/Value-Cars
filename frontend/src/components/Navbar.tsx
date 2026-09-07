@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, RotateCcw, Truck, Car as CarIcon, PlusCircle, LayoutDashboard, Search, MapPin, Phone, Menu, X, UserCircle2 } from 'lucide-react';
+import { ShieldCheck, RotateCcw, Truck, PlusCircle, LayoutDashboard, Search, MapPin, Phone, Menu, X, UserCircle2, MessageCircle } from 'lucide-react';
 
 interface NavbarProps {
   onCityChange?: (city: string) => void;
@@ -24,47 +24,75 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
   const navLinks = (
     <>
       <Link href="/" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-rose-600 transition flex items-center">
-        <CarIcon className="w-4 h-4 mr-1.5" /> Browse Cars
+        Browse Cars
       </Link>
       <Link href="/sell" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-rose-600 transition flex items-center">
-        <PlusCircle className="w-4 h-4 mr-1.5" /> Add / Sell Car
+        <PlusCircle className="w-4 h-4 mr-1.5 text-rose-600" /> Add / Sell Car
       </Link>
       <Link href="/sell/my-listings" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-rose-600 transition flex items-center">
-        <UserCircle2 className="w-4 h-4 mr-1.5" /> My Listings
+        <UserCircle2 className="w-4 h-4 mr-1.5 text-slate-600" /> My Listings
       </Link>
       <Link href="/admin" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-amber-600 transition flex items-center">
-        <LayoutDashboard className="w-4 h-4 mr-1.5" /> Admin Hub
+        <LayoutDashboard className="w-4 h-4 mr-1.5 text-amber-500" /> Admin Hub
       </Link>
     </>
   );
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
-      {/* Top Banner */}
-      <div className="bg-slate-900 text-slate-300 text-xs py-2 px-4 flex justify-between items-center">
+      {/* Top Banner with Official Numbers */}
+      <div className="bg-slate-950 text-slate-300 text-xs py-2 px-4 flex justify-between items-center border-b border-slate-800">
         <div className="flex items-center space-x-4">
-          <span className="flex items-center"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400 mr-1.5" /> 200-Point Inspection Guaranteed</span>
-          <span className="hidden md:flex items-center"><RotateCcw className="w-3.5 h-3.5 text-amber-400 mr-1.5" /> 5-Day Money Back Guarantee</span>
+          <span className="flex items-center"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400 mr-1.5" /> 200-Point Inspection</span>
+          <span className="hidden md:flex items-center"><RotateCcw className="w-3.5 h-3.5 text-amber-400 mr-1.5" /> Quality • Trust • Great Deals</span>
           <span className="hidden lg:flex items-center"><Truck className="w-3.5 h-3.5 text-sky-400 mr-1.5" /> Free Home Test Drive</span>
         </div>
         <div className="flex items-center space-x-4">
-          <span className="text-slate-400 hidden sm:flex items-center"><Phone className="w-3 h-3 mr-1" /> Support: <strong className="text-white ml-1">1800-200-VALUE</strong></span>
-          <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold flex items-center">
+          <div className="flex items-center space-x-3 text-slate-300">
+            <a href="tel:8050966025" className="hover:text-amber-400 transition flex items-center">
+              <Phone className="w-3 h-3 mr-1 text-amber-400" /> <strong className="text-white">8050966025</strong>
+            </a>
+            <span className="text-slate-600 hidden sm:inline">|</span>
+            <a href="tel:8310166040" className="hover:text-amber-400 transition hidden sm:flex items-center">
+              <strong className="text-slate-200">8310166040</strong>
+            </a>
+            <a
+              href="https://wa.me/918050966025?text=Hello%20Value%20Cars,%20I%20am%20interested%20in%20buying/viewing%20a%20car"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-bold ml-2"
+            >
+              <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+            </a>
+          </div>
+          <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold flex items-center border-l border-slate-700 pl-3">
             <LayoutDashboard className="w-3 h-3 mr-1" /> Admin Hub
           </Link>
         </div>
       </div>
 
-      {/* Main Nav */}
+      {/* Main Nav with Logo */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <div className="flex items-center space-x-6">
-          <Link href="/" className="flex items-center space-x-2.5">
-            <div className="w-10 h-10 rounded-xl bg-rose-600 flex items-center justify-center text-white text-xl font-black shadow-md shadow-rose-500/30">
-              <CarIcon className="w-6 h-6" />
+        <div className="flex items-center space-x-5">
+          <Link href="/" className="flex items-center space-x-3">
+            <div className="h-12 w-12 rounded-2xl bg-black border border-amber-500/20 overflow-hidden flex items-center justify-center p-0.5 shadow-md shadow-slate-900/10 shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="./logo-dark.jpeg"
+                alt="Value Cars"
+                className="w-full h-full object-contain rounded-xl"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = './logo-light.jpeg';
+                }}
+              />
             </div>
             <div>
-              <span className="text-2xl font-black tracking-tight text-slate-900">VALUE<span className="text-rose-600">CARS</span></span>
-              <span className="block text-[10px] uppercase font-bold tracking-widest text-slate-400 -mt-1">Certified Marketplace</span>
+              <span className="text-2xl font-black tracking-tight text-slate-950">
+                VALUE<span className="text-amber-500">CARS</span>
+              </span>
+              <span className="block text-[9px] uppercase font-black tracking-widest text-slate-500 -mt-1">
+                Pre-Owned Vehicles
+              </span>
             </div>
           </Link>
 
@@ -94,12 +122,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
         </div>
 
         {/* Global Search Bar */}
-        <div className="hidden lg:flex flex-1 max-w-md mx-8 relative">
+        <div className="hidden lg:flex flex-1 max-w-md mx-6 relative">
           <input
             type="text"
             value={searchTerm}
             onChange={handleSearch}
-            placeholder="Search by Make, Model (e.g. Creta, Thar, Swift)..."
+            placeholder="Search make, model (e.g. Creta, Thar, Swift)..."
             className="w-full bg-slate-100 border border-transparent focus:border-rose-500 focus:bg-white pl-10 pr-4 py-2.5 rounded-full text-sm outline-none transition"
           />
           <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
@@ -110,10 +138,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
           {navLinks}
           <Link
             href="/sell"
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-600/20 transition transform active:scale-95"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 shadow-md transition transform active:scale-95"
           >
-            <PlusCircle className="w-4 h-4 mr-2" />
-            + Add / Sell Car
+            <PlusCircle className="w-4 h-4 mr-2 text-amber-400" />
+            + List Your Car
           </Link>
         </div>
 
@@ -142,12 +170,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
           </div>
           {navLinks}
+          <div className="pt-2 border-t border-slate-100 text-xs text-slate-600 space-y-2">
+            <div className="flex items-center justify-between">
+              <span>Hotline 1:</span>
+              <a href="tel:8050966025" className="font-bold text-slate-900">+91 80509 66025</a>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Hotline 2:</span>
+              <a href="tel:8310166040" className="font-bold text-slate-900">+91 83101 66040</a>
+            </div>
+          </div>
           <Link
             href="/sell"
             onClick={() => setMobileOpen(false)}
-            className="block mt-2 text-center px-4 py-2.5 rounded-full text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 transition"
+            className="block mt-2 text-center px-4 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 transition"
           >
-            + Add / Sell Car
+            + List Your Car
           </Link>
         </div>
       )}
