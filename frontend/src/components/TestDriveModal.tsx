@@ -29,6 +29,18 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    const waMsg = 
+      `🚗 *Value Cars Test Drive Request*\n\n` +
+      `👤 *Customer Name:* ${name}\n` +
+      `📱 *Phone Number:* ${phone}\n` +
+      `🚗 *Vehicle:* ${car.year} ${car.make} ${car.model} (${car.variant})\n` +
+      `📅 *Date & Slot:* ${bookingDate} (${timeSlot})\n` +
+      `📍 *Location:* ${locationType === 'HOME_DELIVERY' ? `Home Delivery (${address})` : `Value Cars Hub (${city})`}\n\n` +
+      `👉 *Please confirm test drive appointment.*`;
+
+    const waUrl = `https://wa.me/918050966025?text=${encodeURIComponent(waMsg)}`;
+
     try {
       await apiClient.bookTestDrive({
         car_id: car.id,
@@ -42,11 +54,26 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
         time_slot: timeSlot,
       });
       setSuccess(true);
+      if (typeof window !== 'undefined') {
+        window.open(waUrl, '_blank');
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to book test drive');
     } finally {
       setLoading(false);
     }
+  };
+
+  const getWhatsAppUrl = () => {
+    const waMsg = 
+      `🚗 *Value Cars Test Drive Request*\n\n` +
+      `👤 *Customer Name:* ${name}\n` +
+      `📱 *Phone Number:* ${phone}\n` +
+      `🚗 *Vehicle:* ${car.year} ${car.make} ${car.model} (${car.variant})\n` +
+      `📅 *Date & Slot:* ${bookingDate} (${timeSlot})\n` +
+      `📍 *Location:* ${locationType === 'HOME_DELIVERY' ? `Home Delivery (${address})` : `Value Cars Hub (${city})`}\n\n` +
+      `👉 *Please confirm test drive appointment.*`;
+    return `https://wa.me/918050966025?text=${encodeURIComponent(waMsg)}`;
   };
 
   return (
@@ -60,32 +87,39 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
         </button>
 
         {success ? (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-6">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <CheckCircle className="w-10 h-10" />
             </div>
-            <h3 className="text-xl font-black text-slate-900">Test Drive Confirmed!</h3>
+            <h3 className="text-2xl font-black text-slate-900">Test Drive Confirmed!</h3>
             <p className="text-sm text-slate-600 mt-2">
-              Our representative will bring the <strong>{car.year} {car.make} {car.model}</strong> to your location on <strong>{bookingDate} ({timeSlot})</strong>.
+              Representative will bring <strong>{car.year} {car.make} {car.model}</strong> to your location on <strong>{bookingDate} ({timeSlot})</strong>.
             </p>
-            <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
+            <p className="text-xs text-slate-500 mt-1">
+              Customer Phone: <strong className="text-slate-800">{phone}</strong>
+            </p>
+
+            <div className="mt-5 p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-left space-y-2">
+              <span className="text-xs font-bold text-emerald-800 block">📲 Instant WhatsApp Connect:</span>
+              <p className="text-[11px] text-emerald-700">
+                WhatsApp has been launched with your test drive details. If it did not open automatically, click below:
+              </p>
               <a
-                href={`https://wa.me/918050966025?text=${encodeURIComponent(
-                  `Hello Value Cars! I have booked a Test Drive for ${car.year} ${car.make} ${car.model} (${car.variant}).\nMy Name: ${name}\nPhone: ${phone}\nDate: ${bookingDate} (${timeSlot})\nLocation: ${locationType === 'HOME_DELIVERY' ? address : 'Hub'}`
-                )}`}
+                href={getWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-2.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-md"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 text-center"
               >
-                📲 Chat on WhatsApp (8050966025)
+                <span>💬</span> Open in WhatsApp & Send Lead (8050966025)
               </a>
-              <button
-                onClick={onClose}
-                className="px-5 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-rose-600 transition"
-              >
-                Back to Catalog
-              </button>
             </div>
+
+            <button
+              onClick={onClose}
+              className="mt-4 px-6 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-rose-600 transition"
+            >
+              Done & Return to Catalog
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

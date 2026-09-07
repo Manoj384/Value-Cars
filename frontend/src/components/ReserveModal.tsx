@@ -27,6 +27,20 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    const waMsg = 
+      `🔔 *Value Cars Viewing / Contact Request*\n\n` +
+      `👤 *Name:* ${name}\n` +
+      `📱 *Phone:* ${phone}\n` +
+      `🚗 *Vehicle:* ${car.year} ${car.make} ${car.model} (${car.variant})\n` +
+      `💰 *Price:* ₹${(car.price / 100000).toFixed(2)} Lakh\n` +
+      `📅 *Date & Slot:* ${preferredDate} (${timeSlot})\n` +
+      `📍 *Location:* Near Bangalore University, Mallathahalli Hub\n` +
+      `📝 *Notes:* ${notes || 'Interested in test driving & inspection'}\n\n` +
+      `👉 *Please confirm viewing appointment.*`;
+
+    const waUrl = `https://wa.me/918050966025?text=${encodeURIComponent(waMsg)}`;
+
     try {
       // Submits as a Hub Viewing / Direct Inspection Contact request
       await apiClient.bookTestDrive({
@@ -40,11 +54,29 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
         time_slot: timeSlot,
       });
       setSuccess(true);
+      // Auto-open WhatsApp chat with pre-filled lead details
+      if (typeof window !== 'undefined') {
+        window.open(waUrl, '_blank');
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to schedule viewing');
     } finally {
       setLoading(false);
     }
+  };
+
+  const getWhatsAppUrl = () => {
+    const waMsg = 
+      `🔔 *Value Cars Viewing / Contact Request*\n\n` +
+      `👤 *Name:* ${name}\n` +
+      `📱 *Phone:* ${phone}\n` +
+      `🚗 *Vehicle:* ${car.year} ${car.make} ${car.model} (${car.variant})\n` +
+      `💰 *Price:* ₹${(car.price / 100000).toFixed(2)} Lakh\n` +
+      `📅 *Date & Slot:* ${preferredDate} (${timeSlot})\n` +
+      `📍 *Location:* Near Bangalore University, Mallathahalli Hub\n` +
+      `📝 *Notes:* ${notes || 'Interested in test driving & inspection'}\n\n` +
+      `👉 *Please confirm viewing appointment.*`;
+    return `https://wa.me/918050966025?text=${encodeURIComponent(waMsg)}`;
   };
 
   return (
@@ -58,35 +90,43 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
         </button>
 
         {success ? (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="text-center py-6">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
               <CheckCircle className="w-10 h-10" />
             </div>
-            <h3 className="text-xl font-black text-slate-900">Viewing Request Received!</h3>
+            <h3 className="text-2xl font-black text-slate-900">Request Sent Successfully!</h3>
             <p className="text-sm text-slate-600 mt-2">
-              Our team has been notified on WhatsApp with your phone number (<strong>{phone}</strong>). We will call you shortly to confirm your visit for the <strong>{car.year} {car.make} {car.model}</strong>.
+              Viewing requested for <strong>{car.year} {car.make} {car.model}</strong> on <strong>{preferredDate} ({timeSlot})</strong>.
             </p>
-            <div className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600">
-              💬 Direct Admin Helpline: <strong>8050966025 | 8310166040</strong> (Mallathahalli Hub)
-            </div>
-            <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
+            <p className="text-xs text-slate-500 mt-1">
+              Your contact number: <strong className="text-slate-800">{phone}</strong>
+            </p>
+
+            <div className="mt-5 p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-left space-y-2">
+              <span className="text-xs font-bold text-emerald-800 block">📲 Instant WhatsApp Connect:</span>
+              <p className="text-[11px] text-emerald-700">
+                A WhatsApp chat window should have opened. If not, click below to send your lead details directly to our hotline!
+              </p>
               <a
-                href={`https://wa.me/918050966025?text=${encodeURIComponent(
-                  `Hello Value Cars! I requested a viewing/call for ${car.year} ${car.make} ${car.model} (${car.variant}).\nMy Name: ${name}\nPhone: ${phone}\nDate: ${preferredDate} (${timeSlot})\nNotes: ${notes || 'None'}`
-                )}`}
+                href={getWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-5 py-2.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-md"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 text-center"
               >
-                📲 Connect on WhatsApp (8050966025)
+                <span>💬</span> Click Here to Open in WhatsApp (8050966025)
               </a>
-              <button
-                onClick={onClose}
-                className="px-5 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-rose-600 transition"
-              >
-                Back to Catalog
-              </button>
             </div>
+
+            <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600">
+              📍 Hub: <strong>Near Bangalore University, Mallathahalli, Bengaluru</strong>
+            </div>
+
+            <button
+              onClick={onClose}
+              className="mt-4 px-6 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-rose-600 transition"
+            >
+              Done & Return to Catalog
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
