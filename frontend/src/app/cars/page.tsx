@@ -4,6 +4,8 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Navbar } from '../../components/Navbar';
+import { Footer } from '../../components/Footer';
+import { ConnectionStatus } from '../../components/ConnectionStatus';
 import { TestDriveModal } from '../../components/TestDriveModal';
 import { ReserveModal } from '../../components/ReserveModal';
 import { apiClient } from '../../services/api';
@@ -251,6 +253,8 @@ export default function CarDetailPage() {
       }>
         <CarDetailContent />
       </Suspense>
+      <Footer />
+      <ConnectionStatus />
     </div>
   );
 }

@@ -3,20 +3,47 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Union
 from jose import jwt
+from passlib.context import CryptContext
 from app.core.config import settings
+
+# Use bcrypt via passlib for secure, salted password hashing.
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Legacy salt used only to verify hashes created before bcrypt was introduced.
+_LEGACY_SALT = "vc_salt_2026"
 
 
 def get_password_hash(password: str) -> str:
-    """Hash a password using SHA-256 with a salt."""
+    """Hash a password using bcrypt (bcrypt scheme)."""
     if not password:
         password = "guest"
-    salt = "vc_salt_2026"
-    return hashlib.sha256(f"{salt}_{password}".encode("utf-8")).hexdigest()
+    return pwd_context.hash(password)
+
+
+def _legacy_hash(password: str) -> str:
+    """Compute the old SHA-256 based hash for verifying pre-existing users."""
+    if not password:
+        password = "guest"
+    return hashlib.sha256(f"{_LEGACY_SALT}_{password}".encode("utf-8")).hexdigest()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password hash."""
-    return get_password_hash(plain_password) == hashed_password
+    """Verify a password against either a bcrypt hash or a legacy SHA-256 hash."""
+    if not plain_password or not hashed_password:
+        return False
+    # Detect legacy SHA-256 hashes (64 lowercase hex chars, not a bcrypt hash).
+    is_legacy = (
+        len(hashed_password) == 64
+        and all(c in "0123456789abcdef" for c in hashed_password)
+    )
+    if is_legacy:
+        return hashlib.sha256(
+            f"{_LEGACY_SALT}_{plain_password}".encode("utf-8")
+        ).hexdigest() == hashed_password
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception:
+        return False
 
 
 def create_access_token(

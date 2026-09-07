@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar } from '../../components/Navbar';
+import { Footer } from '../../components/Footer';
+import { ConnectionStatus } from '../../components/ConnectionStatus';
 import { apiClient, AdminMetrics } from '../../services/api';
 import { Car } from '../../types/car';
 import { LayoutDashboard, CheckCircle2, ShieldAlert, Plus, Loader2, Sparkles, UserCheck } from 'lucide-react';
@@ -205,6 +207,8 @@ export default function AdminPage() {
           </div>
         )}
       </main>
+      <Footer />
+      <ConnectionStatus />
     </div>
   );
 }

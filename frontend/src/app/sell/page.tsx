@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Navbar } from '../../components/Navbar';
+import { Footer } from '../../components/Footer';
+import { ConnectionStatus } from '../../components/ConnectionStatus';
 import { apiClient } from '../../services/api';
 import { CheckCircle2, AlertCircle, Calculator, Sparkles, UploadCloud } from 'lucide-react';
 
@@ -368,6 +370,8 @@ export default function SellCarPage() {
           </form>
         )}
       </main>
+      <Footer />
+      <ConnectionStatus />
     </div>
   );
 }

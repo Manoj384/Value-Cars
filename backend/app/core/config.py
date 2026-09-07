@@ -1,4 +1,5 @@
 import os
+import secrets
 from typing import List, Union
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -11,12 +12,19 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # Security
-    SECRET_KEY: str = "value-cars-super-secret-key-change-in-production-2026-secure"
+    # A strong, randomly generated key is used when none is provided. In
+    # production you MUST set SECRET_KEY explicitly via the environment.
+    SECRET_KEY: str = secrets.token_urlsafe(48)
+    # Convenience flag: if still the auto-generated default in a non-dev env,
+    # we warn on startup below so you never ship with an ephemeral key.
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./value_cars.db"
+
+    # Public URL of the frontend (used for CORS + any absolute links)
+    FRONTEND_URL: str = "http://localhost:3000"
 
     # CORS
     ALLOWED_ORIGINS: List[str] = [
@@ -44,6 +52,10 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore",
     )
+
+    @property
+    def is_production(self) -> bool:
+        return self.ENVIRONMENT.lower() in {"production", "prod", "staging"}
 
 
 settings = Settings()

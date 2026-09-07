@@ -2,6 +2,30 @@ import { Car, InspectionReport } from '../types/car';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
+// Tracks whether the live backend is reachable, so the UI can surface a
+// "Demo data" vs "Live" indicator instead of silently showing stale data.
+let backendReachable = false;
+
+export function isBackendReachable(): boolean {
+  return backendReachable;
+}
+
+/** Helper that pre-emptively checks backend connectivity (used on mount). */
+export async function probeBackend(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/health`, { cache: 'no-store' });
+    backendReachable = res.ok;
+  } catch {
+    backendReachable = false;
+  }
+  return backendReachable;
+}
+
+// Run a lightweight, one-word response to run when a real call succeeds/fails.
+function recordSuccess(ok: boolean) {
+  if (ok) backendReachable = true;
+}
+
 export interface CarFilterOptions {
   make?: string;
   model?: string;
@@ -25,7 +49,7 @@ export interface PaginatedCars {
   total: number;
   page: number;
   page_size: number;
-  total_pages: number;
+  pages: number;
 }
 
 export interface ValuationRequest {
@@ -293,6 +317,7 @@ export const apiClient = {
         }
       });
       const res = await fetch(`${API_BASE_URL}/cars?${query.toString()}`, { cache: 'no-store' });
+      recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
       // Fallback for GitHub Pages static hosting
@@ -327,7 +352,7 @@ export const apiClient = {
       total: filtered.length,
       page: 1,
       page_size: 12,
-      total_pages: 1,
+      pages: 1,
     };
   },
 
@@ -409,8 +434,14 @@ export const apiClient = {
       const res = await fetch(`${API_BASE_URL}/orders/reserve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          // Backend OrderCreate expects delivery_city / delivery_address
+          delivery_city: data.city,
+          delivery_address: (data as { address?: string }).address || 'Value Cars Hub, Local Delivery',
+        }),
       });
+      recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
       // Fallback
@@ -432,11 +463,12 @@ export const apiClient = {
 
   async submitSellerCar(data: SellerCarSubmission) {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/seller-submit`, {
+      const res = await fetch(`${API_BASE_URL}/cars/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
+      recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
       // Fallback
@@ -473,7 +505,8 @@ export const apiClient = {
 
   async getPendingCars(): Promise<Car[]> {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/pending-approval`, { cache: 'no-store' });
+      const res = await fetch(`${API_BASE_URL}/cars/admin/pending`, { cache: 'no-store' });
+      recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
       // Fallback
@@ -483,7 +516,8 @@ export const apiClient = {
 
   async approveCar(carId: string) {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/${carId}/approve`, { method: 'POST' });
+      const res = await fetch(`${API_BASE_URL}/cars/admin/approve/${carId}`, { method: 'POST' });
+      recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
       // Fallback
@@ -493,11 +527,13 @@ export const apiClient = {
 
   async whitelistSellerEmail(email: string, approvedBy = 'Superadmin', notes = 'Verified Online') {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/approve-seller-email`, {
+      const res = await fetch(`${API_BASE_URL}/cars/admin/approve-seller-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, approved_by: approvedBy, notes }),
+        // Backend ApproveEmailRequest only accepts email + notes
+        body: JSON.stringify({ email, notes }),
       });
+      recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
       // Fallback
@@ -510,7 +546,8 @@ export const apiClient = {
 
   async getApprovedEmails() {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/approved-emails`, { cache: 'no-store' });
+      const res = await fetch(`${API_BASE_URL}/cars/admin/approved-seller-emails`, { cache: 'no-store' });
+      recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
       // Fallback

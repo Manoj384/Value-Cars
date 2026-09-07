@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Navbar } from '../components/Navbar';
+import { Footer } from '../components/Footer';
+import { ConnectionStatus } from '../components/ConnectionStatus';
 import { BrandGrid } from '../components/BrandGrid';
 import { FilterSidebar } from '../components/FilterSidebar';
 import { CarCard } from '../components/CarCard';
@@ -15,6 +17,7 @@ export default function HomePage() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState<CarFilterOptions>({
     city: 'Bangalore',
     page: 1,
@@ -34,6 +37,7 @@ export default function HomePage() {
       });
       setCars(data.items);
       setTotalCount(data.total);
+      setTotalPages(data.pages || 1);
     } catch (err) {
       console.error('Error fetching cars:', err);
     } finally {
@@ -87,6 +91,21 @@ export default function HomePage() {
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
             <span>Showing <strong className="text-rose-600">{totalCount}</strong> Verified Cars</span>
           </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={filters.sort_by || 'created_at'}
+              onChange={(e) => setFilters((prev) => ({ ...prev, sort_by: e.target.value, page: 1 }))}
+              aria-label="Sort cars"
+              className="bg-white border border-slate-200 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-700 outline-none focus:border-rose-500 shadow-sm cursor-pointer"
+            >
+              <option value="created_at">Sort: Newest First</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="year_desc">Year: Newest</option>
+              <option value="km_asc">KM: Lowest</option>
+              <option value="score_desc">Inspection Score</option>
+            </select>
+          </div>
         </div>
 
         {/* 12-Brand Visual Selector */}
@@ -138,6 +157,29 @@ export default function HomePage() {
                 ))}
               </div>
             )}
+
+            {/* Pagination */}
+            {!loading && cars.length > 0 && totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-4">
+                <button
+                  onClick={() => setFilters((prev) => ({ ...prev, page: Math.max(1, (prev.page || 1) - 1) }))}
+                  disabled={(filters.page || 1) <= 1}
+                  className="px-5 py-2.5 rounded-full text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  ← Previous
+                </button>
+                <span className="text-sm font-bold text-slate-600">
+                  Page {filters.page || 1} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setFilters((prev) => ({ ...prev, page: Math.min(totalPages, (prev.page || 1) + 1) }))}
+                  disabled={(filters.page || 1) >= totalPages}
+                  className="px-5 py-2.5 rounded-full text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  Next →
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>
@@ -145,6 +187,9 @@ export default function HomePage() {
       {/* Modals */}
       <TestDriveModal car={testDriveCar} onClose={() => setTestDriveCar(null)} />
       <ReserveModal car={reserveCar} onClose={() => setReserveCar(null)} />
+
+      <Footer />
+      <ConnectionStatus />
     </div>
   );
 }

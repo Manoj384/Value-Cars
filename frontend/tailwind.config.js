@@ -16,6 +16,9 @@ module.exports = {
           700: '#be123c',
           900: '#881337',
         }
+      },
+      fontFamily: {
+        sans: ['var(--font-plus-jakarta)', 'Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       }
     },
   },
