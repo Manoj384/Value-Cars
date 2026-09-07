@@ -27,6 +27,7 @@ jobs:
           node-version: "22"
 
       - name: Setup Pages
+        id: pages
         uses: actions/configure-pages@v5
         with:
           static_site_generator: next
@@ -37,6 +38,8 @@ jobs:
 
       - name: Build with Next.js
         working-directory: ./frontend
+        env:
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.pages.outputs.base_path || '/Value-Cars' }}
         run: npx next build
 
       - name: Upload artifact
