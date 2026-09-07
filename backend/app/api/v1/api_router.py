@@ -8,6 +8,8 @@ from app.api.v1.test_drives import router as test_drives_router
 from app.api.v1.inspections import router as inspections_router
 from app.api.v1.orders import router as orders_router
 from app.api.v1.admin import router as admin_router
+from app.api.v1.uploads import router as uploads_router
+from app.api.v1.sellers import router as sellers_router
 
 api_router = APIRouter()
 
@@ -19,3 +21,5 @@ api_router.include_router(test_drives_router, prefix="/test-drives", tags=["Test
 api_router.include_router(inspections_router, prefix="/inspections", tags=["Digital Inspection"])
 api_router.include_router(orders_router, prefix="/orders", tags=["Reservations & Orders"])
 api_router.include_router(admin_router, prefix="/admin", tags=["Admin Operations & Metrics"])
+api_router.include_router(uploads_router, prefix="/uploads", tags=["Image Uploads"])
+api_router.include_router(sellers_router, prefix="/sellers", tags=["Seller Portal"])

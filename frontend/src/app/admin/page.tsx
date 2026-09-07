@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { ConnectionStatus } from '../../components/ConnectionStatus';
-import { apiClient, AdminMetrics } from '../../services/api';
+import { apiClient, AdminMetrics, isAdminAuthed } from '../../services/api';
 import { Car } from '../../types/car';
-import { LayoutDashboard, CheckCircle2, ShieldAlert, Plus, Loader2, Sparkles, UserCheck } from 'lucide-react';
+import { LayoutDashboard, CheckCircle2, ShieldAlert, Plus, Loader2, Sparkles, UserCheck, Lock, LogOut } from 'lucide-react';
 
 export default function AdminPage() {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
@@ -16,6 +16,10 @@ export default function AdminPage() {
   const [newEmail, setNewEmail] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState('');
+  const [authed, setAuthed] = useState<boolean>(() => isAdminAuthed());
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [authError, setAuthError] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -36,8 +40,8 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (authed) loadData();
+  }, [authed]);
 
   const handleApproveCar = async (carId: string) => {
     try {
@@ -62,11 +66,35 @@ export default function AdminPage() {
     }
   };
 
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    try {
+      await apiClient.adminLogin(adminEmail, adminPassword);
+      setAdminPassword('');
+      setAuthed(true);
+      loadData();
+    } catch (err: any) {
+      setAuthError(err?.message || 'Admin login failed');
+    }
+  };
+
+  const handleAdminLogout = () => {
+    apiClient.adminLogout();
+    setAuthed(false);
+    setMetrics(null);
+    setPendingCars([]);
+    setApprovedEmails([]);
+    setActionMsg('');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-1">
+        {authed ? (
+        <>
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="inline-flex items-center space-x-1 text-xs font-black text-amber-600 uppercase tracking-widest bg-amber-50 px-3 py-1 rounded-full mb-2">
@@ -80,6 +108,12 @@ export default function AdminPage() {
             className="px-4 py-2 bg-slate-900 hover:bg-rose-600 text-white text-xs font-bold rounded-xl transition"
           >
             Refresh Dashboard
+          </button>
+          <button
+            onClick={handleAdminLogout}
+            className="ml-3 px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-xl transition inline-flex items-center gap-1.5"
+          >
+            <LogOut className="w-3.5 h-3.5" /> Logout
           </button>
         </div>
 
@@ -206,6 +240,46 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+        </>
+      ) : (
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
+            <div className="flex items-center justify-center w-14 h-14 bg-rose-100 text-rose-600 rounded-2xl mb-4">
+              <Lock className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl font-black text-slate-900">Admin Sign In</h2>
+            <p className="text-xs text-slate-500 mt-1 mb-6">Restricted area. Use your administrator credentials to continue.</p>
+
+            {authError && <p className="mb-4 p-3 bg-rose-50 text-rose-600 font-bold text-xs rounded-xl">{authError}</p>}
+
+            <form onSubmit={handleAdminLogin} className="space-y-4">
+              <input
+                type="email"
+                required
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                placeholder="Admin email"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-rose-500"
+              />
+              <input
+                type="password"
+                required
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-rose-500"
+              />
+              <button type="submit" className="w-full px-4 py-3 bg-slate-900 hover:bg-rose-600 text-white text-sm font-bold rounded-xl transition">
+                Sign In
+              </button>
+            </form>
+
+            <p className="text-[10px] text-slate-400 mt-4 text-center">
+              Default seed account: admin@valuecars.com
+            </p>
+          </div>
+        </div>
+      )}
       </main>
       <Footer />
       <ConnectionStatus />

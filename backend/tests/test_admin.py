@@ -3,8 +3,8 @@ from httpx import AsyncClient
 
 
 @pytest.mark.asyncio
-async def test_admin_metrics(client: AsyncClient):
-    response = await client.get("/api/v1/admin/metrics")
+async def test_admin_metrics(client: AsyncClient, admin_headers: dict):
+    response = await client.get("/api/v1/admin/metrics", headers=admin_headers)
     assert response.status_code == 200
     data = response.json()
     assert "total_published_cars" in data
@@ -17,8 +17,8 @@ async def test_admin_metrics(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_admin_orders_list(client: AsyncClient):
-    response = await client.get("/api/v1/admin/orders")
+async def test_admin_orders_list(client: AsyncClient, admin_headers: dict):
+    response = await client.get("/api/v1/admin/orders", headers=admin_headers)
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)

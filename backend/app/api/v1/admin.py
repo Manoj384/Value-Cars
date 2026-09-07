@@ -1,20 +1,63 @@
 from typing import Dict, Any, List
-from fastapi import APIRouter, Depends
+from pydantic import BaseModel, EmailStr
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.core.security import create_access_token, verify_password
+from app.api.v1.auth import get_current_admin
 from app.models.car import Car, CarStatus
 from app.models.lead import Lead, LeadStatus
 from app.models.test_drive import TestDrive, TestDriveStatus
 from app.models.order import Order, OrderStatus
-from app.models.user import ApprovedSellerEmail
+from app.models.user import ApprovedSellerEmail, User, UserRole
+from app.schemas.user import Token, UserResponse
 
 router = APIRouter()
 
 
+class AdminLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+@router.post("/login", response_model=Token, summary="Admin Login -> JWT")
+async def admin_login(payload: AdminLogin, db: AsyncSession = Depends(get_db)):
+    """Authenticate an administrator account and return a JWT."""
+    email = payload.email.strip().lower()
+    res = await db.execute(select(User).where(User.email == email))
+    user = res.scalar_one_or_none()
+
+    if not user or not verify_password(payload.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+        )
+    if user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This account does not have admin access",
+        )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user account",
+        )
+
+    access_token = create_access_token(subject=str(user.id), role=user.role.value)
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse.model_validate(user),
+    )
+
+
 @router.get("/metrics", summary="Admin Dashboard KPI Metrics")
-async def get_dashboard_metrics(db: AsyncSession = Depends(get_db)) -> Dict[str, Any]:
+async def get_dashboard_metrics(
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+) -> Dict[str, Any]:
     """Retrieve key operational metrics, inventory value, and funnel statistics."""
     # 1. Total Live Cars & Value
     cars_query = select(
@@ -74,7 +117,10 @@ async def get_dashboard_metrics(db: AsyncSession = Depends(get_db)) -> Dict[str,
 
 
 @router.get("/orders", summary="Admin: List All Orders and Token Bookings")
-async def get_all_orders(db: AsyncSession = Depends(get_db)):
+async def get_all_orders(
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
     """Admin views all customer orders, reservations, and payment receipts."""
     query = select(Order).order_by(desc(Order.created_at)).limit(100)
     res = await db.execute(query)

@@ -52,6 +52,16 @@ async def get_current_user(
     return user
 
 
+async def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Validate JWT and require the caller to be an active ADMIN."""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required",
+        )
+    return current_user
+
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
     """Register a new customer account."""

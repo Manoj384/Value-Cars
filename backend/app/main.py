@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1.api_router import api_router
+from app.api.v1.uploads import UPLOAD_DIR
 from app.core.config import settings
 from app.core.database import Base, engine, AsyncSessionLocal
 from app.services.seed_service import seed_database
@@ -82,6 +83,10 @@ if os.path.exists(STATIC_DIR):
 
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Serve uploaded image files (created on demand by the upload endpoint).
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 
 @app.exception_handler(StarletteHTTPException)

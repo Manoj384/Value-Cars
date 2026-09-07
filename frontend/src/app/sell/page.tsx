@@ -6,7 +6,16 @@ import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { ConnectionStatus } from '../../components/ConnectionStatus';
 import { apiClient } from '../../services/api';
-import { CheckCircle2, AlertCircle, Calculator, Sparkles, UploadCloud } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Calculator, Sparkles, UploadCloud, ImagePlus, Trash2, Loader2, Star } from 'lucide-react';
+
+interface PendingImage {
+  id: string;
+  file: File | null;
+  preview: string;
+  url?: string;
+  tag: string;
+  is_cover: boolean;
+}
 
 export default function SellCarPage() {
   const [email, setEmail] = useState('');
@@ -29,7 +38,9 @@ export default function SellCarPage() {
   const [city, setCity] = useState('Bangalore');
   const [price, setPrice] = useState(1450000);
   const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   // Valuation
   const [valuation, setValuation] = useState<{ min: number; max: number } | null>(null);
@@ -101,13 +112,93 @@ export default function SellCarPage() {
         seller_name: sellerName,
         seller_phone: sellerPhone,
         description,
-        image_urls: imageUrl ? [imageUrl] : undefined,
+        image_urls: pendingImages
+          .filter((img) => img.url)
+          .sort((a, b) => Number(b.is_cover) - Number(a.is_cover))
+          .map((img) => img.url as string),
       });
       setSubmittedStatus(res.status);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Submission failed');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setUploadError('');
+    const next: PendingImage[] = files.map((file) => ({
+      id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
+      file,
+      preview: URL.createObjectURL(file),
+      tag: 'EXTERIOR',
+      is_cover: false,
+    }));
+    setPendingImages((prev) => {
+      const combined = [...prev, ...next];
+      if (combined.every((img) => !img.is_cover) && combined.length > 0) {
+        combined[0].is_cover = true;
+      }
+      return combined;
+    });
+    e.target.value = '';
+  };
+
+  const handleRemoveImage = (id: string) => {
+    setPendingImages((prev) => {
+      const removed = prev.find((img) => img.id === id);
+      if (removed) URL.revokeObjectURL(removed.preview);
+      const next = prev.filter((img) => img.id !== id);
+      if (next.length > 0 && next.every((img) => !img.is_cover)) {
+        next[0].is_cover = true;
+      }
+      return next;
+    });
+  };
+
+  const handleToggleCover = (id: string) => {
+    setPendingImages((prev) =>
+      prev.map((img) => ({ ...img, is_cover: img.id === id })),
+    );
+  };
+
+  const handleTagChange = (id: string, tag: string) => {
+    setPendingImages((prev) =>
+      prev.map((img) => (img.id === id ? { ...img, tag } : img)),
+    );
+  };
+
+  const handleUploadImages = async () => {
+    const files = pendingImages
+      .filter((img) => !img.url && img.file)
+      .map((img) => img.file as File);
+    if (files.length === 0) return;
+    setUploadingImages(true);
+    setUploadError('');
+    try {
+      const urls = await apiClient.uploadImages(files);
+      const urlById = new Map<string, string>();
+      let idx = 0;
+      for (const img of pendingImages) {
+        if (!img.url && img.file) urlById.set(img.id, urls[idx++] ?? '');
+      }
+      setPendingImages((prev) =>
+        prev.map((img) => {
+          if (img.url) return img;
+          const url = urlById.get(img.id);
+          if (url) {
+            URL.revokeObjectURL(img.preview);
+            return { ...img, url };
+          }
+          return img;
+        }),
+      );
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Image upload failed');
+    } finally {
+      setUploadingImages(false);
     }
   };
 
@@ -324,27 +415,105 @@ export default function SellCarPage() {
               </button>
             </div>
 
-            {/* Asking Price & Image URL */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Asking Price (₹) *</label>
-                <input
-                  type="number"
-                  required
-                  value={price}
-                  onChange={(e) => setPrice(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500 font-bold"
-                />
+            {/* Asking Price */}
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Asking Price (₹) *</label>
+              <input
+                type="number"
+                required
+                value={price}
+                onChange={(e) => setPrice(Number(e.target.value))}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500 font-bold"
+              />
+            </div>
+
+            {/* Car Photos (Upload) */}
+            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200">
+              <div className="flex items-center justify-between mb-3">
+                <label className="text-xs font-black text-slate-800 uppercase tracking-wider">Car Photos</label>
+                <span className="text-[10px] text-slate-400 font-bold">
+                  {pendingImages.filter((i) => i.url).length} uploaded · {pendingImages.length} added
+                </span>
               </div>
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Cover Image URL</label>
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
-                />
+
+              {uploadError && (
+                <div className="mb-3 p-3 bg-red-50 text-red-600 text-xs rounded-xl flex items-center">
+                  <AlertCircle className="w-3.5 h-3.5 mr-2" /> {uploadError}
+                </div>
+              )}
+
+              {/* Selected image previews */}
+              {pendingImages.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mb-4">
+                  {pendingImages.map((img) => (
+                    <div key={img.id} className="relative group rounded-xl overflow-hidden border border-slate-200 bg-white">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={img.url || img.preview} alt="car preview" className="w-full h-24 object-cover" />
+                      {img.is_cover && (
+                        <span className="absolute top-1 left-1 bg-rose-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded flex items-center">
+                          <Star className="w-2.5 h-2.5 mr-1" /> DISPLAY
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(img.id)}
+                        className="absolute top-1 right-1 w-5 h-5 bg-slate-900/70 text-white rounded flex items-center justify-center hover:bg-red-600 transition"
+                        aria-label="Remove image"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                      <div className="p-2 flex items-center justify-between gap-1">
+                        <select
+                          value={img.tag}
+                          onChange={(e) => handleTagChange(img.id, e.target.value)}
+                          className="text-[10px] bg-slate-100 border border-slate-200 rounded px-1 py-0.5 outline-none"
+                        >
+                          <option>EXTERIOR</option>
+                          <option>INTERIOR</option>
+                          <option>TRUNK</option>
+                          <option>DETAILS</option>
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCover(img.id)}
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${img.is_cover ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-500 hover:text-rose-600'}`}
+                        >
+                          Cover
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 flex-wrap">
+                <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:border-rose-500 hover:text-rose-600 cursor-pointer transition">
+                  <ImagePlus className="w-4 h-4" />
+                  Add Photos (jpg, png, webp)
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    onChange={handleAddImages}
+                    className="hidden"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={handleUploadImages}
+                  disabled={uploadingImages || !pendingImages.some((img) => !img.url && img.file)}
+                  className="px-4 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-black rounded-xl transition flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {uploadingImages ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <UploadCloud className="w-4 h-4 mr-2" /> Upload {pendingImages.filter((i) => !i.url && i.file).length || ''} Image(s)
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 

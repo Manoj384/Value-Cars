@@ -53,7 +53,7 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserv
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
           {/* Title */}
-          <Link href={`/cars?id=${car.id}`} className="block">
+          <Link href={`/cars/${car.id}`} className="block">
             <h3 className="font-extrabold text-slate-900 text-base group-hover:text-rose-600 transition line-clamp-1">
               {car.year} {car.make} {car.model}
             </h3>

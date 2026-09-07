@@ -306,6 +306,79 @@ const APPROVED_SELLER_EMAILS = [
   'manojshankar@valuecars.local',
 ];
 
+export interface SellerProfile {
+  id: string;
+  full_name: string;
+  email: string | null;
+  phone_number: string;
+  city?: string | null;
+  role: string;
+  is_active: boolean;
+  is_verified: boolean;
+  is_approved_seller: boolean;
+  created_at: string;
+}
+
+export interface SellerLoginResponse {
+  access_token: string;
+  token_type: string;
+  user: SellerProfile;
+}
+
+// --- Seller session persisted in localStorage so the portal survives reloads ---
+const SELLER_TOKEN_KEY = 'valuecars_seller_token';
+
+export function setSellerToken(token: string): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(SELLER_TOKEN_KEY, token);
+  }
+}
+
+export function getSellerToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(SELLER_TOKEN_KEY);
+}
+
+export function clearSellerToken(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(SELLER_TOKEN_KEY);
+  }
+}
+
+export function isSellerAuthed(): boolean {
+  return !!getSellerToken();
+}
+
+export interface AdminLoginResponse {
+  access_token: string;
+  token_type: string;
+  user: { id: string; full_name: string; email: string; role: string };
+}
+
+// --- Admin session persisted in localStorage so the dashboard survives reloads ---
+const ADMIN_TOKEN_KEY = 'valuecars_admin_token';
+
+export function setAdminToken(token: string): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(ADMIN_TOKEN_KEY, token);
+  }
+}
+
+export function getAdminToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(ADMIN_TOKEN_KEY);
+}
+
+export function clearAdminToken(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+  }
+}
+
+export function isAdminAuthed(): boolean {
+  return !!getAdminToken();
+}
+
 export const apiClient = {
   // Cars & Catalog
   async getCars(params: CarFilterOptions = {}): Promise<PaginatedCars> {
@@ -481,10 +554,53 @@ export const apiClient = {
     };
   },
 
+  // Image Uploads
+  async uploadImages(files: File[]): Promise<string[]> {
+    const formData = new FormData();
+    for (const file of files) formData.append('files', file);
+    const res = await fetch(`${API_BASE_URL}/uploads/images`, {
+      method: 'POST',
+      body: formData,
+    });
+    recordSuccess(res.ok);
+    if (!res.ok) {
+      const message = await res
+        .text()
+        .catch(() => `Upload failed (${res.status})`);
+      throw new Error(message || `Upload failed (${res.status})`);
+    }
+    const data = (await res.json()) as { url: string }[];
+    return data.map((item) => item.url);
+  },
+
   // Admin Portal & Operations
+  adminHeaders(): Record<string, string> {
+    const token = getAdminToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  },
+
+  async adminLogin(email: string, password: string): Promise<AdminLoginResponse> {
+    const res = await fetch(`${API_BASE_URL}/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.detail || 'Admin login failed');
+    setAdminToken(data.access_token);
+    return data;
+  },
+
+  async adminLogout(): Promise<void> {
+    clearAdminToken();
+  },
+
   async getAdminMetrics(): Promise<AdminMetrics> {
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/metrics`, { cache: 'no-store' });
+      const res = await fetch(`${API_BASE_URL}/admin/metrics`, { headers: this.adminHeaders(), cache: 'no-store' });
       if (res.ok) return res.json();
     } catch {
       // Fallback
@@ -505,7 +621,7 @@ export const apiClient = {
 
   async getPendingCars(): Promise<Car[]> {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/admin/pending`, { cache: 'no-store' });
+      const res = await fetch(`${API_BASE_URL}/cars/admin/pending`, { headers: this.adminHeaders(), cache: 'no-store' });
       recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
@@ -516,7 +632,7 @@ export const apiClient = {
 
   async approveCar(carId: string) {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/admin/approve/${carId}`, { method: 'POST' });
+      const res = await fetch(`${API_BASE_URL}/cars/admin/approve/${carId}`, { method: 'POST', headers: this.adminHeaders() });
       recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
@@ -529,7 +645,7 @@ export const apiClient = {
     try {
       const res = await fetch(`${API_BASE_URL}/cars/admin/approve-seller-email`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: this.adminHeaders(),
         // Backend ApproveEmailRequest only accepts email + notes
         body: JSON.stringify({ email, notes }),
       });
@@ -546,7 +662,7 @@ export const apiClient = {
 
   async getApprovedEmails() {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/admin/approved-seller-emails`, { cache: 'no-store' });
+      const res = await fetch(`${API_BASE_URL}/cars/admin/approved-seller-emails`, { headers: this.adminHeaders(), cache: 'no-store' });
       recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
@@ -557,5 +673,74 @@ export const apiClient = {
       approved_by: 'Superadmin',
       created_at: new Date().toISOString(),
     }));
+  },
+
+  // --- Seller portal (authenticated) ---
+  authHeaders(): Record<string, string> {
+    const token = getSellerToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  },
+
+  async sellerRegister(input: { full_name: string; email: string; phone_number: string; password: string }): Promise<SellerLoginResponse> {
+    const res = await fetch(`${API_BASE_URL}/sellers/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.detail || 'Registration failed');
+    setSellerToken(data.access_token);
+    return data;
+  },
+
+  async sellerLogin(email: string, password: string): Promise<SellerLoginResponse> {
+    const res = await fetch(`${API_BASE_URL}/sellers/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.detail || 'Login failed');
+    setSellerToken(data.access_token);
+    return data;
+  },
+
+  async getSellerProfile(): Promise<SellerProfile> {
+    const res = await fetch(`${API_BASE_URL}/sellers/me`, { headers: this.authHeaders(), cache: 'no-store' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.detail || 'Unable to load profile');
+    return data;
+  },
+
+  async getMyListings(): Promise<Car[]> {
+    const res = await fetch(`${API_BASE_URL}/sellers/me/cars`, { headers: this.authHeaders(), cache: 'no-store' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.detail || 'Unable to load listings');
+    return data;
+  },
+
+  async updateMyListing(carId: string, patch: { price?: number; description?: string; status?: string }): Promise<Car> {
+    const res = await fetch(`${API_BASE_URL}/sellers/cars/${carId}`, {
+      method: 'PATCH',
+      headers: this.authHeaders(),
+      body: JSON.stringify(patch),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.detail || 'Unable to update listing');
+    return data;
+  },
+
+  async deleteMyListing(carId: string): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/sellers/cars/${carId}`, {
+      method: 'DELETE',
+      headers: this.authHeaders(),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data?.detail || 'Unable to delete listing');
+    }
   },
 };

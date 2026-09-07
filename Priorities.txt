@@ -1,0 +1,60 @@
+Here's a prioritized roadmap for the next phase, grounded in what's actually in the codebase today. I dug through the sell flow, the submit endpoint, the `CarImage` model, and the admin routes so these recommendations are concrete, not generic.
+
+## 🔴 Priority 1 — Real image uploads for approved sellers (the feature you asked for)
+
+__Reality check:__ images are *not* uploaded anywhere today. The sell form has a single text input for a URL, and if it's empty the backend silently falls back to an Unsplash stock photo:
+
+- `sell/page.tsx:104` → `image_urls: imageUrl ? [imageUrl] : undefined`
+- `cars.py:216-217` → `default_img = "https://images.unsplash.com/..."` used when nothing is provided
+
+So sellers can neither attach their own photos nor multiple angles. The good news: `CarImage` already has `car_id`, `image_url`, `tag`, `display_order`, `is_cover` — the exact schema an upload feature needs. It just needs a real URL handed to it.
+
+__Concrete build plan:__
+
+1. __Backend upload endpoint__ — add `python-multipart` (FastAPI's `UploadFile`/`File`) and a new route `POST /api/v1/uploads/images` that:
+
+   - Validates MIME type (jpg/png/webp), max size (e.g. 10 MB), file count.
+   - Saves with a `uuid` filename + extension into a storage dir (local `backend/uploads/` in dev).
+   - Returns a publicly-served URL (mount `StaticFiles` or a `/files` route). In production, swap the storage backend for S3 / Cloudflare R2 / a CDN behind that same route contract.
+
+2. __Multiple images + metadata__ — extend the sell form to accept several files, each with a `tag` (EXTERIOR / INTERIOR / TRUNK / DETAILS) and a "set as cover" toggle, sending `[{image_url, tag, display_order, is_cover}]`.
+
+3. __Frontend file picker__ — replace the single URL field with a multi-file picker + client-side preview + drag-and-drop + upload progress, reusing the existing `CarCard` cover-image logic (`car.images?.find(i => i.is_cover)`).
+
+4. __Gate it to approved sellers__ — on the client, the `checkSellerEmail` call already tells you `is_approved`. Show the upload UI only for approved sellers; unapproved sellers keep the "admin review" flow.
+
+## 🔴 Priority 2 — Seller auth & "My Listings" (makes Priority 1 trustworthy)
+
+Today approval is __email-only__ and there is __no login session__ at all for sellers. To let an approved seller upload and later manage "their" cars you need an identity:
+
+- A JWT login/signup for sellers — the plumbing already exists (`security.py` has `create_access_token`/`decode_token`, HS256, expiry).
+- A `/sellers/me` endpoint and a __"My Listings"__ dashboard (edit, re-upload photos, mark sold).
+- Ownership checks on car mutation endpoints so a seller can only touch their own cars __and__ must be an approved email.
+
+## 🟠 Priority 3 — Admin hardening (urgent, currently wide open)
+
+__The admin approve/reject endpoints have zero authentication.__ Anyone can call `POST /admin/approve/{id}` and publish any car. Before you open real seller uploads, add:
+
+- Admin JWT auth (a protected `/admin` login + `Depends(get_current_admin)` on all admin routes).
+- Optional admin-approval of each uploaded photo (reuse the pending→published flow, but at image level).
+
+## 🟡 Priority 4 — Marketplace & UX wins (medium effort, big payoff)
+
+- __Car detail gallery__ — a lightbox/fullscreen viewer for the multi-image set that Priority 1 produces (the `cars/page.tsx` thumbnail strip already supports multiple images, just needs a nicer viewer).
+- __Model autocomplete + location search__ in Navbar (backend `models`/`cities` endpoints don't exist yet).
+- __"Price drop" / new-listing alerts__ — cheap to add on top of the existing `sort_by=created_at`.
+- __Reservation/order flow completion__ — `delivery_city` is wired up; add status tracking + confirmation emails.
+
+## 🟢 Priority 5 — Production & infra (quick wins)
+
+- __Storage abstraction__ + server-side image resize/webp conversion for listing thumbnails (perf for the card grid).
+- __CI additions__: backend tests are only seeded/mock today — add upload endpoint tests (valid/invalid file, size limit) and a frontend E2E happy path.
+- Add __Sentry__ (frontend + backend) now that structured logging and global handlers exist.
+
+## ⚡ Suggested order
+
+1. Backend upload endpoint + storage → 2. Sell form multi-image UI → 3. Seller JWT auth + My Listings → 4. Admin auth → 5. gallery/lightbox + polish → 6. infra (S3, resize, CI, Sentry).
+
+---
+
+Want me to start building __Priority 1__ (the approved-seller image upload feature: backend upload endpoint + storage + multi-image sell form)? If so, let me know which storage approach you prefer:

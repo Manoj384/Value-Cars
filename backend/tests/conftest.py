@@ -44,3 +44,14 @@ async def client(db_session: AsyncSession):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def admin_headers(client: AsyncClient):
+    """Provides Authorization headers for an authenticated superadmin."""
+    res = await client.post(
+        "/api/v1/auth/token",
+        data={"username": "admin@valuecars.com", "password": "Admin@ValueCars2026"},
+    )
+    token = res.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}

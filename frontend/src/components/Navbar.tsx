@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, RotateCcw, Truck, Car as CarIcon, PlusCircle, LayoutDashboard, Search, MapPin, Phone, Menu, X } from 'lucide-react';
+import { ShieldCheck, RotateCcw, Truck, Car as CarIcon, PlusCircle, LayoutDashboard, Search, MapPin, Phone, Menu, X, UserCircle2 } from 'lucide-react';
 
 interface NavbarProps {
   onCityChange?: (city: string) => void;
@@ -28,6 +28,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
       </Link>
       <Link href="/sell" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-rose-600 transition flex items-center">
         <PlusCircle className="w-4 h-4 mr-1.5" /> Add / Sell Car
+      </Link>
+      <Link href="/sell/my-listings" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-rose-600 transition flex items-center">
+        <UserCircle2 className="w-4 h-4 mr-1.5" /> My Listings
       </Link>
       <Link href="/admin" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-amber-600 transition flex items-center">
         <LayoutDashboard className="w-4 h-4 mr-1.5" /> Admin Hub

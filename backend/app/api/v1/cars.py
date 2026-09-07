@@ -5,9 +5,10 @@ from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.api.v1.auth import get_current_admin
 from app.models.car import BodyType, Car, CarFeature, CarImage, CarStatus, FuelType, OwnershipType, TransmissionType
 from app.models.inspection import CheckpointCondition, Inspection, InspectionItem, InspectionStatus
-from app.models.user import ApprovedSellerEmail
+from app.models.user import ApprovedSellerEmail, User
 from app.schemas.car import (
     ApproveEmailRequest,
     ApprovedEmailResponse,
@@ -73,7 +74,10 @@ async def get_cars(
 
 
 @router.get("/admin/pending", response_model=List[CarResponse], summary="Admin: View Cars Awaiting Approval")
-async def get_pending_cars(db: AsyncSession = Depends(get_db)):
+async def get_pending_cars(
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
     """Admin views all car listings submitted by sellers awaiting approval."""
     filters = CarFilterParams(status=CarStatus.PENDING_APPROVAL, page_size=100)
     cars, _, _ = await CarService.list_cars(db, filters)
@@ -81,7 +85,11 @@ async def get_pending_cars(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/admin/approve/{car_id}", response_model=CarResponse, summary="Admin: Approve Pending Car Listing")
-async def approve_car_listing(car_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def approve_car_listing(
+    car_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
     """Admin approves a submitted car, changing status to PUBLISHED."""
     car = await CarService.get_car_by_id(db, car_id)
     if not car:
@@ -95,7 +103,11 @@ async def approve_car_listing(car_id: uuid.UUID, db: AsyncSession = Depends(get_
 
 
 @router.post("/admin/approve-seller-email", response_model=ApprovedEmailResponse, summary="Admin: Approve Seller Email Whitelist")
-async def approve_seller_email(payload: ApproveEmailRequest, db: AsyncSession = Depends(get_db)):
+async def approve_seller_email(
+    payload: ApproveEmailRequest,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
     """Admin approves an email address so the seller can add verified car listings."""
     clean_email = payload.email.strip().lower()
     query = select(ApprovedSellerEmail).where(ApprovedSellerEmail.email == clean_email)
@@ -127,7 +139,10 @@ async def approve_seller_email(payload: ApproveEmailRequest, db: AsyncSession = 
 
 
 @router.get("/admin/approved-seller-emails", response_model=List[ApprovedEmailResponse], summary="Admin: List Approved Emails")
-async def list_approved_seller_emails(db: AsyncSession = Depends(get_db)):
+async def list_approved_seller_emails(
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
     """Admin views all verified/approved seller emails."""
     query = select(ApprovedSellerEmail).where(ApprovedSellerEmail.is_active == True).order_by(desc(ApprovedSellerEmail.created_at))
     res = await db.execute(query)
