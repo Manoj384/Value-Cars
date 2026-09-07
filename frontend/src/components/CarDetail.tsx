@@ -298,15 +298,15 @@ export default function CarDetail({ carId }: CarDetailProps) {
             <div className="space-y-3 pt-2">
               <button
                 onClick={() => setShowTestDrive(true)}
-                className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-sm rounded-xl shadow-lg shadow-rose-600/30 transition transform active:scale-98"
+                className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-sm rounded-xl shadow-lg shadow-rose-600/30 transition transform active:scale-98 flex items-center justify-center gap-2"
               >
-                Book Free Home Test Drive
+                <span>🚗</span> Book Free Home Test Drive
               </button>
               <button
                 onClick={() => setShowReserve(true)}
-                className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-sm rounded-xl transition"
+                className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-black text-sm rounded-xl transition flex items-center justify-center gap-2"
               >
-                Reserve Car (₹10,000 Refundable)
+                <span>📞</span> Schedule Hub Viewing & Call
               </button>
             </div>
           </div>

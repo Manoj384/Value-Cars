@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, ShieldCheck, CreditCard, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Calendar, Phone, CheckCircle, AlertCircle, MessageSquare, Clock } from 'lucide-react';
 import { Car } from '../types/car';
 import { apiClient } from '../services/api';
 
@@ -14,7 +14,9 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [city, setCity] = useState(car?.city || 'Bangalore');
+  const [preferredDate, setPreferredDate] = useState(new Date().toISOString().split('T')[0]);
+  const [timeSlot, setTimeSlot] = useState('11:00 AM - 01:00 PM');
+  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
@@ -26,17 +28,20 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
     setLoading(true);
     setError('');
     try {
-      await apiClient.reserveCar({
+      // Submits as a Hub Viewing / Direct Inspection Contact request
+      await apiClient.bookTestDrive({
         car_id: car.id,
         customer_name: name,
         customer_phone: phone,
-        customer_email: email,
-        city,
-        token_amount: 10000.0,
+        customer_email: email || undefined,
+        city: car.city || 'Bangalore',
+        location_type: 'VALUE_CARS_HUB',
+        booking_date: preferredDate,
+        time_slot: timeSlot,
       });
       setSuccess(true);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to process reservation');
+      setError(err instanceof Error ? err.message : 'Failed to schedule viewing');
     } finally {
       setLoading(false);
     }
@@ -57,10 +62,13 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
             <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-10 h-10" />
             </div>
-            <h3 className="text-xl font-black text-slate-900">Car Reserved Successfully!</h3>
+            <h3 className="text-xl font-black text-slate-900">Viewing Request Received!</h3>
             <p className="text-sm text-slate-600 mt-2">
-              The <strong>{car.year} {car.make} {car.model}</strong> has been reserved for you for 5 days. Your refundable deposit receipt has been sent to <strong>{email}</strong>.
+              Our team has been notified on WhatsApp with your phone number (<strong>{phone}</strong>). We will call you shortly to confirm your visit for the <strong>{car.year} {car.make} {car.model}</strong>.
             </p>
+            <div className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600">
+              💬 Direct Admin Helpline: <strong>1800-200-VALUE</strong> (Available 9 AM - 8 PM)
+            </div>
             <button
               onClick={onClose}
               className="mt-6 px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-rose-600 transition"
@@ -71,12 +79,12 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <div className="inline-flex items-center space-x-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full mb-1">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>100% Refundable Deposit</span>
+              <div className="inline-flex items-center space-x-1.5 text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full mb-1">
+                <Phone className="w-3.5 h-3.5" />
+                <span>Instant Seller & Admin Connect</span>
               </div>
-              <h3 className="text-xl font-black text-slate-900">Hold This Car (₹10,000)</h3>
-              <p className="text-xs text-slate-500">{car.year} {car.make} {car.model} • ₹{(car.price / 100000).toFixed(2)} Lakh</p>
+              <h3 className="text-xl font-black text-slate-900">Schedule Hub Viewing & Call</h3>
+              <p className="text-xs text-slate-500">{car.year} {car.make} {car.model} • ₹{(car.price / 100000).toFixed(2)} Lakh ({car.city})</p>
             </div>
 
             {error && (
@@ -86,20 +94,20 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
             )}
 
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">Full Name *</label>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Your Name *</label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Full Name"
+                placeholder="e.g. Manoj"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Phone *</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Phone Number *</label>
                 <input
                   type="tel"
                   required
@@ -110,10 +118,9 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Email *</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Email (Optional)</label>
                 <input
                   type="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="user@example.com"
@@ -122,24 +129,54 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
               </div>
             </div>
 
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
-              <div className="flex justify-between font-bold text-slate-800">
-                <span>Hold Duration</span>
-                <span>5 Days</span>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Preferred Date</label>
+                <input
+                  type="date"
+                  value={preferredDate}
+                  onChange={(e) => setPreferredDate(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
+                />
               </div>
-              <div className="flex justify-between font-bold text-slate-800">
-                <span>Refund Policy</span>
-                <span className="text-emerald-600">Instant No-Questions Refund</span>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Preferred Time</label>
+                <select
+                  value={timeSlot}
+                  onChange={(e) => setTimeSlot(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
+                >
+                  <option>09:00 AM - 11:00 AM</option>
+                  <option>11:00 AM - 01:00 PM</option>
+                  <option>02:00 PM - 04:00 PM</option>
+                  <option>04:00 PM - 06:00 PM</option>
+                </select>
               </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Any Questions or Notes?</label>
+              <textarea
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. Want to inspect car history, check finance options, etc."
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
+              />
+            </div>
+
+            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 text-xs text-emerald-800 flex items-center">
+              <CheckCircle className="w-4 h-4 mr-2 text-emerald-600 shrink-0" />
+              <span>No payment required. The admin will get your number instantly on WhatsApp.</span>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 py-3 bg-slate-900 hover:bg-rose-600 text-white font-black rounded-xl shadow-lg transition flex items-center justify-center disabled:opacity-50"
+              className="w-full mt-3 py-3 bg-slate-900 hover:bg-rose-600 text-white font-black rounded-xl shadow-lg transition flex items-center justify-center disabled:opacity-50"
             >
-              <CreditCard className="w-4 h-4 mr-2" />
-              {loading ? 'Processing...' : 'Pay ₹10,000 & Reserve Car'}
+              <Phone className="w-4 h-4 mr-2" />
+              {loading ? 'Sending Request...' : 'Schedule Viewing & Request Call'}
             </button>
           </form>
         )}

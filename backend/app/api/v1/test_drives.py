@@ -28,7 +28,8 @@ async def book_test_drive(booking_in: TestDriveCreate, db: AsyncSession = Depend
     await db.commit()
     await db.refresh(booking)
 
-    # Trigger automated SMS & WhatsApp notification
+    # Trigger automated SMS & WhatsApp notifications
+    # 1. Notify customer
     await NotificationService.send_test_drive_booked_alert(
         customer_name=booking.customer_name,
         customer_phone=booking.customer_phone,
@@ -38,6 +39,20 @@ async def book_test_drive(booking_in: TestDriveCreate, db: AsyncSession = Depend
         location_type=booking.location_type.value if hasattr(booking.location_type, "value") else str(booking.location_type),
         address=booking.delivery_address,
         hub_city=booking.hub_name or car.city,
+    )
+
+    # 2. Alert Admin on WhatsApp with customer contact number
+    await NotificationService.send_admin_schedule_contact_alert(
+        customer_name=booking.customer_name,
+        customer_phone=booking.customer_phone,
+        customer_email=booking.customer_email,
+        car_title=car.title,
+        city=car.city,
+        request_type=f"Test Drive ({booking.location_type.value if hasattr(booking.location_type, 'value') else booking.location_type})",
+        booking_date=str(booking.booking_date),
+        time_slot=booking.booking_time_slot,
+        location_type=booking.location_type.value if hasattr(booking.location_type, "value") else str(booking.location_type),
+        address=booking.delivery_address,
     )
 
     return booking

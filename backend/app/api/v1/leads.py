@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.models.lead import Lead, LeadStatus
 from app.schemas.lead import LeadCreate, LeadResponse, LeadUpdate, SellCarValuationRequest, SellCarValuationResponse
 from app.services.valuation_engine import ValuationEngine
+from app.services.notification_service import NotificationService
 
 router = APIRouter()
 
@@ -42,6 +43,17 @@ async def create_lead(lead_in: LeadCreate, db: AsyncSession = Depends(get_db)):
     db.add(lead)
     await db.commit()
     await db.refresh(lead)
+
+    # Trigger admin alert on WhatsApp with customer phone number
+    await NotificationService.send_admin_schedule_contact_alert(
+        customer_name=lead.name,
+        customer_phone=lead.phone,
+        customer_email=lead.email,
+        car_title=str(lead.car_details or "General Vehicle Enquiry"),
+        city=lead.city,
+        request_type=lead.lead_type.value if hasattr(lead.lead_type, "value") else str(lead.lead_type),
+    )
+
     return lead
 
 

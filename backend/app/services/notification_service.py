@@ -363,3 +363,51 @@ class NotificationService:
             return_exceptions=True,
         )
         return [r for r in results if isinstance(r, NotificationRecord)]
+
+    @classmethod
+    async def send_admin_schedule_contact_alert(
+        cls,
+        customer_name: str,
+        customer_phone: str,
+        customer_email: Optional[str],
+        car_title: str,
+        city: str,
+        request_type: str = "Test Drive / Viewing Schedule",
+        booking_date: Optional[str] = None,
+        time_slot: Optional[str] = None,
+        location_type: Optional[str] = None,
+        address: Optional[str] = None,
+    ) -> List[NotificationRecord]:
+        """Notify admin operations team on WhatsApp & SMS with the customer's phone number prominently shown."""
+        admin_phone = settings.ADMIN_ALERT_PHONE
+        if not admin_phone:
+            return []
+
+        date_info = f"{booking_date} ({time_slot})" if booking_date and time_slot else (booking_date or "Flexible")
+        loc_info = f"{city} - {address}" if address else city
+
+        message = (
+            f"🔔 [Value Cars Lead Alert] A customer wants to connect!\n"
+            f"👤 Customer: {customer_name}\n"
+            f"📱 Phone: {customer_phone}\n"
+            f"✉️ Email: {customer_email or 'Not provided'}\n"
+            f"🚗 Vehicle: {car_title}\n"
+            f"📅 Slot: {date_info}\n"
+            f"📍 Location: {loc_info} ({location_type or 'Viewing'})\n"
+            f"👉 Action: Please call {customer_phone} to confirm the viewing."
+        )
+
+        meta = {
+            "customer_name": customer_name,
+            "customer_phone": customer_phone,
+            "car_title": car_title,
+            "request_type": request_type,
+        }
+
+        results = await asyncio.gather(
+            cls._send_sms(admin_phone, message, "ADMIN_CUSTOMER_SCHEDULE_ALERT", meta),
+            cls._send_whatsapp(admin_phone, message, "ADMIN_CUSTOMER_SCHEDULE_ALERT", meta),
+            return_exceptions=True,
+        )
+        return [r for r in results if isinstance(r, NotificationRecord)]
+
