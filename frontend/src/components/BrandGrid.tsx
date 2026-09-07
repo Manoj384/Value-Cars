@@ -11,64 +11,88 @@ interface BrandGridProps {
 interface BrandItem {
   name: string;
   displayName: string;
-  logo: string;
+  shortCode: string;
+  bgGradient: string;
+  textColor: string;
 }
 
 const BRANDS: BrandItem[] = [
   {
     name: 'Maruti',
     displayName: 'Maruti Suzuki',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/maruti-suzuki.svg',
+    shortCode: 'MS',
+    bgGradient: 'from-blue-600 to-indigo-700',
+    textColor: 'text-white',
   },
   {
     name: 'Hyundai',
     displayName: 'Hyundai',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/hyundai.svg',
+    shortCode: 'HY',
+    bgGradient: 'from-sky-700 to-blue-900',
+    textColor: 'text-white',
   },
   {
     name: 'Tata',
     displayName: 'Tata',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/tata.svg',
+    shortCode: 'TATA',
+    bgGradient: 'from-blue-800 to-slate-900',
+    textColor: 'text-white',
   },
   {
     name: 'Mahindra',
     displayName: 'Mahindra',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/mahindra.svg',
+    shortCode: 'M&M',
+    bgGradient: 'from-red-600 to-rose-800',
+    textColor: 'text-white',
   },
   {
     name: 'Toyota',
     displayName: 'Toyota',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/toyota.svg',
+    shortCode: 'TY',
+    bgGradient: 'from-red-700 to-red-900',
+    textColor: 'text-white',
   },
   {
     name: 'Kia',
     displayName: 'Kia',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/kia.svg',
+    shortCode: 'KIA',
+    bgGradient: 'from-black to-slate-800',
+    textColor: 'text-white',
   },
   {
     name: 'Honda',
     displayName: 'Honda',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/honda.svg',
+    shortCode: 'H',
+    bgGradient: 'from-slate-800 to-slate-950',
+    textColor: 'text-white',
   },
   {
     name: 'Skoda',
     displayName: 'Skoda',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/skoda.svg',
+    shortCode: 'SK',
+    bgGradient: 'from-emerald-700 to-teal-900',
+    textColor: 'text-white',
   },
   {
     name: 'Volkswagen',
     displayName: 'Volkswagen',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/volkswagen.svg',
+    shortCode: 'VW',
+    bgGradient: 'from-blue-900 to-slate-900',
+    textColor: 'text-white',
   },
   {
     name: 'Nissan',
     displayName: 'Nissan',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/nissan.svg',
+    shortCode: 'NIS',
+    bgGradient: 'from-red-800 to-zinc-900',
+    textColor: 'text-white',
   },
   {
     name: 'Renault',
     displayName: 'Renault',
-    logo: 'https://cdn.jsdelivr.net/gh/filippofilip95/car-logos-dataset@master/logos/optimized/renault.svg',
+    shortCode: 'RN',
+    bgGradient: 'from-amber-600 to-yellow-800',
+    textColor: 'text-white',
   },
 ];
 
@@ -103,19 +127,12 @@ export const BrandGrid: React.FC<BrandGridProps> = ({ selectedBrand, onSelectBra
                   : 'border-slate-100 bg-slate-50/50 hover:border-slate-300 hover:bg-white'
               }`}
             >
-              <div className="w-10 h-10 flex items-center justify-center mb-1.5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={b.logo}
-                  alt={b.displayName}
-                  className="max-h-8 max-w-8 object-contain"
-                  onError={(e) => {
-                    // Fallback to text initials if svg fails
-                    (e.target as HTMLElement).style.display = 'none';
-                  }}
-                />
+              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${b.bgGradient} flex items-center justify-center shadow-sm mb-1.5`}>
+                <span className={`text-[10px] font-black tracking-tight ${b.textColor}`}>
+                  {b.shortCode}
+                </span>
               </div>
-              <span className={`text-[11px] font-bold text-center truncate w-full ${isSelected ? 'text-rose-700' : 'text-slate-700'}`}>
+              <span className={`text-[11px] font-bold text-center truncate w-full ${isSelected ? 'text-rose-700 font-extrabold' : 'text-slate-700'}`}>
                 {b.displayName}
               </span>
             </button>
@@ -127,12 +144,12 @@ export const BrandGrid: React.FC<BrandGridProps> = ({ selectedBrand, onSelectBra
           onClick={() => onSelectBrand('')}
           className={`brand-card flex flex-col items-center justify-center p-3 rounded-xl border border-dashed transition-all cursor-pointer ${
             !selectedBrand
-              ? 'border-rose-300 bg-rose-50/50'
+              ? 'border-rose-400 bg-rose-50/70 shadow-sm'
               : 'border-slate-300 bg-slate-50 hover:bg-white'
           }`}
         >
-          <div className="w-10 h-10 flex items-center justify-center mb-1.5 text-slate-500">
-            <Layers className="w-6 h-6 text-rose-600" />
+          <div className="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center mb-1.5 text-rose-600">
+            <Layers className="w-5 h-5" />
           </div>
           <span className="text-[11px] font-bold text-slate-700 text-center truncate w-full">
             All Brands

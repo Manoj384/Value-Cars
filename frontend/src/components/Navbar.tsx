@@ -10,7 +10,7 @@ interface NavbarProps {
   selectedCity?: string;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, selectedCity = 'Bangalore' }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, selectedCity = '' }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -75,12 +75,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
               value={selectedCity}
               onChange={(e) => onCityChange && onCityChange(e.target.value)}
               aria-label="Filter cars by city"
-              className="bg-transparent border-none outline-none cursor-pointer text-sm"
+              className="bg-transparent border-none outline-none cursor-pointer text-sm font-bold text-slate-800"
             >
-              <option value="">All Cities</option>
+              <option value="">All Cities (India)</option>
               <option value="Bangalore">Bangalore</option>
               <option value="Mumbai">Mumbai</option>
               <option value="Delhi NCR">Delhi NCR</option>
+              <option value="Hyderabad">Hyderabad</option>
+              <option value="Chennai">Chennai</option>
+              <option value="Pune">Pune</option>
+              <option value="Kolkata">Kolkata</option>
+              <option value="Ahmedabad">Ahmedabad</option>
+              <option value="Jaipur">Jaipur</option>
+              <option value="Chandigarh">Chandigarh</option>
+              <option value="Kochi">Kochi</option>
             </select>
           </div>
         </div>

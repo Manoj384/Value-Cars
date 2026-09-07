@@ -19,7 +19,7 @@ export default function HomePage() {
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState<CarFilterOptions>({
-    city: 'Bangalore',
+    city: '',
     page: 1,
     page_size: 12,
   });
@@ -60,7 +60,7 @@ export default function HomePage() {
 
   const handleResetFilters = () => {
     setSelectedBrand('');
-    setFilters({ city: 'Bangalore', page: 1, page_size: 12 });
+    setFilters({ city: '', page: 1, page_size: 12 });
   };
 
   return (

@@ -284,7 +284,7 @@ export default function SellCarPage() {
             </div>
 
             {/* Seller Contact Info */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Seller Name *</label>
                 <input
@@ -306,6 +306,26 @@ export default function SellCarPage() {
                   placeholder="9876543210"
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
                 />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Car Location (City) *</label>
+                <select
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500 font-bold text-slate-800"
+                >
+                  <option>Bangalore</option>
+                  <option>Mumbai</option>
+                  <option>Delhi NCR</option>
+                  <option>Hyderabad</option>
+                  <option>Chennai</option>
+                  <option>Pune</option>
+                  <option>Kolkata</option>
+                  <option>Ahmedabad</option>
+                  <option>Jaipur</option>
+                  <option>Chandigarh</option>
+                  <option>Kochi</option>
+                </select>
               </div>
             </div>
 
