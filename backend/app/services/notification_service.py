@@ -347,9 +347,9 @@ class NotificationService:
         reg_number: str,
         price: float,
     ) -> List[NotificationRecord]:
-        """Notify admin operations team when an unapproved seller submits a car."""
-        admin_phone = settings.ADMIN_ALERT_PHONE
-        if not admin_phone:
+        """Notify all admin operations phones when an unapproved seller submits a car."""
+        admin_phones = getattr(settings, "ADMIN_ALERT_PHONES", [settings.ADMIN_ALERT_PHONE])
+        if not admin_phones:
             return []
             
         message = (
@@ -357,11 +357,13 @@ class NotificationService:
             f"listed by {seller_name} ({seller_email}) for ₹{price:,.0f}. Please review in Admin Dashboard."
         )
         meta = {"car_title": car_title, "seller_email": seller_email, "price": price}
-        results = await asyncio.gather(
-            cls._send_sms(admin_phone, message, "ADMIN_PENDING_CAR_ALERT", meta),
-            cls._send_whatsapp(admin_phone, message, "ADMIN_PENDING_CAR_ALERT", meta),
-            return_exceptions=True,
-        )
+        tasks = []
+        for phone in admin_phones:
+            if phone:
+                tasks.append(cls._send_sms(phone, message, "ADMIN_PENDING_CAR_ALERT", meta))
+                tasks.append(cls._send_whatsapp(phone, message, "ADMIN_PENDING_CAR_ALERT", meta))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         return [r for r in results if isinstance(r, NotificationRecord)]
 
     @classmethod
@@ -378,9 +380,9 @@ class NotificationService:
         location_type: Optional[str] = None,
         address: Optional[str] = None,
     ) -> List[NotificationRecord]:
-        """Notify admin operations team on WhatsApp & SMS with the customer's phone number prominently shown."""
-        admin_phone = settings.ADMIN_ALERT_PHONE
-        if not admin_phone:
+        """Notify all admin operations phones on WhatsApp & SMS with the customer's phone number prominently shown."""
+        admin_phones = getattr(settings, "ADMIN_ALERT_PHONES", [settings.ADMIN_ALERT_PHONE])
+        if not admin_phones:
             return []
 
         date_info = f"{booking_date} ({time_slot})" if booking_date and time_slot else (booking_date or "Flexible")
@@ -404,10 +406,12 @@ class NotificationService:
             "request_type": request_type,
         }
 
-        results = await asyncio.gather(
-            cls._send_sms(admin_phone, message, "ADMIN_CUSTOMER_SCHEDULE_ALERT", meta),
-            cls._send_whatsapp(admin_phone, message, "ADMIN_CUSTOMER_SCHEDULE_ALERT", meta),
-            return_exceptions=True,
-        )
+        tasks = []
+        for phone in admin_phones:
+            if phone:
+                tasks.append(cls._send_sms(phone, message, "ADMIN_CUSTOMER_SCHEDULE_ALERT", meta))
+                tasks.append(cls._send_whatsapp(phone, message, "ADMIN_CUSTOMER_SCHEDULE_ALERT", meta))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         return [r for r in results if isinstance(r, NotificationRecord)]
 

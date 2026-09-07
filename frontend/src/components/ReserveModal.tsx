@@ -67,14 +67,26 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
               Our team has been notified on WhatsApp with your phone number (<strong>{phone}</strong>). We will call you shortly to confirm your visit for the <strong>{car.year} {car.make} {car.model}</strong>.
             </p>
             <div className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600">
-              💬 Direct Admin Helpline: <strong>1800-200-VALUE</strong> (Available 9 AM - 8 PM)
+              💬 Direct Admin Helpline: <strong>8050966025 | 8310166040</strong> (Mallathahalli Hub)
             </div>
-            <button
-              onClick={onClose}
-              className="mt-6 px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-rose-600 transition"
-            >
-              Back to Catalog
-            </button>
+            <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
+              <a
+                href={`https://wa.me/918050966025?text=${encodeURIComponent(
+                  `Hello Value Cars! I requested a viewing/call for ${car.year} ${car.make} ${car.model} (${car.variant}).\nMy Name: ${name}\nPhone: ${phone}\nDate: ${preferredDate} (${timeSlot})\nNotes: ${notes || 'None'}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-2.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-md"
+              >
+                📲 Connect on WhatsApp (8050966025)
+              </a>
+              <button
+                onClick={onClose}
+                className="px-5 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-rose-600 transition"
+              >
+                Back to Catalog
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

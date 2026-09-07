@@ -182,7 +182,7 @@ async def my_seller_listings(
 @router.patch(
     "/cars/{car_id}",
     response_model=CarResponse,
-    summary="Edit one of the seller's listings (price/description/status)",
+    summary="Edit one of the seller's listings (or any listing for admin)",
 )
 async def update_seller_listing(
     car_id: uuid.UUID,
@@ -190,18 +190,20 @@ async def update_seller_listing(
     current_seller: User = Depends(get_current_seller),
     db: AsyncSession = Depends(get_db),
 ):
-    """Update a listing the seller owns (e.g. mark SOLD, adjust price/notes)."""
+    """Update a listing (seller owns it or caller is admin)."""
     email = current_seller.email.strip().lower()
-    result = await db.execute(
-        select(Car)
-        .where(Car.id == car_id, Car.seller_email == email)
-        .options(selectinload(Car.images), selectinload(Car.features))
-    )
+    stmt = select(Car).options(selectinload(Car.images), selectinload(Car.features))
+    if current_seller.role != UserRole.ADMIN:
+        stmt = stmt.where(Car.id == car_id, Car.seller_email == email)
+    else:
+        stmt = stmt.where(Car.id == car_id)
+
+    result = await db.execute(stmt)
     car = result.scalar_one_or_none()
     if not car:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Listing not found or not owned by this seller",
+            detail="Listing not found or not authorized to edit",
         )
     if payload.price is not None:
         car.price = payload.price
@@ -223,23 +225,27 @@ async def update_seller_listing(
 @router.delete(
     "/cars/{car_id}",
     status_code=status.HTTP_204_NO_CONTENT,
-    summary="Delete one of the seller's listings",
+    summary="Delete one of the seller's listings (or any listing for admin)",
 )
 async def delete_seller_listing(
     car_id: uuid.UUID,
     current_seller: User = Depends(get_current_seller),
     db: AsyncSession = Depends(get_db),
 ):
-    """Remove a listing the seller owns."""
+    """Remove a listing (seller owns it or caller is admin)."""
     email = current_seller.email.strip().lower()
-    result = await db.execute(
-        select(Car).where(Car.id == car_id, Car.seller_email == email)
-    )
+    stmt = select(Car)
+    if current_seller.role != UserRole.ADMIN:
+        stmt = stmt.where(Car.id == car_id, Car.seller_email == email)
+    else:
+        stmt = stmt.where(Car.id == car_id)
+
+    result = await db.execute(stmt)
     car = result.scalar_one_or_none()
     if not car:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Listing not found or not owned by this seller",
+            detail="Listing not found or not authorized to delete",
         )
     await db.delete(car)
     await db.commit()

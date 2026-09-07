@@ -68,12 +68,24 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
             <p className="text-sm text-slate-600 mt-2">
               Our representative will bring the <strong>{car.year} {car.make} {car.model}</strong> to your location on <strong>{bookingDate} ({timeSlot})</strong>.
             </p>
-            <button
-              onClick={onClose}
-              className="mt-6 px-6 py-2.5 bg-slate-900 text-white font-bold rounded-xl hover:bg-rose-600 transition"
-            >
-              Back to Catalog
-            </button>
+            <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
+              <a
+                href={`https://wa.me/918050966025?text=${encodeURIComponent(
+                  `Hello Value Cars! I have booked a Test Drive for ${car.year} ${car.make} ${car.model} (${car.variant}).\nMy Name: ${name}\nPhone: ${phone}\nDate: ${bookingDate} (${timeSlot})\nLocation: ${locationType === 'HOME_DELIVERY' ? address : 'Hub'}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-2.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition flex items-center justify-center gap-2 shadow-md"
+              >
+                📲 Chat on WhatsApp (8050966025)
+              </a>
+              <button
+                onClick={onClose}
+                className="px-5 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-rose-600 transition"
+              >
+                Back to Catalog
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">

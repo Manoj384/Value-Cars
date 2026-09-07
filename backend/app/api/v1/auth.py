@@ -64,7 +64,9 @@ async def get_current_admin(current_user: User = Depends(get_current_user)) -> U
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
-    """Register a new customer account."""
+    """Register a new customer or admin account based on phone whitelist."""
+    from app.core.config import settings
+
     query = select(User).where(User.phone_number == user_in.phone_number)
     existing = await db.execute(query)
     if existing.scalar_one_or_none():
@@ -73,14 +75,22 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
             detail="A user with this phone number already exists",
         )
 
+    clean_phone = user_in.phone_number.replace("+91", "").replace("+", "").strip()
+    is_admin_phone = any(
+        clean_phone in p.replace("+91", "").replace("+", "").strip()
+        for p in settings.ADMIN_AUTHORIZED_PHONES
+    )
+    assigned_role = UserRole.ADMIN if is_admin_phone else user_in.role
+
     user = User(
         full_name=user_in.full_name,
         phone_number=user_in.phone_number,
         email=user_in.email,
         hashed_password=get_password_hash(user_in.password) if user_in.password else None,
-        role=user_in.role,
+        role=assigned_role,
         city=user_in.city,
         is_verified=True,
+        is_approved_seller=is_admin_phone or (user_in.role == UserRole.ADMIN),
     )
     db.add(user)
     await db.commit()
@@ -123,12 +133,20 @@ async def send_otp(request: OTPRequest):
 
 @router.post("/verify-otp", response_model=Token)
 async def verify_otp(request: OTPVerify, db: AsyncSession = Depends(get_db)):
-    """Verifies OTP and returns user access token. Auto-registers user if not existing."""
+    """Verifies OTP and returns user access token. Auto-registers user with appropriate admin/customer role."""
+    from app.core.config import settings
+
     if request.otp not in ["1234", "9999"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid OTP. Use 1234 in development mode.",
         )
+
+    clean_phone = request.phone_number.replace("+91", "").replace("+", "").strip()
+    is_admin_phone = any(
+        clean_phone in p.replace("+91", "").replace("+", "").strip()
+        for p in settings.ADMIN_AUTHORIZED_PHONES
+    )
 
     query = select(User).where(User.phone_number == request.phone_number)
     result = await db.execute(query)
@@ -136,13 +154,19 @@ async def verify_otp(request: OTPVerify, db: AsyncSession = Depends(get_db)):
 
     if not user:
         user = User(
-            full_name=request.full_name or "Valued Customer",
+            full_name=request.full_name or ("Value Cars Admin" if is_admin_phone else "Valued Customer"),
             phone_number=request.phone_number,
-            role=UserRole.CUSTOMER,
+            role=UserRole.ADMIN if is_admin_phone else UserRole.CUSTOMER,
             is_active=True,
             is_verified=True,
+            is_approved_seller=is_admin_phone,
         )
         db.add(user)
+        await db.commit()
+        await db.refresh(user)
+    elif is_admin_phone and user.role != UserRole.ADMIN:
+        user.role = UserRole.ADMIN
+        user.is_approved_seller = True
         await db.commit()
         await db.refresh(user)
 

@@ -64,6 +64,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
             >
               <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
             </a>
+            <a
+              href="https://maps.google.com/?q=Near+Bangalore+university,+Kengunte,+Mallathahalli,+Bengaluru,+Karnataka+560056"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 font-semibold ml-2"
+              title="Near Bangalore university, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056"
+            >
+              <MapPin className="w-3.5 h-3.5 text-sky-400" /> Mallathahalli (Location)
+            </a>
           </div>
           <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold flex items-center border-l border-slate-700 pl-3">
             <LayoutDashboard className="w-3 h-3 mr-1" /> Admin Hub

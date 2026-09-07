@@ -205,45 +205,55 @@ SAMPLE_CARS = [
 
 
 async def seed_database(db: AsyncSession) -> None:
-    """Seeds default admin user, approved emails, and initial sample car inventory."""
-    # 1. Seed Admin User
-    admin_query = select(User).where(User.email == "admin@valuecars.com")
-    admin_res = await db.execute(admin_query)
-    admin = admin_res.scalar_one_or_none()
-    if not admin:
-        admin = User(
-            full_name="Value Cars Superadmin",
-            phone_number="9876543210",
-            email="admin@valuecars.com",
-            hashed_password=get_password_hash("Admin@ValueCars2026"),
-            role=UserRole.ADMIN,
-            is_active=True,
-            is_verified=True,
-            is_approved_seller=True,
-            city="Bangalore",
-        )
-        db.add(admin)
+    """Seeds default admin users, approved emails, and initial sample car inventory."""
+    # 1. Seed Admin Users
+    admin_accounts = [
+        ("Value Cars Superadmin", "8050966025", "admin@valuecars.com", "Admin@ValueCars2026"),
+        ("Value Cars Admin 2", "8310166040", "admin2@valuecars.com", "Admin@ValueCars2026"),
+        ("Value Cars Operations Admin", "6362923891", "admin.private@valuecars.com", "Admin@ValueCars2026"),
+    ]
 
-    # 2. Seed Pre-approved Seller Email
-    apprv_query = select(ApprovedSellerEmail).where(ApprovedSellerEmail.email == "verified.seller@valuecars.com")
-    apprv_res = await db.execute(apprv_query)
-    if not apprv_res.scalar_one_or_none():
-        db.add(
-            ApprovedSellerEmail(
-                email="verified.seller@valuecars.com",
-                approved_by="Superadmin",
-                notes="Authorized Premium Partner Dealer",
+    for name, phone, email, pwd in admin_accounts:
+        existing_admin = await db.execute(select(User).where((User.email == email) | (User.phone_number == phone)))
+        admin = existing_admin.scalar_one_or_none()
+        if not admin:
+            admin = User(
+                full_name=name,
+                phone_number=phone,
+                email=email,
+                hashed_password=get_password_hash(pwd),
+                role=UserRole.ADMIN,
                 is_active=True,
+                is_verified=True,
+                is_approved_seller=True,
+                city="Bangalore",
             )
-        )
-        db.add(
-            ApprovedSellerEmail(
-                email="admin@valuecars.com",
-                approved_by="Superadmin",
-                notes="Primary Platform Admin",
-                is_active=True,
+            db.add(admin)
+        else:
+            admin.role = UserRole.ADMIN
+            admin.is_approved_seller = True
+            admin.is_verified = True
+
+    # 2. Seed Pre-approved Seller Emails
+    approved_emails = [
+        ("admin@valuecars.com", "Primary Platform Admin"),
+        ("admin2@valuecars.com", "Secondary Platform Admin"),
+        ("admin.private@valuecars.com", "Operations Admin"),
+        ("verified.seller@valuecars.com", "Authorized Premium Partner Dealer"),
+    ]
+
+    for email, notes in approved_emails:
+        apprv_query = select(ApprovedSellerEmail).where(ApprovedSellerEmail.email == email)
+        apprv_res = await db.execute(apprv_query)
+        if not apprv_res.scalar_one_or_none():
+            db.add(
+                ApprovedSellerEmail(
+                    email=email,
+                    approved_by="Superadmin",
+                    notes=notes,
+                    is_active=True,
+                )
             )
-        )
 
     # 3. Seed Inspector User
     insp_query = select(User).where(User.email == "inspector@valuecars.com")

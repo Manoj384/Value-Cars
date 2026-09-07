@@ -59,6 +59,20 @@ class Settings(BaseSettings):
     META_WHATSAPP_PHONE_NUMBER_ID: str = ""
     ADMIN_ALERT_PHONE: str = "+918050966025"
     ADMIN_SECONDARY_PHONE: str = "+918310166040"
+    ADMIN_PRIVATE_PHONE: str = "+916362923891"
+    ADMIN_ALERT_PHONES: List[str] = [
+        "+918050966025",
+        "+916362923891",
+        "+918310166040",
+    ]
+    ADMIN_AUTHORIZED_PHONES: List[str] = [
+        "8050966025",
+        "8310166040",
+        "6362923891",
+        "+918050966025",
+        "+918310166040",
+        "+916362923891",
+    ]
     OFFICIAL_ADDRESS: str = "Near Bangalore university, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056"
     MAPS_URL: str = "https://maps.google.com/?q=Near+Bangalore+university,+Kengunte,+Mallathahalli,+Bengaluru,+Karnataka+560056"
 

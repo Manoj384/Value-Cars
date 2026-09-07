@@ -348,3 +348,52 @@ async def get_car_details(car_id: uuid.UUID, db: AsyncSession = Depends(get_db))
             detail=f"Vehicle with ID '{car_id}' not found",
         )
     return CarResponse.model_validate(car)
+
+
+@router.delete("/admin/{car_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Admin: Delete Any Car")
+async def admin_delete_car(
+    car_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
+    """Admin removes any car listing permanently from catalog."""
+    car = await CarService.get_car_by_id(db, car_id)
+    if not car:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Vehicle with ID '{car_id}' not found",
+        )
+    await db.delete(car)
+    await db.commit()
+    return None
+
+
+@router.patch("/admin/{car_id}", response_model=CarResponse, summary="Admin: Update Any Car")
+async def admin_update_car(
+    car_id: uuid.UUID,
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
+    """Admin updates vehicle price, status, or details."""
+    car = await CarService.get_car_by_id(db, car_id)
+    if not car:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Vehicle with ID '{car_id}' not found",
+        )
+    if "price" in payload and payload["price"] is not None:
+        car.price = float(payload["price"])
+    if "description" in payload and payload["description"] is not None:
+        car.description = str(payload["description"])
+    if "status" in payload and payload["status"] is not None:
+        try:
+            car.status = CarStatus(payload["status"])
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid status '{payload['status']}'",
+            )
+    await db.commit()
+    await db.refresh(car)
+    return CarResponse.model_validate(car)

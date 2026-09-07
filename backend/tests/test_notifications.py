@@ -89,7 +89,7 @@ async def test_direct_seller_alerts():
         reg_number="KA-05-MM-1234",
         price=1450000.0,
     )
-    assert len(admin_records) == 2
+    assert len(admin_records) == len(settings.ADMIN_ALERT_PHONES) * 2
     assert "Admin Alert" in admin_records[0].message
 
 
