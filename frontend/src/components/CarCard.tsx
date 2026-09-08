@@ -28,6 +28,10 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserv
         <img
           src={coverImage}
           alt={car.title}
+          width={800}
+          height={416}
+          loading="lazy"
+          fetchPriority="low"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
 

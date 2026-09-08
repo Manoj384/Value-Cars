@@ -11,6 +11,8 @@ const nextConfig = {
     unoptimized: true,
   },
   trailingSlash: true,
+  poweredByHeader: false,
+  generateEtags: true,
 };
 
 export default nextConfig;

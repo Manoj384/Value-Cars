@@ -7,6 +7,8 @@ import { Footer } from '../../components/Footer';
 import { ConnectionStatus } from '../../components/ConnectionStatus';
 import { apiClient, AdminMetrics, isAdminAuthed } from '../../services/api';
 import { Car } from '../../types/car';
+import { track } from '../../lib/activity';
+import { reportError } from '../../lib/errorReporting';
 import { LayoutDashboard, CheckCircle2, ShieldAlert, Plus, Loader2, Sparkles, UserCheck, Lock, LogOut } from 'lucide-react';
 
 export default function AdminPage() {
@@ -33,7 +35,7 @@ export default function AdminPage() {
       setPendingCars(cars);
       setApprovedEmails(emails);
     } catch (err) {
-      console.error(err);
+      reportError(err, { action: 'loadAdminData' });
     } finally {
       setLoading(false);
     }
@@ -41,6 +43,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (authed) loadData();
+    track('admin', 'view');
   }, [authed]);
 
   const handleApproveCar = async (carId: string) => {

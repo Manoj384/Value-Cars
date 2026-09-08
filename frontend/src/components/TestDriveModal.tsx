@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { X, Calendar, Clock, MapPin, CheckCircle, AlertCircle } from 'lucide-react';
 import { Car } from '../types/car';
 import { apiClient } from '../services/api';
+import { track } from '../lib/activity';
+import { reportError } from '../lib/errorReporting';
 
 interface TestDriveModalProps {
   car: Car | null;
@@ -54,10 +56,12 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
         time_slot: timeSlot,
       });
       setSuccess(true);
+      track('test_drive', 'request', { carId: car.id, locationType });
       if (typeof window !== 'undefined') {
         window.open(waUrl, '_blank');
       }
     } catch (err: unknown) {
+      reportError(err, { action: 'bookTestDrive', carId: car.id });
       setError(err instanceof Error ? err.message : 'Failed to book test drive');
     } finally {
       setLoading(false);

@@ -6,6 +6,9 @@ import { TestDriveModal } from './TestDriveModal';
 import { ReserveModal } from './ReserveModal';
 import { apiClient } from '../services/api';
 import { Car, InspectionReport } from '../types/car';
+import { track } from '../lib/activity';
+import { reportError } from '../lib/errorReporting';
+import { addRecentCar } from '../lib/uiState';
 import { ShieldCheck, ArrowLeft, Award, Loader2, X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
 
 interface CarDetailProps {
@@ -45,19 +48,32 @@ export default function CarDetail({ carId }: CarDetailProps) {
         ]);
         setCar(carData);
         setInspection(inspData);
+        // Persist a compact snapshot so the home page can show "Recently Viewed".
+        addRecentCar({
+          id: carData.id,
+          year: carData.year,
+          make: carData.make,
+          model: carData.model,
+          title: carData.title,
+          price: carData.price,
+          image:
+            (carData.images?.find((img) => img.is_cover) || carData.images?.[0])?.image_url || '',
+        });
         if (carData.images && carData.images.length > 0) {
           const sorted = [...carData.images].sort((a, b) => a.display_order - b.display_order);
           const cover = sorted.findIndex((img) => img.is_cover);
           setActiveIdx(cover >= 0 ? cover : 0);
         }
       } catch (err) {
-        console.error(err);
+        reportError(err, { action: 'loadCarDetail', carId });
       } finally {
         setLoading(false);
       }
     };
 
     fetchDetails();
+    // Activity: record a car detail view.
+    track('car', 'view', { carId });
   }, [carId]);
 
   // Keyboard navigation for the fullscreen lightbox
@@ -107,7 +123,12 @@ export default function CarDetail({ carId }: CarDetailProps) {
             <div className="relative h-96 sm:h-[420px] rounded-2xl overflow-hidden bg-slate-100 group">
               <button
                 type="button"
-                onClick={() => active && setLightboxOpen(true)}
+                onClick={() => {
+                  if (active) {
+                    setLightboxOpen(true);
+                    track('car', 'gallery_open', { carId });
+                  }
+                }}
                 className="block w-full h-full cursor-zoom-in"
                 aria-label="Open fullscreen image viewer"
               >
@@ -115,6 +136,9 @@ export default function CarDetail({ carId }: CarDetailProps) {
                 <img
                   src={active?.image_url || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80'}
                   alt={car.title}
+                  width={1200}
+                  height={800}
+                  fetchPriority="high"
                   className="w-full h-full object-cover"
                 />
               </button>
@@ -123,7 +147,10 @@ export default function CarDetail({ carId }: CarDetailProps) {
               {images.length > 0 && (
                 <button
                   type="button"
-                  onClick={() => setLightboxOpen(true)}
+                  onClick={() => {
+                    setLightboxOpen(true);
+                    track('car', 'gallery_open', { carId });
+                  }}
                   className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-black/60 hover:bg-black/75 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur transition"
                   aria-label="Open fullscreen image viewer"
                 >

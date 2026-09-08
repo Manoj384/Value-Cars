@@ -1,4 +1,5 @@
 import { Car, InspectionReport } from '../types/car';
+import { cacheGet, cacheGetStale, cacheSet, cacheKeyHash } from '../lib/cache';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
@@ -24,6 +25,44 @@ export async function probeBackend(): Promise<boolean> {
 // Run a lightweight, one-word response to run when a real call succeeds/fails.
 function recordSuccess(ok: boolean) {
   if (ok) backendReachable = true;
+}
+
+function recordFailure() {
+  backendReachable = false;
+}
+
+// TTLs used by the catalog cache (ms). Lists refresh often; details/inspection less so.
+const TTL_CAR_LIST = 60_000; // 1 min
+const TTL_CAR_DETAIL = 300_000; // 5 min
+const TTL_INSPECTION = 600_000; // 10 min
+
+/**
+ * Lightweight GET with a single retry + short backoff for flaky networks.
+ * Returns the Response, or null if the request ultimately failed to send.
+ */
+async function fetchGet(url: string, retries = 1): Promise<Response | null> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      return res;
+    } catch {
+      if (attempt < retries) {
+        await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+      }
+    }
+  }
+  recordFailure();
+  return null;
+}
+
+/** Parse a successful fetch into JSON, or return null on parse/network trouble. */
+async function readJson<T>(res: Response | null): Promise<T | null> {
+  if (!res || !res.ok) return null;
+  try {
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
 }
 
 export interface CarFilterOptions {
@@ -478,62 +517,114 @@ export function isAdminAuthed(): boolean {
   return !!getAdminToken();
 }
 
+/**
+ * In-memory catalog filter used as a GitHub Pages demo fallback when the
+ * backend is unreachable and there is no cached/stale data.
+ */
+function mockGetCars(params: CarFilterOptions = {}): PaginatedCars {
+  let filtered = [...MOCK_CARS];
+  if (params.make) {
+    filtered = filtered.filter((c) => c.make.toLowerCase().includes(params.make!.toLowerCase()));
+  }
+  if (params.model) {
+    filtered = filtered.filter(
+      (c) =>
+        c.model.toLowerCase().includes(params.model!.toLowerCase()) ||
+        c.make.toLowerCase().includes(params.model!.toLowerCase())
+    );
+  }
+  if (params.fuel_type) {
+    filtered = filtered.filter((c) => c.fuel_type === params.fuel_type);
+  }
+  if (params.transmission) {
+    filtered = filtered.filter((c) => c.transmission === params.transmission);
+  }
+  if (params.body_type) {
+    filtered = filtered.filter((c) => c.body_type === params.body_type);
+  }
+  if (params.max_price) {
+    filtered = filtered.filter((c) => c.price <= params.max_price!);
+  }
+  if (params.min_score) {
+    filtered = filtered.filter((c) => c.inspection_score >= params.min_score!);
+  }
+
+  return {
+    items: filtered,
+    total: filtered.length,
+    page: 1,
+    page_size: 12,
+    pages: 1,
+  };
+}
+
 export const apiClient = {
   // Cars & Catalog
   async getCars(params: CarFilterOptions = {}): Promise<PaginatedCars> {
-    try {
-      const query = new URLSearchParams();
-      Object.entries(params).forEach(([key, val]) => {
-        if (val !== undefined && val !== null && val !== '') {
-          query.append(key, String(val));
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, val]) => {
+      if (val !== undefined && val !== null && val !== '') {
+        query.append(key, String(val));
+      }
+    });
+
+    const key = cacheKeyHash('cars', query.toString());
+    const url = `${API_BASE_URL}/cars?${query.toString()}`;
+
+    // 1) Fresh cache hit → return instantly, no network.
+    const cached = cacheGet<PaginatedCars>(key);
+    if (cached) return cached.value;
+
+    // 2) Stale cache → serve it immediately while refreshing in the background
+    //    (stale-while-revalidate), so the UI is never blank on a slow network.
+    const stale = cacheGetStale<PaginatedCars>(key);
+    if (stale) {
+      void (async () => {
+        const data = await readJson<PaginatedCars>(await fetchGet(url));
+        if (data) {
+          recordSuccess(true);
+          cacheSet(key, data, TTL_CAR_LIST);
         }
-      });
-      const res = await fetch(`${API_BASE_URL}/cars?${query.toString()}`, { cache: 'no-store' });
-      recordSuccess(res.ok);
-      if (res.ok) return res.json();
-    } catch {
-      // Fallback for GitHub Pages static hosting
+      })();
+      return stale;
     }
 
-    // Filter in-memory for GitHub Pages demo
-    let filtered = [...MOCK_CARS];
-    if (params.make) {
-      filtered = filtered.filter((c) => c.make.toLowerCase().includes(params.make!.toLowerCase()));
-    }
-    if (params.model) {
-      filtered = filtered.filter((c) => c.model.toLowerCase().includes(params.model!.toLowerCase()) || c.make.toLowerCase().includes(params.model!.toLowerCase()));
-    }
-    if (params.fuel_type) {
-      filtered = filtered.filter((c) => c.fuel_type === params.fuel_type);
-    }
-    if (params.transmission) {
-      filtered = filtered.filter((c) => c.transmission === params.transmission);
-    }
-    if (params.body_type) {
-      filtered = filtered.filter((c) => c.body_type === params.body_type);
-    }
-    if (params.max_price) {
-      filtered = filtered.filter((c) => c.price <= params.max_price!);
-    }
-    if (params.min_score) {
-      filtered = filtered.filter((c) => c.inspection_score >= params.min_score!);
+    // 3) No cache at all → network now.
+    const data = await readJson<PaginatedCars>(await fetchGet(url));
+    if (data) {
+      recordSuccess(true);
+      cacheSet(key, data, TTL_CAR_LIST);
+      return data;
     }
 
-    return {
-      items: filtered,
-      total: filtered.length,
-      page: 1,
-      page_size: 12,
-      pages: 1,
-    };
+    // 4) Network miss (backend down / offline) → demo data for GitHub Pages.
+    return mockGetCars(params);
   },
 
   async getCarById(id: string): Promise<Car> {
-    try {
-      const res = await fetch(`${API_BASE_URL}/cars/${id}`, { cache: 'no-store' });
-      if (res.ok) return res.json();
-    } catch {
-      // Fallback
+    const key = cacheKeyHash('car', id);
+    const url = `${API_BASE_URL}/cars/${id}`;
+
+    const cached = cacheGet<Car>(key);
+    if (cached) return cached.value;
+
+    const stale = cacheGetStale<Car>(key);
+    if (stale) {
+      void (async () => {
+        const data = await readJson<Car>(await fetchGet(url));
+        if (data) {
+          recordSuccess(true);
+          cacheSet(key, data, TTL_CAR_DETAIL);
+        }
+      })();
+      return stale;
+    }
+
+    const data = await readJson<Car>(await fetchGet(url));
+    if (data) {
+      recordSuccess(true);
+      cacheSet(key, data, TTL_CAR_DETAIL);
+      return data;
     }
 
     const found = MOCK_CARS.find((c) => c.id === id) || MOCK_CARS[0];
@@ -541,11 +632,29 @@ export const apiClient = {
   },
 
   async getCarInspection(carId: string): Promise<InspectionReport> {
-    try {
-      const res = await fetch(`${API_BASE_URL}/inspections/car/${carId}`, { cache: 'no-store' });
-      if (res.ok) return res.json();
-    } catch {
-      // Fallback
+    const key = cacheKeyHash('inspection', carId);
+    const url = `${API_BASE_URL}/inspections/car/${carId}`;
+
+    const cached = cacheGet<InspectionReport>(key);
+    if (cached) return cached.value;
+
+    const stale = cacheGetStale<InspectionReport>(key);
+    if (stale) {
+      void (async () => {
+        const data = await readJson<InspectionReport>(await fetchGet(url));
+        if (data) {
+          recordSuccess(true);
+          cacheSet(key, data, TTL_INSPECTION);
+        }
+      })();
+      return stale;
+    }
+
+    const data = await readJson<InspectionReport>(await fetchGet(url));
+    if (data) {
+      recordSuccess(true);
+      cacheSet(key, data, TTL_INSPECTION);
+      return data;
     }
 
     return {

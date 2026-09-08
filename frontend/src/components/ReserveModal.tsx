@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { X, Calendar, Phone, CheckCircle, AlertCircle, MessageSquare, Clock } from 'lucide-react';
 import { Car } from '../types/car';
 import { apiClient } from '../services/api';
+import { track } from '../lib/activity';
+import { reportError } from '../lib/errorReporting';
 
 interface ReserveModalProps {
   car: Car | null;
@@ -54,11 +56,13 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
         time_slot: timeSlot,
       });
       setSuccess(true);
+      track('reserve', 'request', { carId: car.id });
       // Auto-open WhatsApp chat with pre-filled lead details
       if (typeof window !== 'undefined') {
         window.open(waUrl, '_blank');
       }
     } catch (err: unknown) {
+      reportError(err, { action: 'bookViewing', carId: car.id });
       setError(err instanceof Error ? err.message : 'Failed to schedule viewing');
     } finally {
       setLoading(false);

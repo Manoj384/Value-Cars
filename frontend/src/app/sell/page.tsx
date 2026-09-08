@@ -6,6 +6,8 @@ import { Navbar } from '../../components/Navbar';
 import { Footer } from '../../components/Footer';
 import { ConnectionStatus } from '../../components/ConnectionStatus';
 import { apiClient } from '../../services/api';
+import { track } from '../../lib/activity';
+import { reportError } from '../../lib/errorReporting';
 import { CheckCircle2, AlertCircle, Calculator, Sparkles, UploadCloud, ImagePlus, Trash2, Loader2, Star } from 'lucide-react';
 
 interface PendingImage {
@@ -69,6 +71,11 @@ export default function SellCarPage() {
     return () => clearTimeout(timer);
   }, [email]);
 
+  // Activity: record each sell-page visit once per page load.
+  useEffect(() => {
+    track('sell', 'view');
+  }, []);
+
   const handleCalculateValuation = async () => {
     try {
       const res = await apiClient.calculateValuation({
@@ -83,8 +90,9 @@ export default function SellCarPage() {
       });
       setValuation({ min: res.estimated_min_price, max: res.estimated_max_price });
       setPrice(res.recommended_procurement_price);
-    } catch {
-      // Fallback
+      track('sell', 'get_valuation', { make, model, year });
+    } catch (err) {
+      reportError(err, { action: 'calculateValuation' });
     }
   };
 
@@ -118,7 +126,9 @@ export default function SellCarPage() {
           .map((img) => img.url as string),
       });
       setSubmittedStatus(res.status);
+      track('sell', 'submit', { status: res.status, make, model, year });
     } catch (err: unknown) {
+      reportError(err, { action: 'submitSellerCar' });
       setError(err instanceof Error ? err.message : 'Submission failed');
     } finally {
       setSubmitting(false);
@@ -196,6 +206,7 @@ export default function SellCarPage() {
         }),
       );
     } catch (err) {
+      reportError(err, { action: 'uploadImages' });
       setUploadError(err instanceof Error ? err.message : 'Image upload failed');
     } finally {
       setUploadingImages(false);

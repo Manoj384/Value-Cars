@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { ConnectionStatus } from '../components/ConnectionStatus';
@@ -9,20 +10,27 @@ import { FilterSidebar } from '../components/FilterSidebar';
 import { CarCard } from '../components/CarCard';
 import { TestDriveModal } from '../components/TestDriveModal';
 import { ReserveModal } from '../components/ReserveModal';
+import { MobileFilterDrawer } from '../components/MobileFilterDrawer';
 import { apiClient, CarFilterOptions } from '../services/api';
 import { Car } from '../types/car';
-import { ShieldCheck, Sparkles, Loader2 } from 'lucide-react';
+import { track } from '../lib/activity';
+import { reportError } from '../lib/errorReporting';
+import { loadFilters, saveFilters, getRecentCars, RecentCar } from '../lib/uiState';
+import { ShieldCheck, Sparkles, Loader2, SlidersHorizontal } from 'lucide-react';
 
 export default function HomePage() {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const [filters, setFilters] = useState<CarFilterOptions>({
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<CarFilterOptions>(() => ({
     city: '',
     page: 1,
     page_size: 12,
-  });
+    ...loadFilters(),
+  }));
+  const [recentCars, setRecentCars] = useState<RecentCar[]>(() => getRecentCars());
 
   const [selectedBrand, setSelectedBrand] = useState('');
   const [testDriveCar, setTestDriveCar] = useState<Car | null>(null);
@@ -39,7 +47,7 @@ export default function HomePage() {
       setTotalCount(data.total);
       setTotalPages(data.pages || 1);
     } catch (err) {
-      console.error('Error fetching cars:', err);
+      reportError(err, { action: 'fetchCars' });
     } finally {
       setLoading(false);
     }
@@ -49,16 +57,29 @@ export default function HomePage() {
     fetchCars();
   }, [fetchCars]);
 
+  // Activity: record each marketplace visit once per page load.
+  useEffect(() => {
+    track('home', 'view');
+  }, []);
+
+  // Persist the active marketplace filters across sessions.
+  useEffect(() => {
+    saveFilters(filters);
+  }, [filters]);
+
   const handleFilterChange = (newFilters: Partial<CarFilterOptions>) => {
+    track('home', 'filter_change', newFilters);
     setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
   };
 
   const handleBrandSelect = (brand: string) => {
+    track('home', 'brand_select', { brand: brand || 'all' });
     setSelectedBrand(brand);
     setFilters((prev) => ({ ...prev, make: brand || undefined, page: 1 }));
   };
 
   const handleResetFilters = () => {
+    track('home', 'reset_filters');
     setSelectedBrand('');
     setFilters({ city: '', page: 1, page_size: 12 });
   };
@@ -92,6 +113,14 @@ export default function HomePage() {
             <span>Showing <strong className="text-rose-600">{totalCount}</strong> Verified Cars</span>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMobileFiltersOpen(true)}
+              className="lg:hidden flex items-center gap-1.5 bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:border-rose-500 transition"
+              aria-label="Open filter drawer"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-rose-600" />
+              <span>Filters</span>
+            </button>
             <select
               value={filters.sort_by || 'created_at'}
               onChange={(e) => setFilters((prev) => ({ ...prev, sort_by: e.target.value, page: 1 }))}
@@ -111,6 +140,44 @@ export default function HomePage() {
         {/* 12-Brand Visual Selector */}
         <BrandGrid selectedBrand={selectedBrand} onSelectBrand={handleBrandSelect} />
 
+{/* Recently Viewed (persisted client-side) */}
+        {recentCars.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">
+              Recently Viewed
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
+              {recentCars.slice(0, 6).map((rc) => (
+                <Link
+                  href={`/cars?id=${rc.id}`}
+                  key={rc.id}
+                  onClick={() => track('home', 'recent_click', { carId: rc.id })}
+                  className="group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition"
+                >
+                  <div className="relative h-24 bg-slate-100 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={rc.image}
+                      alt={rc.title}
+                      width={320}
+                      height={160}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                  <div className="p-2">
+                    <p className="text-xs font-bold text-slate-700 line-clamp-1">
+                      {rc.year} {rc.make} {rc.model}
+                    </p>
+                    <p className="text-[11px] font-black text-rose-600">
+                      ₹{(rc.price / 100000).toFixed(2)} Lakh
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
         {/* Main Grid: Sidebar + Cars */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filter Sidebar */}
@@ -184,9 +251,16 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Modals */}
+      {/* Modals & Drawers */}
       <TestDriveModal car={testDriveCar} onClose={() => setTestDriveCar(null)} />
       <ReserveModal car={reserveCar} onClose={() => setReserveCar(null)} />
+      <MobileFilterDrawer
+        open={mobileFiltersOpen}
+        onClose={() => setMobileFiltersOpen(false)}
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
+      />
 
       <Footer />
       <ConnectionStatus />

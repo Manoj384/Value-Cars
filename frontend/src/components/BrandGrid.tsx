@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Layers } from 'lucide-react';
+import { BrandLogo } from './BrandLogo';
 
 interface BrandGridProps {
   selectedBrand: string;
@@ -11,89 +12,22 @@ interface BrandGridProps {
 interface BrandItem {
   name: string;
   displayName: string;
-  shortCode: string;
-  bgGradient: string;
-  textColor: string;
+  // optional accent colour for the tile background behind the logo
+  tileBg: string;
 }
 
 const BRANDS: BrandItem[] = [
-  {
-    name: 'Maruti',
-    displayName: 'Maruti Suzuki',
-    shortCode: 'MS',
-    bgGradient: 'from-blue-600 to-indigo-700',
-    textColor: 'text-white',
-  },
-  {
-    name: 'Hyundai',
-    displayName: 'Hyundai',
-    shortCode: 'HY',
-    bgGradient: 'from-sky-700 to-blue-900',
-    textColor: 'text-white',
-  },
-  {
-    name: 'Tata',
-    displayName: 'Tata',
-    shortCode: 'TATA',
-    bgGradient: 'from-blue-800 to-slate-900',
-    textColor: 'text-white',
-  },
-  {
-    name: 'Mahindra',
-    displayName: 'Mahindra',
-    shortCode: 'M&M',
-    bgGradient: 'from-red-600 to-rose-800',
-    textColor: 'text-white',
-  },
-  {
-    name: 'Toyota',
-    displayName: 'Toyota',
-    shortCode: 'TY',
-    bgGradient: 'from-red-700 to-red-900',
-    textColor: 'text-white',
-  },
-  {
-    name: 'Kia',
-    displayName: 'Kia',
-    shortCode: 'KIA',
-    bgGradient: 'from-black to-slate-800',
-    textColor: 'text-white',
-  },
-  {
-    name: 'Honda',
-    displayName: 'Honda',
-    shortCode: 'H',
-    bgGradient: 'from-slate-800 to-slate-950',
-    textColor: 'text-white',
-  },
-  {
-    name: 'Skoda',
-    displayName: 'Skoda',
-    shortCode: 'SK',
-    bgGradient: 'from-emerald-700 to-teal-900',
-    textColor: 'text-white',
-  },
-  {
-    name: 'Volkswagen',
-    displayName: 'Volkswagen',
-    shortCode: 'VW',
-    bgGradient: 'from-blue-900 to-slate-900',
-    textColor: 'text-white',
-  },
-  {
-    name: 'Nissan',
-    displayName: 'Nissan',
-    shortCode: 'NIS',
-    bgGradient: 'from-red-800 to-zinc-900',
-    textColor: 'text-white',
-  },
-  {
-    name: 'Renault',
-    displayName: 'Renault',
-    shortCode: 'RN',
-    bgGradient: 'from-amber-600 to-yellow-800',
-    textColor: 'text-white',
-  },
+  { name: 'Maruti', displayName: 'Maruti Suzuki', tileBg: 'bg-white' },
+  { name: 'Hyundai', displayName: 'Hyundai', tileBg: 'bg-white' },
+  { name: 'Tata', displayName: 'Tata', tileBg: 'bg-white' },
+  { name: 'Mahindra', displayName: 'Mahindra', tileBg: 'bg-white' },
+  { name: 'Toyota', displayName: 'Toyota', tileBg: 'bg-white' },
+  { name: 'Kia', displayName: 'Kia', tileBg: 'bg-white' },
+  { name: 'Honda', displayName: 'Honda', tileBg: 'bg-white' },
+  { name: 'Skoda', displayName: 'Skoda', tileBg: 'bg-white' },
+  { name: 'Volkswagen', displayName: 'Volkswagen', tileBg: 'bg-white' },
+  { name: 'Nissan', displayName: 'Nissan', tileBg: 'bg-white' },
+  { name: 'Renault', displayName: 'Renault', tileBg: 'bg-white' },
 ];
 
 export const BrandGrid: React.FC<BrandGridProps> = ({ selectedBrand, onSelectBrand }) => {
@@ -127,10 +61,8 @@ export const BrandGrid: React.FC<BrandGridProps> = ({ selectedBrand, onSelectBra
                   : 'border-slate-100 bg-slate-50/50 hover:border-slate-300 hover:bg-white'
               }`}
             >
-              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${b.bgGradient} flex items-center justify-center shadow-sm mb-1.5`}>
-                <span className={`text-[10px] font-black tracking-tight ${b.textColor}`}>
-                  {b.shortCode}
-                </span>
+              <div className={`w-9 h-9 rounded-xl ${b.tileBg} flex items-center justify-center shadow-sm mb-1.5 border border-slate-100`}>
+                <BrandLogo brand={b.name} className="w-7 h-7" ariaLabel={`${b.displayName} logo`} />
               </div>
               <span className={`text-[11px] font-bold text-center truncate w-full ${isSelected ? 'text-rose-700 font-extrabold' : 'text-slate-700'}`}>
                 {b.displayName}
