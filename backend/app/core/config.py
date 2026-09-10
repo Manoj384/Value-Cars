@@ -1,7 +1,6 @@
-import os
-import secrets
+import json
 from typing import List, Union
-from pydantic import AnyHttpUrl, field_validator
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -12,22 +11,15 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # Security
-    # A strong, randomly generated key is used when none is provided. In
-    # production you MUST set SECRET_KEY explicitly via the environment.
-    SECRET_KEY: str = secrets.token_urlsafe(48)
-    # Convenience flag: if still the auto-generated default in a non-dev env,
-    # we warn on startup below so you never ship with an ephemeral key.
+    SECRET_KEY: str = "value-cars-super-secret-key-change-in-production-2026-secure"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./value_cars.db"
 
-    # Public URL of the frontend (used for CORS + any absolute links)
-    FRONTEND_URL: str = "http://localhost:3000"
-
     # CORS
-    ALLOWED_ORIGINS: List[str] = [
+    ALLOWED_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000",
@@ -37,44 +29,38 @@ class Settings(BaseSettings):
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
+        if isinstance(v, str):
+            if v.startswith("["):
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
             return [i.strip() for i in v.split(",") if i.strip()]
-        elif isinstance(v, (list, str)):
+        elif isinstance(v, list):
             return v
-        raise ValueError(v)
-
-    # Redis
-    REDIS_URL: str = "redis://localhost:6379/0"
+        return ["*"]
 
     # Notifications & Alerts
     NOTIFICATIONS_ENABLED: bool = True
-    SMS_PROVIDER: str = "mock"  # "mock" | "twilio" | "fast2sms"
-    WHATSAPP_PROVIDER: str = "mock"  # "mock" | "twilio" | "meta"
+    SMS_PROVIDER: str = "mock"
+    WHATSAPP_PROVIDER: str = "mock"
+    ADMIN_ALERT_PHONE: str = "9876543210"
+    ADMIN_ALERT_PHONES: List[str] = ["9876543210"]
+    ADMIN_AUTHORIZED_PHONES: List[str] = ["9876543210", "9876543211"]
+    ADMIN_ALERT_EMAIL: str = "admin@valuecars.com"
     TWILIO_ACCOUNT_SID: str = ""
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_PHONE_NUMBER: str = ""
-    TWILIO_WHATSAPP_NUMBER: str = ""
     FAST2SMS_API_KEY: str = ""
-    META_WHATSAPP_TOKEN: str = ""
-    META_WHATSAPP_PHONE_NUMBER_ID: str = ""
-    ADMIN_ALERT_PHONE: str = "+918050966025"
-    ADMIN_SECONDARY_PHONE: str = "+918310166040"
-    ADMIN_PRIVATE_PHONE: str = "+916362923891"
-    ADMIN_ALERT_PHONES: List[str] = [
-        "+918050966025",
-        "+916362923891",
-        "+918310166040",
-    ]
-    ADMIN_AUTHORIZED_PHONES: List[str] = [
-        "8050966025",
-        "8310166040",
-        "6362923891",
-        "+918050966025",
-        "+918310166040",
-        "+916362923891",
-    ]
-    OFFICIAL_ADDRESS: str = "Near Bangalore university, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056"
-    MAPS_URL: str = "https://maps.google.com/?q=Near+Bangalore+university,+Kengunte,+Mallathahalli,+Bengaluru,+Karnataka+560056"
+    WHATSAPP_PHONE_NUMBER_ID: str = ""
+    WHATSAPP_ACCESS_TOKEN: str = ""
+
+    # Supabase (Optional)
+    SUPABASE_URL: str = ""
+    SUPABASE_KEY: str = ""
+
+    # Redis
+    REDIS_URL: str = "redis://localhost:6379/0"
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -82,10 +68,6 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore",
     )
-
-    @property
-    def is_production(self) -> bool:
-        return self.ENVIRONMENT.lower() in {"production", "prod", "staging"}
 
 
 settings = Settings()
