@@ -1,49 +1,45 @@
 import logging
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.v1.api_router import api_router
-from app.api.v1.uploads import UPLOAD_DIR
 from app.core.config import settings
 from app.core.database import Base, engine, AsyncSessionLocal
 from app.services.seed_service import seed_database
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("valuecars")
-
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for database initialization and seeding."""
-    # Startup: Create tables if they do not exist
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Startup: Connect to DB and ensure tables exist
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print("Connected to database successfully. Tables initialized.")
+    except Exception as e:
+        print(f"Warning during database table sync on startup: {e}")
 
-    # Seed default admin user & sample cars
-    async with AsyncSessionLocal() as session:
-        try:
+    # Startup: Seed initial data if empty
+    try:
+        async with AsyncSessionLocal() as session:
             await seed_database(session)
-        except Exception as e:
-            logger.warning("Database seeding encountered: %s", e)
+    except Exception as e:
+        print(f"Notice during initial seeding: {e}")
 
-    logger.info("✅ Value Cars API started in %s mode", settings.ENVIRONMENT)
-    if settings.is_production:
-        logger.warning(
-            "⚠️  Running in production without an explicit SECRET_KEY. "
-            "Set SECRET_KEY via environment to keep sessions secure."
-        )
     yield
 
-    # Shutdown: Close database engine connections
-    await engine.dispose()
+    # Shutdown: Close database engine connections gracefully
+    try:
+        await engine.dispose()
+    except Exception:
+        pass
 
 
 app = FastAPI(
@@ -60,8 +56,9 @@ Production-ready backend for a modern Spinny-inspired used-car marketplace and i
 
 ### Core Capabilities:
 - **Car Catalog & Search**: Multi-criteria filters, high-resolution galleries, and 360 specs.
+- **Brand Selector**: 12-brand visual selection grid.
 - **Valuation Engine**: Intelligent rules-based used-car price estimator.
-- **Digital Inspection**: 100+ checkpoint evaluation report with categorical scoring.
+- **Digital Inspection**: 200-point checkpoint evaluation report with categorical scoring.
 - **Seller Submissions**: Online car addition with Admin Email Verification & Whitelist approval.
 - **CRM & Leads**: Sell car requests, test drive bookings, and conversion pipeline.
 - **Orders & Payments**: Token reservations and checkout handling.
@@ -83,50 +80,6 @@ if os.path.exists(STATIC_DIR):
 
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
-
-# Serve uploaded image files (created on demand by the upload endpoint).
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-
-
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    """Return consistent JSON for API HTTP errors (friendlier than HTML)."""
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": str(exc.detail), "ok": False},
-    )
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Return human-readable validation errors instead of raw internals."""
-    errors = exc.errors()
-    messages = []
-    for err in errors:
-        loc = " -> ".join(str(p) for p in err.get("loc", []) if p != "body")
-        messages.append(f"{loc}: {err.get('msg', 'invalid value')}")
-    return JSONResponse(
-        status_code=422,
-        content={
-            "ok": False,
-            "detail": "Validation failed",
-            "errors": messages,
-        },
-    )
-
-
-@app.exception_handler(Exception)
-async def unhandled_exception_handler(request: Request, exc: Exception):
-    """Catch unexpected errors and return a safe generic message."""
-    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
-    return JSONResponse(
-        status_code=500,
-        content={
-            "ok": False,
-            "detail": "An unexpected error occurred. Please try again later.",
-        },
-    )
 
 
 @app.get("/", summary="Web Application Home")
