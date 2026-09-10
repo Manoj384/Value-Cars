@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Value Cars | Spinny-Style Certified Used Cars & Marketplace</title>
+  <title>Value Cars | Certified Used Cars Marketplace & Direct Upload Hub</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script>
     tailwind.config = {
@@ -24,12 +24,13 @@
               500: '#f43f5e',
               600: '#e11d48',
               700: '#be123c',
+              800: '#9f1239',
               900: '#881337',
             },
-            accent: {
-              50: '#f0fdf4',
-              500: '#22c55e',
-              600: '#16a34a',
+            whatsapp: {
+              500: '#25D366',
+              600: '#128C7E',
+              700: '#075E54',
             }
           }
         }
@@ -38,7 +39,6 @@
   </script>
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
     .badge-certified { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -58,70 +58,87 @@
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-  <!-- TOP ANNOUNCEMENT BAR -->
-  <div class="bg-slate-900 text-slate-300 text-xs py-2 px-4 flex justify-between items-center">
-    <div class="flex items-center space-x-4">
-      <span><i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5"></i> 200-Point Inspection Guaranteed</span>
-      <span class="hidden md:inline"><i class="fa-solid fa-rotate-left text-amber-400 mr-1.5"></i> 5-Day Money Back Guarantee</span>
-      <span class="hidden lg:inline"><i class="fa-solid fa-truck text-sky-400 mr-1.5"></i> Free Home Test Drive</span>
-    </div>
-    <div class="flex items-center space-x-4">
-      <span class="text-slate-400">Support: <strong class="text-white">1800-200-VALUE</strong></span>
-      <button onclick="switchTab('admin')" class="text-amber-400 hover:text-amber-300 font-semibold flex items-center">
-        <i class="fa-solid fa-lock text-xs mr-1"></i> Admin Approval Portal
-      </button>
+  <!-- TOP ANNOUNCEMENT & CONTACT BAR -->
+  <div class="bg-slate-950 text-slate-300 text-xs py-2.5 px-4 sm:px-8 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center space-x-4">
+        <span class="flex items-center text-emerald-400 font-bold">
+          <i class="fa-solid fa-shield-check mr-1.5 text-sm"></i> 200-Point Spinny Quality Checked
+        </span>
+        <span class="hidden md:flex items-center text-amber-400 font-semibold">
+          <i class="fa-solid fa-rotate-left mr-1.5"></i> 5-Day Money Back Guarantee
+        </span>
+        <span class="hidden lg:flex items-center text-sky-400 font-semibold">
+          <i class="fa-solid fa-truck-fast mr-1.5"></i> Doorstep Hub Delivery
+        </span>
+      </div>
+      
+      <!-- Live Contact Actions -->
+      <div class="flex items-center space-x-5">
+        <a href="https://wa.me/919876543210?text=Hi%20Value%20Cars,%20I%20am%20looking%20for%20a%20certified%20used%20car." target="_blank" class="text-whatsapp-500 hover:text-white font-bold flex items-center transition">
+          <i class="fa-brands fa-whatsapp text-sm mr-1.5 text-whatsapp-500"></i> WhatsApp Helpdesk
+        </a>
+        <a href="tel:+919876543210" class="text-slate-200 hover:text-brand-500 font-bold flex items-center transition">
+          <i class="fa-solid fa-phone text-xs mr-1.5 text-brand-500"></i> +91 98765 43210
+        </a>
+        <button onclick="openManageApprovedEmailsModal()" class="text-amber-400 hover:text-amber-300 font-bold flex items-center pl-3 border-l border-slate-700">
+          <i class="fa-solid fa-user-shield text-xs mr-1.5"></i> Authorized Emails
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- NAVIGATION BAR -->
   <header class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-      <div class="flex items-center space-x-8">
-        <!-- Brand Logo -->
-        <a href="#" onclick="switchTab('browse')" class="flex items-center space-x-2.5">
-          <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white text-xl font-black shadow-md shadow-brand-500/30">
+      <div class="flex items-center space-x-6 sm:space-x-8">
+        
+        <!-- Value Cars Logo & Emblem -->
+        <a href="#" onclick="selectBrand('')" class="flex items-center space-x-3 group">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-700 via-brand-600 to-rose-500 flex items-center justify-center text-white text-2xl shadow-lg shadow-brand-500/30 group-hover:scale-105 transition">
             <i class="fa-solid fa-car-side"></i>
           </div>
           <div>
-            <span class="text-2xl font-black tracking-tight text-slate-900">VALUE<span class="text-brand-600">CARS</span></span>
-            <span class="block text-[10px] uppercase font-bold tracking-widest text-slate-400 -mt-1">Certified Marketplace</span>
+            <span class="text-2xl font-black tracking-tight text-slate-950">VALUE<span class="text-brand-600">CARS</span></span>
+            <span class="block text-[9px] uppercase font-extrabold tracking-widest text-slate-400 -mt-1 flex items-center">
+              <i class="fa-solid fa-circle-check text-emerald-500 text-[8px] mr-1"></i> Certified Inventory
+            </span>
           </div>
         </a>
 
-        <!-- City Selector -->
-        <div class="hidden md:flex items-center bg-slate-100 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700">
-          <i class="fa-solid fa-location-dot text-brand-600 mr-2"></i>
-          <select id="citySelect" onchange="applyFilters()" class="bg-transparent border-none outline-none cursor-pointer">
-            <option value="">All Cities</option>
-            <option value="Bangalore" selected>Bangalore</option>
-            <option value="Mumbai">Mumbai</option>
-            <option value="Delhi NCR">Delhi NCR</option>
+        <!-- City & Hub Location Filter -->
+        <div class="hidden md:flex items-center bg-slate-100 hover:bg-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 transition">
+          <i class="fa-solid fa-location-dot text-brand-600 mr-2 text-sm"></i>
+          <select id="citySelect" onchange="applyFilters()" class="bg-transparent border-none outline-none cursor-pointer font-bold">
+            <option value="">All Locations</option>
+            <option value="Bangalore" selected>Bangalore (Koramangala Hub)</option>
+            <option value="Mumbai">Mumbai (Andheri Hub)</option>
+            <option value="Delhi NCR">Delhi NCR (Gurgaon Hub)</option>
           </select>
         </div>
       </div>
 
       <!-- Search Input -->
-      <div class="hidden lg:flex flex-1 max-w-md mx-8 relative">
+      <div class="hidden lg:flex flex-1 max-w-md mx-6 relative">
         <input
           type="text"
           id="globalSearch"
-          placeholder="Search by Make, Model (e.g. Creta, Thar, Swift)..."
-          class="w-full bg-slate-100 border border-transparent focus:border-brand-500 focus:bg-white pl-10 pr-4 py-2.5 rounded-full text-sm outline-none transition"
+          placeholder="Search by Make, Model, Fuel, Location (e.g. Thar, Creta, Fortuner)..."
+          class="w-full bg-slate-100 border border-transparent focus:border-brand-500 focus:bg-white pl-10 pr-4 py-2.5 rounded-full text-xs font-semibold outline-none transition"
           oninput="debounceSearch()"
         />
-        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
       </div>
 
-      <!-- Action Buttons -->
+      <!-- Actions: Approved Email Login & Add Car -->
       <div class="flex items-center space-x-3">
-        <button onclick="switchTab('browse')" id="navBrowse" class="px-4 py-2 text-sm font-bold text-slate-700 hover:text-brand-600 transition">
-          <i class="fa-solid fa-car mr-1.5"></i> Browse Cars
+        <button onclick="openValuationModal()" class="hidden sm:inline-flex items-center px-3.5 py-2 text-xs font-bold text-slate-700 hover:text-brand-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+          <i class="fa-solid fa-calculator mr-1.5 text-brand-600"></i> Valuation Tool
         </button>
-        <button onclick="openValuationModal()" class="px-4 py-2 text-sm font-bold text-slate-700 hover:text-brand-600 transition hidden sm:inline-flex items-center">
-          <i class="fa-solid fa-calculator mr-1.5 text-brand-600"></i> Price Estimator
-        </button>
-        <button onclick="openAddCarModal()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-md shadow-brand-500/20 text-sm flex items-center transition">
-          <i class="fa-solid fa-plus mr-1.5"></i> Add / Sell Car
+
+        <!-- Direct Car Upload Button -->
+        <button onclick="openAddCarDirectModal()" class="bg-brand-600 hover:bg-brand-700 text-white font-black px-4 py-2.5 rounded-xl shadow-md shadow-brand-500/25 text-xs sm:text-sm flex items-center transition">
+          <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Add / Upload Car
         </button>
       </div>
     </div>
@@ -130,381 +147,309 @@
   <!-- MAIN CONTENT CONTAINER -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- TAB 1: BROWSE CARS (DEFAULT) -->
-    <div id="tabBrowse">
-
-      <!-- HERO BANNER -->
-      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-900 text-white p-8 sm:p-12 mb-8 shadow-xl">
-        <div class="relative z-10 max-w-2xl">
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30 mb-4">
-            <i class="fa-solid fa-award mr-1.5"></i> Spinny-Standard 200-Point Inspection
-          </span>
-          <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-4">
-            Find Your Dream Certified Used Car with Complete Trust.
-          </h1>
-          <p class="text-slate-300 text-base sm:text-lg mb-6">
-            Fixed fair pricing, verified digital health scorecards, free 1-year warranty, and instant test drives at your doorstep.
-          </p>
-          <div class="flex flex-wrap gap-3">
-            <button onclick="setQuickFilter('body_type', 'SUV')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-sm transition">
-              🚙 SUVs
-            </button>
-            <button onclick="setQuickFilter('body_type', 'SEDAN')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-sm transition">
-              🚘 Sedans
-            </button>
-            <button onclick="setQuickFilter('transmission', 'AUTOMATIC')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-sm transition">
-              ⚡ Automatics
-            </button>
-            <button onclick="setQuickFilter('fuel_type', 'PETROL')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-sm transition">
-              ⛽ Petrol
-            </button>
-          </div>
-        </div>
-        <div class="absolute -right-10 -bottom-10 opacity-15 text-[280px] pointer-events-none">
-          <i class="fa-solid fa-car-rear"></i>
+    <!-- HERO BANNER -->
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-brand-950 text-white p-8 sm:p-12 mb-8 shadow-xl">
+      <div class="relative z-10 max-w-2xl">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30 mb-4">
+          <i class="fa-solid fa-award mr-1.5"></i> Direct Server Certified Uploads
+        </span>
+        <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-4">
+          Buy & Sell Verified Used Cars with Direct WhatsApp & Location Support.
+        </h1>
+        <p class="text-slate-300 text-sm sm:text-base mb-6">
+          Every car undergoes 200 checkpoints, certified inspection reports, and immediate WhatsApp assistance with hub pickup.
+        </p>
+        <div class="flex flex-wrap gap-2.5">
+          <button onclick="setQuickFilter('body_type', 'SUV')" class="bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-xl text-xs font-semibold backdrop-blur-sm transition">
+            🚙 SUVs
+          </button>
+          <button onclick="setQuickFilter('body_type', 'SEDAN')" class="bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-xl text-xs font-semibold backdrop-blur-sm transition">
+            🚘 Sedans
+          </button>
+          <button onclick="setQuickFilter('transmission', 'AUTOMATIC')" class="bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-xl text-xs font-semibold backdrop-blur-sm transition">
+            ⚡ Automatics
+          </button>
+          <button onclick="setQuickFilter('fuel_type', 'DIESEL')" class="bg-white/10 hover:bg-white/20 px-3.5 py-1.5 rounded-xl text-xs font-semibold backdrop-blur-sm transition">
+            ⛽ Diesel 4x4
+          </button>
         </div>
       </div>
-
-      <!-- BRAND SELECTOR SECTION (MATCHING SCREENSHOT REFERENCE) -->
-      <section class="mb-10 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-          <div>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-700 mb-1.5">
-              <i class="fa-solid fa-tags mr-1.5 text-brand-600"></i> Explore by Manufacturer
-            </span>
-            <h2 class="text-2xl font-black text-slate-900 tracking-tight">Select Your Car Brand</h2>
-            <p class="text-xs text-slate-500 font-semibold mt-0.5">Click any brand below to instantly view its verified models</p>
-          </div>
-          <button onclick="selectBrand('')" id="brand-clear-btn" class="self-start sm:self-auto text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3.5 py-1.5 rounded-full transition flex items-center">
-            <i class="fa-solid fa-layer-group mr-1.5"></i> Show All Brands
-          </button>
-        </div>
-
-        <!-- 12-Brand Grid (Maruti, Hyundai, Tata, Mahindra, Toyota, Kia, Honda, Skoda, Volkswagen, Nissan, Renault, View All) -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4" id="brandGrid">
-          
-          <!-- 1. Maruti Suzuki -->
-          <button onclick="selectBrand('Maruti')" id="brand-Maruti" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <path d="M78 28L60 46H22l18-18h38zm-56 44l18-18h38l-18 18H22z" fill="#003366"/>
-                <path d="M40 46l20 20H42L22 46h18z" fill="#c00"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Maruti Suzuki</span>
-          </button>
-
-          <!-- 2. Hyundai -->
-          <button onclick="selectBrand('Hyundai')" id="brand-Hyundai" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
-                <ellipse cx="50" cy="50" rx="42" ry="24" fill="none" stroke="#002c5f" stroke-width="6"/>
-                <path d="M38 34c4 10 7 22 7 32M62 34c-4 10-7 22-7 32M40 50h20" fill="none" stroke="#002c5f" stroke-width="6" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Hyundai</span>
-          </button>
-
-          <!-- 3. Tata -->
-          <button onclick="selectBrand('Tata')" id="brand-Tata" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
-                <ellipse cx="50" cy="50" rx="42" ry="24" fill="#004b87"/>
-                <path d="M28 42h44M50 42v28" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
-                <circle cx="34" cy="42" r="5" fill="#fff"/>
-                <circle cx="66" cy="42" r="5" fill="#fff"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Tata</span>
-          </button>
-
-          <!-- 4. Mahindra -->
-          <button onclick="selectBrand('Mahindra')" id="brand-Mahindra" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
-                <path d="M22 68L42 32l8 14-6 10 12-24 14 24-6-10 8-14 20 36H22z" fill="#d32f2f"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Mahindra</span>
-          </button>
-
-          <!-- 5. Toyota -->
-          <button onclick="selectBrand('Toyota')" id="brand-Toyota" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
-                <ellipse cx="50" cy="50" rx="44" ry="32" fill="none" stroke="#eb0a1e" stroke-width="5"/>
-                <ellipse cx="50" cy="42" rx="30" ry="14" fill="none" stroke="#eb0a1e" stroke-width="5"/>
-                <ellipse cx="50" cy="54" rx="14" ry="24" fill="none" stroke="#eb0a1e" stroke-width="5"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Toyota</span>
-          </button>
-
-          <!-- 6. Kia -->
-          <button onclick="selectBrand('Kia')" id="brand-Kia" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 60" class="w-12 h-10 transition group-hover:scale-110">
-                <path d="M12 45V15l16 30V15M34 15v30M56 15l-14 30h28L84 15" fill="none" stroke="#05141f" stroke-width="8" stroke-linecap="square"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Kia</span>
-          </button>
-
-          <!-- 7. Honda -->
-          <button onclick="selectBrand('Honda')" id="brand-Honda" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <rect x="15" y="15" width="70" height="70" rx="14" fill="none" stroke="#e40521" stroke-width="6"/>
-                <path d="M32 30v40l8-4V50h20v16l8 4V30L60 34v10H40V34z" fill="#e40521"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Honda</span>
-          </button>
-
-          <!-- 8. Skoda -->
-          <button onclick="selectBrand('Skoda')" id="brand-Skoda" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <circle cx="50" cy="50" r="42" fill="none" stroke="#4ba82e" stroke-width="6"/>
-                <path d="M50 25c12 0 20 10 20 20 0 8-6 16-16 16l-8-6 10-6-16-4 10-20z" fill="#4ba82e"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Skoda</span>
-          </button>
-
-          <!-- 9. Volkswagen -->
-          <button onclick="selectBrand('Volkswagen')" id="brand-Volkswagen" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <circle cx="50" cy="50" r="42" fill="none" stroke="#001e50" stroke-width="6"/>
-                <path d="M26 30l16 28 8-16 8 16 16-28M34 46l16 28 16-28" fill="none" stroke="#001e50" stroke-width="5" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Volkswagen</span>
-          </button>
-
-          <!-- 10. Nissan -->
-          <button onclick="selectBrand('Nissan')" id="brand-Nissan" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#c3002f" stroke-width="6"/>
-                <rect x="15" y="42" width="70" height="16" rx="3" fill="#c3002f"/>
-                <text x="50" y="54" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">NISSAN</text>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Nissan</span>
-          </button>
-
-          <!-- 11. Renault -->
-          <button onclick="selectBrand('Renault')" id="brand-Renault" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <path d="M50 15L74 50 50 85 26 50z" fill="none" stroke="#ffcc00" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M50 32L62 50 50 68 38 50z" fill="#ffcc00"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Renault</span>
-          </button>
-
-          <!-- 12. View All Brands Action Tile -->
-          <button onclick="selectBrand('')" class="brand-card bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-2 group-hover:scale-110 transition">
-              <i class="fa-solid fa-angles-right text-lg"></i>
-            </div>
-            <span class="text-xs font-extrabold text-amber-700 flex items-center">
-              View All <i class="fa-solid fa-chevron-right text-[10px] ml-1"></i>
-            </span>
-          </button>
-
-        </div>
-      </section>
-
-      <!-- CATALOG WORKSPACE (SIDEBAR + GRID) -->
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-
-        <!-- FILTER SIDEBAR -->
-        <aside class="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-fit sticky top-24">
-          <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
-            <h3 class="font-extrabold text-slate-900 text-lg flex items-center">
-              <i class="fa-solid fa-sliders text-brand-600 mr-2"></i> Filters
-            </h3>
-            <button onclick="resetFilters()" class="text-xs font-bold text-brand-600 hover:text-brand-700">
-              Reset All
-            </button>
-          </div>
-
-          <!-- Active Brand Badge (if filtered) -->
-          <div id="activeBrandBanner" class="hidden mb-5 bg-brand-50 border border-brand-200 rounded-xl p-3 flex justify-between items-center text-xs">
-            <div>
-              <span class="text-slate-400 block text-[10px] uppercase font-bold">Active Brand</span>
-              <strong id="activeBrandName" class="text-brand-700 font-extrabold text-sm">Hyundai</strong>
-            </div>
-            <button onclick="selectBrand('')" class="text-brand-600 hover:text-brand-800 font-bold text-xs">
-              <i class="fa-solid fa-xmark"></i> Clear
-            </button>
-          </div>
-
-          <!-- Price Range -->
-          <div class="mb-6">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Max Budget (₹ Lakhs)</label>
-            <input type="range" id="priceRange" min="300000" max="3000000" step="50000" value="3000000" oninput="updatePriceLabel(this.value)" class="w-full accent-brand-600 cursor-pointer">
-            <div class="flex justify-between text-xs font-semibold text-slate-600 mt-1">
-              <span>₹3 Lakh</span>
-              <span id="priceLabel" class="text-brand-600 font-bold">Up to ₹30.0 L</span>
-            </div>
-          </div>
-
-          <!-- Fuel Type -->
-          <div class="mb-6">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Fuel Type</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button onclick="toggleFuel(this, 'PETROL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Petrol</button>
-              <button onclick="toggleFuel(this, 'DIESEL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Diesel</button>
-              <button onclick="toggleFuel(this, 'CNG')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">CNG</button>
-              <button onclick="toggleFuel(this, 'ELECTRIC')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Electric</button>
-            </div>
-          </div>
-
-          <!-- Transmission -->
-          <div class="mb-6">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Transmission</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button onclick="toggleTransmission(this, 'MANUAL')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Manual</button>
-              <button onclick="toggleTransmission(this, 'AUTOMATIC')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Automatic</button>
-            </div>
-          </div>
-
-          <!-- Body Type -->
-          <div class="mb-6">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Body Type</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button onclick="toggleBody(this, 'SUV')" class="body-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">SUV</button>
-              <button onclick="toggleBody(this, 'SEDAN')" class="body-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Sedan</button>
-              <button onclick="toggleBody(this, 'HATCHBACK')" class="body-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Hatchback</button>
-            </div>
-          </div>
-
-          <!-- Min Inspection Score -->
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Inspection Score</label>
-            <select id="minScoreSelect" onchange="applyFilters()" class="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-brand-600">
-              <option value="">Any Score</option>
-              <option value="9.0">9.0+ Excellent Condition</option>
-              <option value="8.5">8.5+ Great Condition</option>
-              <option value="8.0">8.0+ Good Condition</option>
-            </select>
-          </div>
-        </aside>
-
-        <!-- CAR CARDS GRID -->
-        <div class="lg:col-span-3">
-          <!-- Header stats & sorting -->
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <div>
-              <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight" id="catalogTitle">Available Verified Cars</h2>
-              <p id="resultsCount" class="text-xs text-slate-500 font-semibold mt-0.5">Showing verified vehicles</p>
-            </div>
-
-            <!-- Sort dropdown -->
-            <div class="flex items-center space-x-2 text-sm font-semibold">
-              <span class="text-slate-500 text-xs uppercase font-bold">Sort By:</span>
-              <select id="sortBySelect" onchange="applyFilters()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-brand-600">
-                <option value="created_at">Recently Added</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
-                <option value="km_asc">Kilometers: Low to High</option>
-                <option value="year_desc">Year: Newest First</option>
-                <option value="score_desc">Inspection Score: Highest First</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Dynamic Car Cards Container -->
-          <div id="carsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <!-- Loading Skeletons -->
-            <div class="col-span-full py-16 text-center text-slate-400">
-              <i class="fa-solid fa-spinner fa-spin text-3xl text-brand-600 mb-3"></i>
-              <p class="font-bold text-sm">Loading verified car inventory...</p>
-            </div>
-          </div>
-        </div>
-
+      <div class="absolute -right-8 -bottom-10 opacity-15 text-[260px] pointer-events-none">
+        <i class="fa-solid fa-car-side"></i>
       </div>
     </div>
 
-    <!-- TAB 2: ADMIN APPROVAL PORTAL -->
-    <div id="tabAdmin" class="hidden">
-      <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm mb-8">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b border-slate-100 gap-4">
-          <div>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 mb-2">
-              <i class="fa-solid fa-shield-halved mr-1.5"></i> Admin Control Center
-            </span>
-            <h2 class="text-3xl font-extrabold text-slate-900">Seller Email & Car Approval Management</h2>
-            <p class="text-slate-500 text-sm mt-1">Approve verified seller emails or manually review and publish pending user car submissions.</p>
+    <!-- BRAND SELECTOR GRID (12 BRANDS WITH VECTOR LOGOS) -->
+    <section class="mb-10 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+        <div>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-700 mb-1.5">
+            <i class="fa-solid fa-tags mr-1.5 text-brand-600"></i> Explore by Manufacturer
+          </span>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Select Your Car Brand</h2>
+          <p class="text-xs text-slate-500 font-semibold mt-0.5">Click any brand below to view its verified cars inside that brand</p>
+        </div>
+        <button onclick="selectBrand('')" id="brand-clear-btn" class="self-start sm:self-auto text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3.5 py-1.5 rounded-full transition flex items-center">
+          <i class="fa-solid fa-layer-group mr-1.5"></i> Show All Brands
+        </button>
+      </div>
+
+      <!-- 12-Brand Cards Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4" id="brandGrid">
+        
+        <!-- 1. Maruti Suzuki -->
+        <button onclick="selectBrand('Maruti')" id="brand-Maruti" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+              <path d="M78 28L60 46H22l18-18h38zm-56 44l18-18h38l-18 18H22z" fill="#003366"/>
+              <path d="M40 46l20 20H42L22 46h18z" fill="#c00"/>
+            </svg>
           </div>
-          <button onclick="switchTab('browse')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition">
-            <i class="fa-solid fa-arrow-left mr-1.5"></i> Back to Marketplace
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Maruti Suzuki</span>
+        </button>
+
+        <!-- 2. Hyundai -->
+        <button onclick="selectBrand('Hyundai')" id="brand-Hyundai" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
+              <ellipse cx="50" cy="50" rx="42" ry="24" fill="none" stroke="#002c5f" stroke-width="6"/>
+              <path d="M38 34c4 10 7 22 7 32M62 34c-4 10-7 22-7 32M40 50h20" fill="none" stroke="#002c5f" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Hyundai</span>
+        </button>
+
+        <!-- 3. Tata -->
+        <button onclick="selectBrand('Tata')" id="brand-Tata" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
+              <ellipse cx="50" cy="50" rx="42" ry="24" fill="#004b87"/>
+              <path d="M28 42h44M50 42v28" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="34" cy="42" r="5" fill="#fff"/>
+              <circle cx="66" cy="42" r="5" fill="#fff"/>
+            </svg>
+          </div>
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Tata</span>
+        </button>
+
+        <!-- 4. Mahindra -->
+        <button onclick="selectBrand('Mahindra')" id="brand-Mahindra" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
+              <path d="M22 68L42 32l8 14-6 10 12-24 14 24-6-10 8-14 20 36H22z" fill="#d32f2f"/>
+            </svg>
+          </div>
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Mahindra</span>
+        </button>
+
+        <!-- 5. Toyota -->
+        <button onclick="selectBrand('Toyota')" id="brand-Toyota" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
+              <ellipse cx="50" cy="50" rx="44" ry="32" fill="none" stroke="#eb0a1e" stroke-width="5"/>
+              <ellipse cx="50" cy="42" rx="30" ry="14" fill="none" stroke="#eb0a1e" stroke-width="5"/>
+              <ellipse cx="50" cy="54" rx="14" ry="24" fill="none" stroke="#eb0a1e" stroke-width="5"/>
+            </svg>
+          </div>
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Toyota</span>
+        </button>
+
+        <!-- 6. Kia -->
+        <button onclick="selectBrand('Kia')" id="brand-Kia" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 60" class="w-12 h-10 transition group-hover:scale-110">
+              <path d="M12 45V15l16 30V15M34 15v30M56 15l-14 30h28L84 15" fill="none" stroke="#05141f" stroke-width="8" stroke-linecap="square"/>
+            </svg>
+          </div>
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Kia</span>
+        </button>
+
+        <!-- 7. Honda -->
+        <button onclick="selectBrand('Honda')" id="brand-Honda" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+              <rect x="15" y="15" width="70" height="70" rx="14" fill="none" stroke="#e40521" stroke-width="6"/>
+              <path d="M32 30v40l8-4V50h20v16l8 4V30L60 34v10H40V34z" fill="#e40521"/>
+            </svg>
+          </div>
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Honda</span>
+        </button>
+
+        <!-- 8. Skoda -->
+        <button onclick="selectBrand('Skoda')" id="brand-Skoda" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#4ba82e" stroke-width="6"/>
+              <path d="M50 25c12 0 20 10 20 20 0 8-6 16-16 16l-8-6 10-6-16-4 10-20z" fill="#4ba82e"/>
+            </svg>
+          </div>
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Skoda</span>
+        </button>
+
+        <!-- 9. Volkswagen -->
+        <button onclick="selectBrand('Volkswagen')" id="brand-Volkswagen" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+              <circle cx="50" cy="50" r="42" fill="none" stroke="#001e50" stroke-width="6"/>
+              <path d="M26 30l16 28 8-16 8 16 16-28M34 46l16 28 16-28" fill="none" stroke="#001e50" stroke-width="5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Volkswagen</span>
+        </button>
+
+        <!-- 10. Nissan -->
+        <button onclick="selectBrand('Nissan')" id="brand-Nissan" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#c3002f" stroke-width="6"/>
+              <rect x="15" y="42" width="70" height="16" rx="3" fill="#c3002f"/>
+              <text x="50" y="54" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">NISSAN</text>
+            </svg>
+          </div>
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Nissan</span>
+        </button>
+
+        <!-- 11. Renault -->
+        <button onclick="selectBrand('Renault')" id="brand-Renault" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
+              <path d="M50 15L74 50 50 85 26 50z" fill="none" stroke="#ffcc00" stroke-width="8" stroke-linejoin="round"/>
+              <path d="M50 32L62 50 50 68 38 50z" fill="#ffcc00"/>
+            </svg>
+          </div>
+          <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Renault</span>
+        </button>
+
+        <!-- 12. View All Brands -->
+        <button onclick="selectBrand('')" class="brand-card bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-2 group-hover:scale-110 transition">
+            <i class="fa-solid fa-angles-right text-lg"></i>
+          </div>
+          <span class="text-xs font-extrabold text-amber-700 flex items-center">
+            View All <i class="fa-solid fa-chevron-right text-[10px] ml-1"></i>
+          </span>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- CATALOG WORKSPACE (FILTERS + VEHICLE CARDS) -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+      <!-- FILTER SIDEBAR -->
+      <aside class="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-fit sticky top-24">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+          <h3 class="font-extrabold text-slate-900 text-base flex items-center">
+            <i class="fa-solid fa-sliders text-brand-600 mr-2"></i> Refine Search
+          </h3>
+          <button onclick="resetFilters()" class="text-xs font-bold text-brand-600 hover:text-brand-700">
+            Reset
           </button>
         </div>
 
-        <!-- TWO PANELS: 1. Whitelist Email Form & 2. Pending Cars List -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-          
-          <!-- Whitelist New Seller Email -->
-          <div class="lg:col-span-1 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-            <h3 class="font-black text-slate-900 text-lg mb-4 flex items-center">
-              <i class="fa-solid fa-user-check text-emerald-600 mr-2"></i> Approve New Seller Email
-            </h3>
-            <p class="text-xs text-slate-600 mb-4">Emails added here are authorized to submit and auto-publish cars directly to the marketplace.</p>
-            
-            <form onsubmit="handleApproveEmail(event)" class="space-y-4">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Seller Email Address *</label>
-                <input type="email" id="approveEmailInput" required placeholder="seller@example.com" class="w-full bg-white border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Approval Notes</label>
-                <input type="text" id="approveEmailNotes" placeholder="e.g. Authorized Dealer / Individual Owner" class="w-full bg-white border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
-              </div>
-              <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md shadow-emerald-600/20">
-                <i class="fa-solid fa-check mr-1.5"></i> Approve Seller Email
-              </button>
-            </form>
+        <!-- Active Brand Filter Chip -->
+        <div id="activeBrandBanner" class="hidden mb-5 bg-brand-50 border border-brand-200 rounded-xl p-3 flex justify-between items-center text-xs">
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Filtered Brand</span>
+            <strong id="activeBrandName" class="text-brand-700 font-extrabold text-sm">Hyundai</strong>
+          </div>
+          <button onclick="selectBrand('')" class="text-brand-600 hover:text-brand-800 font-bold text-xs">
+            <i class="fa-solid fa-xmark"></i> Clear
+          </button>
+        </div>
 
-            <div class="mt-8">
-              <h4 class="text-xs font-extrabold uppercase text-slate-500 tracking-wider mb-3">Approved Seller Emails</h4>
-              <div id="approvedEmailsList" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
-                <!-- Dynamically loaded -->
-              </div>
-            </div>
+        <!-- Max Price Slider -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Budget Range</label>
+          <input type="range" id="priceRange" min="300000" max="4500000" step="50000" value="4500000" oninput="updatePriceLabel(this.value)" class="w-full accent-brand-600 cursor-pointer">
+          <div class="flex justify-between text-xs font-semibold text-slate-600 mt-1">
+            <span>₹3 L</span>
+            <span id="priceLabel" class="text-brand-600 font-bold">Up to ₹45.0 L</span>
+          </div>
+        </div>
+
+        <!-- Fuel Type -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Fuel Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleFuel(this, 'PETROL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Petrol</button>
+            <button onclick="toggleFuel(this, 'DIESEL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Diesel</button>
+            <button onclick="toggleFuel(this, 'CNG')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">CNG</button>
+            <button onclick="toggleFuel(this, 'ELECTRIC')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Electric</button>
+          </div>
+        </div>
+
+        <!-- Transmission -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Transmission</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleTransmission(this, 'MANUAL')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Manual</button>
+            <button onclick="toggleTransmission(this, 'AUTOMATIC')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Automatic</button>
+          </div>
+        </div>
+
+        <!-- Body Type -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Body Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleBody(this, 'SUV')" class="body-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">SUV</button>
+            <button onclick="toggleBody(this, 'SEDAN')" class="body-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Sedan</button>
+            <button onclick="toggleBody(this, 'HATCHBACK')" class="body-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Hatchback</button>
+          </div>
+        </div>
+
+        <!-- Min Inspection Score -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Inspection Score</label>
+          <select id="minScoreSelect" onchange="applyFilters()" class="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-brand-600">
+            <option value="">Any Condition</option>
+            <option value="9.0">9.0+ Excellent Condition</option>
+            <option value="8.5">8.5+ Great Condition</option>
+          </select>
+        </div>
+      </aside>
+
+      <!-- CAR CARDS GRID -->
+      <div class="lg:col-span-3">
+        
+        <!-- Header stats & sorting -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h2 class="text-2xl font-black text-slate-900 tracking-tight" id="catalogTitle">Available Certified Cars</h2>
+            <p id="resultsCount" class="text-xs text-slate-500 font-semibold mt-0.5">Showing verified vehicles</p>
           </div>
 
-          <!-- Pending Car Submissions -->
-          <div class="lg:col-span-2">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="font-black text-slate-900 text-lg flex items-center">
-                <i class="fa-solid fa-clock text-amber-500 mr-2"></i> Cars Awaiting Admin Approval
-              </h3>
-              <button onclick="loadPendingCars()" class="text-xs font-bold text-brand-600 hover:underline">
-                <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
-              </button>
-            </div>
-            
-            <div id="pendingCarsList" class="space-y-4">
-              <!-- Dynamically loaded pending car cards -->
-            </div>
+          <!-- Sort dropdown -->
+          <div class="flex items-center space-x-2 text-sm font-semibold">
+            <span class="text-slate-500 text-xs uppercase font-bold">Sort:</span>
+            <select id="sortBySelect" onchange="applyFilters()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-brand-600">
+              <option value="created_at">Recently Added</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="km_asc">Kilometers: Low to High</option>
+              <option value="year_desc">Year: Newest First</option>
+              <option value="score_desc">Inspection Score: Highest First</option>
+            </select>
           </div>
+        </div>
 
+        <!-- Dynamic Car Cards Container -->
+        <div id="carsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <!-- Loading state -->
+          <div class="col-span-full py-16 text-center text-slate-400">
+            <i class="fa-solid fa-spinner fa-spin text-3xl text-brand-600 mb-3"></i>
+            <p class="font-bold text-sm">Loading verified car inventory...</p>
+          </div>
         </div>
       </div>
+
     </div>
 
   </main>
 
-  <!-- CAR DETAIL & INSPECTION MODAL -->
-  <div id="carDetailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 sm:p-8 relative">
+  <!-- CAR DETAIL & 200-POINT INSPECTION MODAL (WITH WHATSAPP & CALL) -->
+  <div id="carDetailModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 sm:p-8 relative">
       <button onclick="closeCarModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition">
         <i class="fa-solid fa-xmark"></i>
       </button>
@@ -515,45 +460,45 @@
     </div>
   </div>
 
-  <!-- ADD / SELL CAR MODAL (WITH ONLINE SELLER EMAIL VERIFICATION) -->
-  <div id="addCarModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 sm:p-8 relative">
-      <button onclick="closeAddCarModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition">
+  <!-- DIRECT CAR UPLOAD MODAL (ONLY FOR APPROVED ADMIN/SELLER EMAILS) -->
+  <div id="addCarDirectModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 sm:p-8 relative">
+      <button onclick="closeAddCarDirectModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <div class="mb-6">
         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brand-100 text-brand-700 mb-2">
-          <i class="fa-solid fa-circle-plus mr-1.5"></i> Seller Submission Portal
+          <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Direct Server Upload Studio
         </span>
-        <h3 class="text-2xl font-black text-slate-900">List Your Vehicle Online</h3>
-        <p class="text-xs text-slate-500 mt-1">Verified emails get published immediately; new seller emails are reviewed & approved by admin.</p>
+        <h3 class="text-2xl font-black text-slate-900">Add New Vehicle to Live Inventory</h3>
+        <p class="text-xs text-slate-500 mt-1">Authorized admin/seller emails upload and publish cars directly to the server immediately.</p>
       </div>
 
-      <form onsubmit="handleCarSubmission(event)" class="space-y-4">
+      <form onsubmit="handleDirectCarUpload(event)" class="space-y-4">
         
-        <!-- Seller Email & Verification Status -->
+        <!-- Authorized Email Verification Input -->
         <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-          <label class="block text-xs font-bold text-slate-700 mb-1">Your Email Address *</label>
+          <label class="block text-xs font-bold text-slate-800 mb-1">Your Authorized Email Address *</label>
           <div class="flex gap-2">
-            <input type="email" id="sellerEmail" required placeholder="your.name@example.com" onchange="checkEmailVerificationStatus(this.value)" class="flex-1 bg-white border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
-            <button type="button" onclick="checkEmailVerificationStatus(document.getElementById('sellerEmail').value)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold">
-              Check Status
+            <input type="email" id="uploadEmail" required placeholder="admin@valuecars.com" onchange="verifyUploadEmail(this.value)" class="flex-1 bg-white border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-brand-600 font-semibold">
+            <button type="button" onclick="verifyUploadEmail(document.getElementById('uploadEmail').value)" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition">
+              Verify Email
             </button>
           </div>
-          <div id="emailStatusBadge" class="mt-2 text-xs font-semibold text-slate-500">
-            Enter your email to check if you are pre-approved to publish directly.
+          <div id="uploadEmailStatus" class="mt-2 text-xs font-bold text-slate-500">
+            Enter your approved email. (Default: <code>admin@valuecars.com</code> or <code>verified.seller@valuecars.com</code>)
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Seller Full Name *</label>
-            <input type="text" id="sellerName" required placeholder="Manoj Shankar" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Seller / Hub Manager Name *</label>
+            <input type="text" id="uploadSellerName" required value="Manoj Shankar" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600 font-semibold">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
-            <input type="tel" id="sellerPhone" required placeholder="9876543210" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Contact Phone (for WhatsApp & Calls) *</label>
+            <input type="tel" id="uploadSellerPhone" required value="9876543210" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600 font-semibold">
           </div>
         </div>
 
@@ -561,83 +506,123 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Make *</label>
-            <input type="text" id="carMake" required placeholder="e.g. Hyundai" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <input type="text" id="uploadMake" required placeholder="e.g. Toyota, Mahindra" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Model *</label>
-            <input type="text" id="carModel" required placeholder="e.g. Creta" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <input type="text" id="uploadModel" required placeholder="e.g. Fortuner, Creta" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Variant *</label>
-            <input type="text" id="carVariant" required placeholder="e.g. 1.5 SX (O)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <input type="text" id="uploadVariant" required placeholder="e.g. 2.8 4x4 AT" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Manufacturing Year *</label>
-            <input type="number" id="carYear" required min="2000" max="2026" value="2022" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <input type="number" id="uploadYear" required min="2005" max="2026" value="2023" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Kilometers Driven *</label>
-            <input type="number" id="carKm" required placeholder="25000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <input type="number" id="uploadKm" required placeholder="15000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Selling Price (₹) *</label>
-            <input type="number" id="carPrice" required placeholder="1250000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <input type="number" id="uploadPrice" required placeholder="3250000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Fuel Type</label>
-            <select id="carFuel" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
-              <option value="PETROL">Petrol</option>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Fuel</label>
+            <select id="uploadFuel" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
               <option value="DIESEL">Diesel</option>
+              <option value="PETROL">Petrol</option>
               <option value="CNG">CNG</option>
               <option value="ELECTRIC">Electric</option>
             </select>
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Transmission</label>
-            <select id="carTrans" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
-              <option value="MANUAL">Manual</option>
+            <select id="uploadTrans" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
               <option value="AUTOMATIC">Automatic</option>
+              <option value="MANUAL">Manual</option>
             </select>
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Body Type</label>
-            <select id="carBody" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Body</label>
+            <select id="uploadBody" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
               <option value="SUV">SUV</option>
               <option value="SEDAN">Sedan</option>
               <option value="HATCHBACK">Hatchback</option>
             </select>
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">City</label>
-            <input type="text" id="carCity" required value="Bangalore" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
+            <label class="block text-xs font-bold text-slate-700 mb-1">City / Hub Location</label>
+            <input type="text" id="uploadCity" required value="Bangalore" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Car Registration Number *</label>
-          <input type="text" id="carReg" required placeholder="KA-01-AB-1234" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+          <label class="block text-xs font-bold text-slate-700 mb-1">Vehicle Registration Number *</label>
+          <input type="text" id="uploadReg" required placeholder="KA-01-MJ-9999" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600 font-semibold uppercase">
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Car Image URL (HD Photo)</label>
-          <input type="url" id="carImage" placeholder="https://images.unsplash.com/photo-1549399542-7e3f8b79c341" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+          <label class="block text-xs font-bold text-slate-700 mb-1">High-Res Car Photo URL</label>
+          <input type="url" id="uploadImage" placeholder="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
         </div>
 
-        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-black py-4 rounded-2xl text-base transition shadow-lg shadow-brand-500/25">
-          <i class="fa-solid fa-paper-plane mr-2"></i> Submit Car Listing
+        <button type="submit" id="uploadSubmitBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-black py-4 rounded-2xl text-base transition shadow-lg shadow-brand-500/25 flex items-center justify-center">
+          <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Upload & Publish to Server Instantly
         </button>
       </form>
     </div>
   </div>
 
-  <!-- VALUATION ESTIMATOR MODAL -->
-  <div id="valuationModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+  <!-- MANAGE APPROVED ADMIN / SELLER EMAILS MODAL (FOR SUPERADMIN) -->
+  <div id="manageApprovedEmailsModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl p-6 sm:p-8 relative">
+      <button onclick="closeManageApprovedEmailsModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="mb-6">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 mb-2">
+          <i class="fa-solid fa-shield-halved mr-1.5"></i> Superadmin Control
+        </span>
+        <h3 class="text-2xl font-black text-slate-900">Manage Authorized Listing Emails</h3>
+        <p class="text-xs text-slate-500 mt-1">Approve specific emails once. Anyone with these emails can add and directly publish cars.</p>
+      </div>
+
+      <!-- Add New Approved Email Form -->
+      <form onsubmit="handleWhitelistEmail(event)" class="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-6">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Grant Direct Upload Access to Email *</label>
+          <input type="email" id="newAdminEmail" required placeholder="manager@valuecars.com" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-brand-600 font-semibold">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Manager / Role Description</label>
+          <input type="text" id="newAdminNotes" placeholder="e.g. Bangalore Hub Manager / Authorized Dealer" class="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-brand-600">
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md shadow-emerald-600/20">
+          <i class="fa-solid fa-user-plus mr-1.5"></i> Authorize & Whitelist Email
+        </button>
+      </form>
+
+      <!-- List of Currently Approved Emails -->
+      <div>
+        <h4 class="text-xs font-extrabold uppercase text-slate-500 tracking-wider mb-3">Currently Authorized Emails</h4>
+        <div id="authorizedEmailsList" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar">
+          <!-- Dynamically injected -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VALUATION MODAL -->
+  <div id="valuationModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl p-6 sm:p-8 relative">
       <button onclick="closeValuationModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition">
         <i class="fa-solid fa-xmark"></i>
@@ -645,49 +630,49 @@
 
       <div class="mb-6">
         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-2">
-          <i class="fa-solid fa-chart-line mr-1.5"></i> Algorithmic Pricing
+          <i class="fa-solid fa-chart-line mr-1.5"></i> Instant Price Algorithm
         </span>
-        <h3 class="text-2xl font-black text-slate-900">Instant Valuation Calculator</h3>
-        <p class="text-xs text-slate-500 mt-1">Get instant fair market quotes based on age, depreciation, and mileage factors.</p>
+        <h3 class="text-2xl font-black text-slate-900">Used Car Price Estimator</h3>
+        <p class="text-xs text-slate-500 mt-1">Get instant fair market quotes based on age depreciation and mileage.</p>
       </div>
 
       <form onsubmit="handleCalculateValuation(event)" class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Make</label>
-            <input type="text" id="valMake" required value="Hyundai" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
+            <input type="text" id="valMake" required value="Toyota" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Model</label>
-            <input type="text" id="valModel" required value="Creta" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
+            <input type="text" id="valModel" required value="Fortuner" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Year</label>
-            <input type="number" id="valYear" required value="2022" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
+            <input type="number" id="valYear" required value="2023" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Kilometers Driven</label>
-            <input type="number" id="valKm" required value="25000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
+            <input type="number" id="valKm" required value="15000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
           </div>
         </div>
 
-        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-md">
-          Calculate Fair Market Value
+        <button type="submit" class="w-full bg-slate-950 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-md">
+          Calculate Fair Market Price
         </button>
       </form>
 
       <div id="valuationResult" class="hidden mt-6 bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center">
         <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">Estimated Fair Market Value</span>
-        <div id="valRangeText" class="text-2xl font-black text-emerald-950 mt-1">₹12.4 L – ₹13.8 L</div>
-        <p class="text-xs text-emerald-800 mt-2 font-medium">Recommended Procurement Quote: <strong id="valBuyText" class="font-bold">₹11.6 L</strong></p>
+        <div id="valRangeText" class="text-2xl font-black text-emerald-950 mt-1">₹34.5 L – ₹38.2 L</div>
+        <p class="text-xs text-emerald-800 mt-2 font-medium">Recommended Value Cars Procurement Quote: <strong id="valBuyText" class="font-bold">₹33.2 L</strong></p>
       </div>
     </div>
   </div>
 
-  <!-- JAVASCRIPT APPLICATION CONTROLLER -->
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
   <script>
     const API_BASE = '/api/v1';
     let currentFilters = {
@@ -695,7 +680,7 @@
       fuel_type: null,
       transmission: null,
       body_type: null,
-      max_price: 3000000,
+      max_price: 4500000,
       min_score: null,
       city: 'Bangalore',
       search: '',
@@ -713,13 +698,12 @@
 
     // Select Brand Filter
     function selectBrand(brandName) {
-      // Remove active class from all brand cards
       document.querySelectorAll('.brand-card').forEach(b => b.classList.remove('active-brand'));
 
       if (!brandName || currentFilters.make === brandName) {
         currentFilters.make = null;
         document.getElementById('activeBrandBanner').classList.add('hidden');
-        document.getElementById('catalogTitle').innerText = 'Available Verified Cars';
+        document.getElementById('catalogTitle').innerText = 'Available Certified Cars';
       } else {
         currentFilters.make = brandName;
         const targetBtn = document.getElementById(`brand-${brandName}`);
@@ -727,27 +711,13 @@
         
         document.getElementById('activeBrandBanner').classList.remove('hidden');
         document.getElementById('activeBrandName').innerText = brandName;
-        document.getElementById('catalogTitle').innerText = `Available Verified ${brandName} Cars`;
+        document.getElementById('catalogTitle').innerText = `Available Certified ${brandName} Cars`;
       }
 
       loadCars();
     }
 
-    // Switch between Marketplace & Admin Tab
-    function switchTab(tab) {
-      if (tab === 'admin') {
-        document.getElementById('tabBrowse').classList.add('hidden');
-        document.getElementById('tabAdmin').classList.remove('hidden');
-        loadPendingCars();
-        loadApprovedEmails();
-      } else {
-        document.getElementById('tabAdmin').classList.add('hidden');
-        document.getElementById('tabBrowse').classList.remove('hidden');
-        loadCars();
-      }
-    }
-
-    // Fetch and render cars
+    // Load & Render Live Cars
     async function loadCars() {
       const grid = document.getElementById('carsGrid');
       grid.innerHTML = `
@@ -781,8 +751,8 @@
           grid.innerHTML = `
             <div class="col-span-full py-16 text-center bg-white rounded-3xl border border-slate-200">
               <i class="fa-solid fa-car-tunnel text-4xl text-slate-300 mb-3"></i>
-              <h4 class="font-bold text-slate-700 text-lg">No ${currentFilters.make ? currentFilters.make + ' ' : ''}cars match the selected filters</h4>
-              <p class="text-xs text-slate-400 mt-1">Try resetting your filters or selecting another brand.</p>
+              <h4 class="font-bold text-slate-700 text-lg">No ${currentFilters.make ? currentFilters.make + ' ' : ''}cars found</h4>
+              <p class="text-xs text-slate-400 mt-1">Try clearing filters or changing city location.</p>
               <button onclick="resetFilters()" class="mt-4 bg-brand-600 text-white font-bold px-4 py-2 rounded-xl text-xs">Reset All Filters</button>
             </div>
           `;
@@ -791,31 +761,42 @@
 
         grid.innerHTML = data.items.map(car => {
           const coverImg = car.images && car.images.length > 0 ? car.images[0].image_url : 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341';
-          return `
-            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group">
-              <!-- Cover Image -->
-              <div class="relative h-48 bg-slate-100 overflow-hidden">
-                <img src="${coverImg}" alt="${car.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                <div class="absolute top-3 left-3 flex gap-1.5">
-                  <span class="badge-certified text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md shadow flex items-center">
-                    <i class="fa-solid fa-circle-check mr-1"></i> Certified
-                  </span>
-                  <span class="bg-slate-900/80 backdrop-blur-md text-amber-400 text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow flex items-center">
-                    <i class="fa-solid fa-star mr-1"></i> ${car.inspection_score.toFixed(1)}/10
-                  </span>
-                </div>
-                <div class="absolute bottom-3 right-3 bg-slate-900/80 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-md">
-                  <i class="fa-solid fa-location-dot text-brand-500 mr-1"></i> ${car.city}
-                </div>
-              </div>
+          const hubLoc = car.hub_location || `${car.city} Central Mega Hub`;
+          const sellerPhone = car.seller_phone || '9876543210';
+          const waMessage = encodeURIComponent(`Hi Value Cars! I am interested in this car: ${car.title} (Reg: ${car.reg_number}) listed for ${formatLakhs(car.price)} at ${car.city} Hub. Can I get more details?`);
 
-              <!-- Content -->
-              <div class="p-5 flex-1 flex flex-col justify-between">
-                <div>
+          return `
+            <div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col justify-between group">
+              <!-- Cover Image & Badges -->
+              <div>
+                <div class="relative h-48 bg-slate-100 overflow-hidden">
+                  <img src="${coverImg}" alt="${car.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                  <div class="absolute top-3 left-3 flex gap-1.5">
+                    <span class="badge-certified text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md shadow flex items-center">
+                      <i class="fa-solid fa-circle-check mr-1"></i> Certified
+                    </span>
+                    <span class="bg-slate-950/80 backdrop-blur-md text-amber-400 text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow flex items-center">
+                      <i class="fa-solid fa-star mr-1"></i> ${car.inspection_score.toFixed(1)}/10
+                    </span>
+                  </div>
+                  
+                  <!-- Hub Location Badge -->
+                  <div class="absolute bottom-3 left-3 bg-slate-950/80 text-white text-[10px] font-bold px-2.5 py-1 rounded-md backdrop-blur-md flex items-center">
+                    <i class="fa-solid fa-location-dot text-brand-500 mr-1.5"></i> ${car.city} Hub
+                  </div>
+                </div>
+
+                <!-- Content -->
+                <div class="p-5">
                   <h3 class="font-bold text-slate-900 text-base line-clamp-1 group-hover:text-brand-600 transition">
                     ${car.title}
                   </h3>
                   
+                  <!-- Location Subtext -->
+                  <div class="flex items-center text-[11px] text-slate-500 font-semibold mt-1">
+                    <i class="fa-solid fa-warehouse text-slate-400 mr-1.5"></i> ${hubLoc}
+                  </div>
+
                   <!-- Chips -->
                   <div class="flex flex-wrap gap-1.5 mt-3">
                     <span class="bg-slate-100 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">
@@ -831,18 +812,28 @@
                       ${car.transmission}
                     </span>
                   </div>
-                </div>
 
-                <!-- Price & Action -->
-                <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <div>
-                    <span class="text-xs text-slate-400 font-bold uppercase block">Fixed Price</span>
-                    <span class="text-xl font-black text-slate-900">${formatLakhs(car.price)}</span>
+                  <!-- Price -->
+                  <div class="mt-4 flex items-baseline justify-between">
+                    <div>
+                      <span class="text-[10px] text-slate-400 font-extrabold uppercase block">Fixed Direct Price</span>
+                      <span class="text-xl font-black text-slate-950">${formatLakhs(car.price)}</span>
+                    </div>
+                    <button onclick="viewCarDetail('${car.id}')" class="text-brand-600 hover:text-brand-700 font-extrabold text-xs flex items-center">
+                      Full Specs & Report <i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i>
+                    </button>
                   </div>
-                  <button onclick="viewCarDetail('${car.id}')" class="bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 font-bold px-4 py-2 rounded-xl text-xs transition duration-200 flex items-center">
-                    View Specs & Report <i class="fa-solid fa-arrow-right ml-1.5 text-[10px]"></i>
-                  </button>
                 </div>
+              </div>
+
+              <!-- Quick Contact Bar (WhatsApp & Call) -->
+              <div class="p-4 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-2">
+                <a href="https://wa.me/91${sellerPhone}?text=${waMessage}" target="_blank" class="bg-whatsapp-500 hover:bg-whatsapp-600 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center transition shadow-sm">
+                  <i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> WhatsApp
+                </a>
+                <a href="tel:+91${sellerPhone}" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center transition shadow-sm">
+                  <i class="fa-solid fa-phone text-xs mr-1.5 text-brand-400"></i> Call Hub
+                </a>
               </div>
             </div>
           `;
@@ -850,15 +841,15 @@
 
       } catch (err) {
         console.error('Error loading cars:', err);
-        grid.innerHTML = `<div class="col-span-full text-center text-red-500 font-bold py-8">Failed to connect to Value Cars API. Ensure backend is running.</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center text-red-500 font-bold py-8">Failed to connect to Value Cars API.</div>`;
       }
     }
 
-    // View Detailed Car Modal with 100+ Point Inspection Report
+    // View Detailed Car Modal with 200-Point Inspection, WhatsApp, Location, & Actions
     async function viewCarDetail(carId) {
       const modal = document.getElementById('carDetailModal');
       const content = document.getElementById('carModalContent');
-      content.innerHTML = `<div class="py-16 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl text-brand-600 mb-2"></i><p>Loading vehicle scorecard...</p></div>`;
+      content.innerHTML = `<div class="py-16 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl text-brand-600 mb-2"></i><p>Loading vehicle scorecard & location details...</p></div>`;
       modal.classList.remove('hidden');
       modal.classList.add('flex');
 
@@ -871,24 +862,40 @@
         let insp = inspRes && inspRes.ok ? await inspRes.json() : null;
 
         const coverImg = car.images && car.images.length > 0 ? car.images[0].image_url : 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341';
+        const hubLoc = car.hub_location || `${car.city} Value Cars Mega Hub`;
+        const sellerPhone = car.seller_phone || '9876543210';
+        const waMessage = encodeURIComponent(`Hello Value Cars! I want to inquire about: ${car.title} (${car.reg_number}) at ${car.city} Hub priced at ${formatLakhs(car.price)}.`);
 
         content.innerHTML = `
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Left: Gallery & Specs -->
+            <!-- Left: Gallery, Location & Specs -->
             <div>
-              <div class="rounded-2xl overflow-hidden h-64 bg-slate-100 mb-4 shadow">
+              <div class="rounded-2xl overflow-hidden h-64 bg-slate-100 mb-3 shadow">
                 <img src="${coverImg}" class="w-full h-full object-cover" id="modalMainImage">
               </div>
               ${car.images && car.images.length > 1 ? `
-                <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar mb-3">
                   ${car.images.map(img => `
                     <img src="${img.image_url}" onclick="document.getElementById('modalMainImage').src='${img.image_url}'" class="w-16 h-16 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-brand-600 transition">
                   `).join('')}
                 </div>
               ` : ''}
 
+              <!-- Location & Hub Card -->
+              <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-2xl mb-4 flex items-center justify-between text-xs">
+                <div>
+                  <span class="text-slate-400 font-bold uppercase text-[10px] block">Inspection & Test-Drive Location</span>
+                  <strong class="text-slate-900 text-xs font-black flex items-center mt-0.5">
+                    <i class="fa-solid fa-location-dot text-brand-600 mr-1.5"></i> ${hubLoc}
+                  </strong>
+                </div>
+                <a href="https://maps.google.com/?q=${encodeURIComponent(hubLoc + ', ' + car.city)}" target="_blank" class="text-brand-600 font-extrabold hover:underline flex items-center text-xs">
+                  <i class="fa-solid fa-map-pin mr-1"></i> Map
+                </a>
+              </div>
+
               <!-- Spec Grid -->
-              <div class="bg-slate-50 p-4 rounded-2xl mt-4 grid grid-cols-2 gap-3 text-xs">
+              <div class="bg-slate-50 p-4 rounded-2xl grid grid-cols-2 gap-3 text-xs">
                 <div><span class="text-slate-400 block font-semibold">Make & Model</span><strong class="text-slate-800 font-bold">${car.make} ${car.model}</strong></div>
                 <div><span class="text-slate-400 block font-semibold">Variant</span><strong class="text-slate-800 font-bold">${car.variant}</strong></div>
                 <div><span class="text-slate-400 block font-semibold">Year of Mfd</span><strong class="text-slate-800 font-bold">${car.year}</strong></div>
@@ -910,7 +917,7 @@
               ` : ''}
             </div>
 
-            <!-- Right: Price & Digital Inspection Report -->
+            <!-- Right: Price, WhatsApp Contact & Inspection Breakdown -->
             <div class="flex flex-col justify-between">
               <div>
                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-2">
@@ -922,11 +929,21 @@
                   ${car.original_price ? `<span class="text-sm line-through text-slate-400 font-semibold">${formatLakhs(car.original_price)}</span>` : ''}
                 </div>
 
+                <!-- Instant Direct Contact Bar -->
+                <div class="grid grid-cols-2 gap-3 mt-5">
+                  <a href="https://wa.me/91${sellerPhone}?text=${waMessage}" target="_blank" class="bg-whatsapp-500 hover:bg-whatsapp-600 text-white font-bold py-3 rounded-2xl text-xs flex items-center justify-center transition shadow-md shadow-whatsapp-500/20">
+                    <i class="fa-brands fa-whatsapp text-base mr-2"></i> Chat on WhatsApp
+                  </a>
+                  <a href="tel:+91${sellerPhone}" class="bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-2xl text-xs flex items-center justify-center transition shadow-md">
+                    <i class="fa-solid fa-phone text-xs mr-2 text-brand-400"></i> Call: +91 ${sellerPhone}
+                  </a>
+                </div>
+
                 <!-- Inspection Score Card Breakdown -->
-                <div class="mt-6 bg-slate-900 text-white p-5 rounded-2xl">
+                <div class="mt-6 bg-slate-950 text-white p-5 rounded-2xl shadow-lg">
                   <div class="flex justify-between items-center pb-3 border-b border-slate-800">
                     <div>
-                      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Overall Health Score</span>
+                      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Health Scorecard</span>
                       <h4 class="text-2xl font-black text-amber-400">${car.inspection_score.toFixed(1)} <span class="text-sm font-semibold text-slate-400">/ 10</span></h4>
                     </div>
                     <span class="bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full">
@@ -948,12 +965,12 @@
               </div>
 
               <!-- Action CTAs -->
-              <div class="mt-8 space-y-3">
-                <button onclick="bookTestDrive('${car.id}', '${car.title.replace(/'/g, "\\'")}')" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-2xl text-sm transition shadow-lg shadow-brand-500/20 flex items-center justify-center">
-                  <i class="fa-solid fa-calendar-check mr-2"></i> Book Free Test Drive
+              <div class="mt-6 space-y-2.5">
+                <button onclick="bookTestDrive('${car.id}', '${car.title.replace(/'/g, "\\'")}')" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-2xl text-xs transition shadow-lg shadow-brand-500/20 flex items-center justify-center">
+                  <i class="fa-solid fa-calendar-check mr-2"></i> Book Doorstep / Hub Test Drive
                 </button>
-                <button onclick="reserveCar('${car.id}', '${car.title.replace(/'/g, "\\'")}')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl text-sm transition flex items-center justify-center">
-                  <i class="fa-solid fa-lock mr-2 text-emerald-400"></i> Reserve Now (₹10,000 Refundable)
+                <button onclick="reserveCar('${car.id}', '${car.title.replace(/'/g, "\\'")}')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl text-xs transition flex items-center justify-center">
+                  <i class="fa-solid fa-lock mr-2 text-emerald-400"></i> Reserve Car (₹10,000 Refundable Token)
                 </button>
               </div>
             </div>
@@ -968,6 +985,245 @@
     function closeCarModal() {
       document.getElementById('carDetailModal').classList.add('hidden');
       document.getElementById('carDetailModal').classList.remove('flex');
+    }
+
+    // Modal Toggles
+    function openAddCarDirectModal() {
+      document.getElementById('addCarDirectModal').classList.remove('hidden');
+      document.getElementById('addCarDirectModal').classList.add('flex');
+    }
+    function closeAddCarDirectModal() {
+      document.getElementById('addCarDirectModal').classList.add('hidden');
+      document.getElementById('addCarDirectModal').classList.remove('flex');
+    }
+    function openManageApprovedEmailsModal() {
+      document.getElementById('manageApprovedEmailsModal').classList.remove('hidden');
+      document.getElementById('manageApprovedEmailsModal').classList.add('flex');
+      loadAuthorizedEmails();
+    }
+    function closeManageApprovedEmailsModal() {
+      document.getElementById('manageApprovedEmailsModal').classList.add('hidden');
+      document.getElementById('manageApprovedEmailsModal').classList.remove('flex');
+    }
+    function openValuationModal() {
+      document.getElementById('valuationModal').classList.remove('hidden');
+      document.getElementById('valuationModal').classList.add('flex');
+    }
+    function closeValuationModal() {
+      document.getElementById('valuationModal').classList.add('hidden');
+      document.getElementById('valuationModal').classList.remove('flex');
+    }
+
+    // Verify if Upload Email is Approved
+    async function verifyUploadEmail(email) {
+      if (!email || !email.includes('@')) return;
+      const statusEl = document.getElementById('uploadEmailStatus');
+      statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Verifying admin authorization...`;
+
+      try {
+        const res = await fetch(`${API_BASE}/cars/check-seller-email?email=${encodeURIComponent(email)}`);
+        const data = await res.json();
+        if (data.is_approved) {
+          statusEl.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Authorized Email!</span> Any car added with this email will directly upload & publish to the live server.`;
+          document.getElementById('uploadSubmitBtn').disabled = false;
+        } else {
+          statusEl.innerHTML = `<span class="text-rose-600 font-bold"><i class="fa-solid fa-circle-xmark mr-1"></i> Unauthorized Email.</span> Only pre-approved emails can upload cars. Contact superadmin to authorize this email.`;
+        }
+      } catch (err) {
+        statusEl.innerText = 'Verification failed.';
+      }
+    }
+
+    // Direct Car Upload Submission
+    async function handleDirectCarUpload(e) {
+      e.preventDefault();
+      const email = document.getElementById('uploadEmail').value.trim();
+
+      // Check authorization first
+      const authRes = await fetch(`${API_BASE}/cars/check-seller-email?email=${encodeURIComponent(email)}`);
+      const authData = await authRes.json();
+      if (!authData.is_approved) {
+        alert(`❌ Access Denied: "${email}" is not an authorized email approved by Superadmin.\nPlease use an approved email or authorize this email in the "Authorized Emails" panel.`);
+        return;
+      }
+
+      const payload = {
+        seller_email: email,
+        seller_name: document.getElementById('uploadSellerName').value,
+        seller_phone: document.getElementById('uploadSellerPhone').value,
+        title: `${document.getElementById('uploadYear').value} ${document.getElementById('uploadMake').value} ${document.getElementById('uploadModel').value} ${document.getElementById('uploadVariant').value}`,
+        reg_number: document.getElementById('uploadReg').value.toUpperCase(),
+        make: document.getElementById('uploadMake').value,
+        model: document.getElementById('uploadModel').value,
+        variant: document.getElementById('uploadVariant').value,
+        year: parseInt(document.getElementById('uploadYear').value),
+        kilometers_driven: parseInt(document.getElementById('uploadKm').value),
+        fuel_type: document.getElementById('uploadFuel').value,
+        transmission: document.getElementById('uploadTrans').value,
+        ownership: 'FIRST',
+        body_type: document.getElementById('uploadBody').value,
+        color: 'White',
+        city: document.getElementById('uploadCity').value,
+        price: parseFloat(document.getElementById('uploadPrice').value),
+        image_urls: document.getElementById('uploadImage').value ? [document.getElementById('uploadImage').value] : []
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/cars/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        alert(`🎉 Success!\n${result.message}\nCar ID: ${result.car_id}`);
+        closeAddCarDirectModal();
+        loadCars();
+      } catch (err) {
+        alert('Upload failed: ' + err.message);
+      }
+    }
+
+    // Superadmin: Whitelist / Authorize an Email
+    async function handleWhitelistEmail(e) {
+      e.preventDefault();
+      const email = document.getElementById('newAdminEmail').value.trim();
+      const notes = document.getElementById('newAdminNotes').value.trim();
+
+      try {
+        const res = await fetch(`${API_BASE}/cars/admin/approve-seller-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, notes: notes || "Authorized Admin/Manager" })
+        });
+        if (res.ok) {
+          alert(`✅ Email "${email}" has been Approved & Whitelisted!\nThey can now add cars and directly publish to the live server.`);
+          document.getElementById('newAdminEmail').value = '';
+          document.getElementById('newAdminNotes').value = '';
+          loadAuthorizedEmails();
+        }
+      } catch (err) {
+        alert('Failed to authorize email');
+      }
+    }
+
+    // Load Authorized Emails List
+    async function loadAuthorizedEmails() {
+      const container = document.getElementById('authorizedEmailsList');
+      container.innerHTML = `<div class="py-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-sm"></i></div>`;
+      try {
+        const res = await fetch(`${API_BASE}/cars/admin/approved-seller-emails`);
+        const list = await res.json();
+        if (!list || list.length === 0) {
+          container.innerHTML = `<p class="text-xs text-slate-400">No authorized emails yet.</p>`;
+          return;
+        }
+        container.innerHTML = list.map(item => `
+          <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs flex justify-between items-center">
+            <div>
+              <strong class="text-slate-900 block font-bold">${item.email}</strong>
+              <span class="text-[10px] text-slate-500">${item.notes || 'Authorized Manager'}</span>
+            </div>
+            <span class="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-md">
+              <i class="fa-solid fa-check text-[9px] mr-1"></i> Authorized
+            </span>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<p class="text-xs text-red-500">Failed to load emails.</p>`;
+      }
+    }
+
+    // Valuation Calculator
+    async function handleCalculateValuation(e) {
+      e.preventDefault();
+      const payload = {
+        make: document.getElementById('valMake').value,
+        model: document.getElementById('valModel').value,
+        year: parseInt(document.getElementById('valYear').value),
+        kilometers_driven: parseInt(document.getElementById('valKm').value),
+        fuel_type: 'DIESEL',
+        transmission: 'AUTOMATIC',
+        ownership: 'FIRST',
+        city: 'Bangalore'
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/leads/valuation`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        document.getElementById('valuationResult').classList.remove('hidden');
+        document.getElementById('valRangeText').innerText = `${formatLakhs(data.estimated_min_price)} – ${formatLakhs(data.estimated_max_price)}`;
+        document.getElementById('valBuyText').innerText = formatLakhs(data.recommended_procurement_price);
+      } catch (err) {
+        alert('Error calculating valuation');
+      }
+    }
+
+    // Book Test Drive
+    async function bookTestDrive(carId, title) {
+      const name = prompt(`Book Test Drive for ${title}\nEnter your name:`, "Manoj Shankar");
+      if (!name) return;
+      const phone = prompt("Enter your 10-digit mobile number:", "9876543210");
+      if (!phone) return;
+
+      const payload = {
+        car_id: carId,
+        customer_name: name,
+        customer_phone: phone,
+        booking_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        booking_time_slot: "10:00 AM - 12:00 PM",
+        location_type: "HUB_VISIT"
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/test-drives`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          alert(`🎉 Test drive booked successfully for ${title}!\nOur Hub manager will contact you at ${phone}.`);
+          closeCarModal();
+        }
+      } catch (err) {
+        alert('Booking failed');
+      }
+    }
+
+    // Reserve Car
+    async function reserveCar(carId, title) {
+      const name = prompt(`Reserve ${title} (₹10,000 Refundable Token)\nEnter your name:`, "Manoj Shankar");
+      if (!name) return;
+      const phone = prompt("Enter your mobile number:", "9876543210");
+      if (!phone) return;
+
+      const payload = {
+        car_id: carId,
+        customer_name: name,
+        customer_phone: phone,
+        order_type: "RESERVATION_TOKEN",
+        token_amount: 10000,
+        delivery_city: "Bangalore"
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/orders/reserve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (res.ok) {
+          alert(`✅ Car Reserved Successfully!\nOrder Reference: ${result.order_number}\nThe car is now reserved for you.`);
+          closeCarModal();
+          loadCars();
+        }
+      } catch (err) {
+        alert('Reservation error: ' + err.message);
+      }
     }
 
     // Filter Helpers
@@ -1037,7 +1293,7 @@
         fuel_type: null,
         transmission: null,
         body_type: null,
-        max_price: 3000000,
+        max_price: 4500000,
         min_score: null,
         city: 'Bangalore',
         search: '',
@@ -1045,293 +1301,13 @@
       };
       document.querySelectorAll('.brand-card').forEach(b => b.classList.remove('active-brand'));
       document.getElementById('activeBrandBanner').classList.add('hidden');
-      document.getElementById('catalogTitle').innerText = 'Available Verified Cars';
-      document.getElementById('priceRange').value = 3000000;
-      document.getElementById('priceLabel').innerText = 'Up to ₹30.0 L';
+      document.getElementById('catalogTitle').innerText = 'Available Certified Cars';
+      document.getElementById('priceRange').value = 4500000;
+      document.getElementById('priceLabel').innerText = 'Up to ₹45.0 L';
       document.getElementById('globalSearch').value = '';
       document.getElementById('minScoreSelect').value = '';
       document.querySelectorAll('.fuel-btn, .trans-btn, .body-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600'));
       loadCars();
-    }
-
-    // Modal Helpers
-    function openAddCarModal() {
-      document.getElementById('addCarModal').classList.remove('hidden');
-      document.getElementById('addCarModal').classList.add('flex');
-    }
-    function closeAddCarModal() {
-      document.getElementById('addCarModal').classList.add('hidden');
-      document.getElementById('addCarModal').classList.remove('flex');
-    }
-    function openValuationModal() {
-      document.getElementById('valuationModal').classList.remove('hidden');
-      document.getElementById('valuationModal').classList.add('flex');
-    }
-    function closeValuationModal() {
-      document.getElementById('valuationModal').classList.add('hidden');
-      document.getElementById('valuationModal').classList.remove('flex');
-    }
-
-    // Check Seller Email Verification
-    async function checkEmailVerificationStatus(email) {
-      if (!email || !email.includes('@')) return;
-      const badge = document.getElementById('emailStatusBadge');
-      badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Checking email verification status...`;
-
-      try {
-        const res = await fetch(`${API_BASE}/cars/check-seller-email?email=${encodeURIComponent(email)}`);
-        const data = await res.json();
-        if (data.is_approved) {
-          badge.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Verified & Pre-Approved Seller!</span> Your car will go live immediately.`;
-        } else {
-          badge.innerHTML = `<span class="text-amber-600 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Unverified Email.</span> Your car will be submitted for Admin Review & Approval.`;
-        }
-      } catch (err) {
-        badge.innerText = 'Could not verify status.';
-      }
-    }
-
-    // Handle Online Car Submission
-    async function handleCarSubmission(e) {
-      e.preventDefault();
-      const payload = {
-        seller_email: document.getElementById('sellerEmail').value,
-        seller_name: document.getElementById('sellerName').value,
-        seller_phone: document.getElementById('sellerPhone').value,
-        title: `${document.getElementById('carYear').value} ${document.getElementById('carMake').value} ${document.getElementById('carModel').value} ${document.getElementById('carVariant').value}`,
-        reg_number: document.getElementById('carReg').value,
-        make: document.getElementById('carMake').value,
-        model: document.getElementById('carModel').value,
-        variant: document.getElementById('carVariant').value,
-        year: parseInt(document.getElementById('carYear').value),
-        kilometers_driven: parseInt(document.getElementById('carKm').value),
-        fuel_type: document.getElementById('carFuel').value,
-        transmission: document.getElementById('carTrans').value,
-        ownership: 'FIRST',
-        body_type: document.getElementById('carBody').value,
-        color: 'White',
-        city: document.getElementById('carCity').value,
-        price: parseFloat(document.getElementById('carPrice').value),
-        image_urls: document.getElementById('carImage').value ? [document.getElementById('carImage').value] : []
-      };
-
-      try {
-        const res = await fetch(`${API_BASE}/cars/submit`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await res.json();
-        alert(result.message);
-        closeAddCarModal();
-        loadCars();
-      } catch (err) {
-        alert('Failed to submit car: ' + err.message);
-      }
-    }
-
-    // Handle Valuation Calculation
-    async function handleCalculateValuation(e) {
-      e.preventDefault();
-      const payload = {
-        make: document.getElementById('valMake').value,
-        model: document.getElementById('valModel').value,
-        year: parseInt(document.getElementById('valYear').value),
-        kilometers_driven: parseInt(document.getElementById('valKm').value),
-        fuel_type: 'PETROL',
-        transmission: 'MANUAL',
-        ownership: 'FIRST',
-        city: 'Bangalore'
-      };
-
-      try {
-        const res = await fetch(`${API_BASE}/leads/valuation`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        document.getElementById('valuationResult').classList.remove('hidden');
-        document.getElementById('valRangeText').innerText = `${formatLakhs(data.estimated_min_price)} – ${formatLakhs(data.estimated_max_price)}`;
-        document.getElementById('valBuyText').innerText = formatLakhs(data.recommended_procurement_price);
-      } catch (err) {
-        alert('Error calculating valuation');
-      }
-    }
-
-    // Book Test Drive
-    async function bookTestDrive(carId, title) {
-      const name = prompt(`Book Free Test Drive for ${title}\nEnter your full name:`, "Manoj Shankar");
-      if (!name) return;
-      const phone = prompt("Enter your 10-digit mobile number:", "9876543210");
-      if (!phone) return;
-
-      const payload = {
-        car_id: carId,
-        customer_name: name,
-        customer_phone: phone,
-        booking_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        booking_time_slot: "10:00 AM - 12:00 PM",
-        location_type: "HUB_VISIT"
-      };
-
-      try {
-        const res = await fetch(`${API_BASE}/test-drives`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (res.ok) {
-          alert(`🎉 Test drive booked successfully for ${title}! Our representative will contact you at ${phone}.`);
-          closeCarModal();
-        }
-      } catch (err) {
-        alert('Booking failed');
-      }
-    }
-
-    // Reserve Car Token
-    async function reserveCar(carId, title) {
-      const name = prompt(`Reserve ${title} (₹10,000 Refundable Token)\nEnter your name:`, "Manoj Shankar");
-      if (!name) return;
-      const phone = prompt("Enter your mobile number:", "9876543210");
-      if (!phone) return;
-
-      const payload = {
-        car_id: carId,
-        customer_name: name,
-        customer_phone: phone,
-        order_type: "RESERVATION_TOKEN",
-        token_amount: 10000,
-        delivery_city: "Bangalore"
-      };
-
-      try {
-        const res = await fetch(`${API_BASE}/orders/reserve`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await res.json();
-        if (res.ok) {
-          alert(`✅ Car Reserved Successfully!\nOrder Reference: ${result.order_number}\nPayment Status: SUCCESS (Simulated Razorpay)\nThe vehicle is now held exclusively for you.`);
-          closeCarModal();
-          loadCars();
-        } else {
-          alert(result.detail || 'Reservation failed');
-        }
-      } catch (err) {
-        alert('Reservation error: ' + err.message);
-      }
-    }
-
-    // Admin: Load Pending Cars
-    async function loadPendingCars() {
-      const list = document.getElementById('pendingCarsList');
-      list.innerHTML = `<div class="py-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl text-brand-600 mb-2"></i><p>Loading pending cars...</p></div>`;
-
-      try {
-        const res = await fetch(`${API_BASE}/cars/admin/pending`);
-        const cars = await res.json();
-        if (!cars || cars.length === 0) {
-          list.innerHTML = `
-            <div class="bg-slate-50 p-8 rounded-2xl text-center border border-slate-200">
-              <i class="fa-solid fa-circle-check text-3xl text-emerald-500 mb-2"></i>
-              <h4 class="font-bold text-slate-700">All submissions are reviewed!</h4>
-              <p class="text-xs text-slate-400 mt-1">No car listings currently pending approval.</p>
-            </div>
-          `;
-          return;
-        }
-
-        list.innerHTML = cars.map(c => `
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded">PENDING APPROVAL</span>
-                <span class="text-xs text-slate-500 font-semibold">${c.reg_number}</span>
-              </div>
-              <h4 class="font-bold text-slate-900 text-base mt-1">${c.title}</h4>
-              <p class="text-xs text-slate-500 mt-0.5">Submitted by: <strong class="text-slate-800">${c.seller_name || 'Seller'}</strong> (${c.seller_email})</p>
-              <div class="text-xs font-bold text-slate-900 mt-2">${formatLakhs(c.price)} &bull; ${c.city}</div>
-            </div>
-            <div class="flex gap-2">
-              <button onclick="approveCarListing('${c.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition">
-                <i class="fa-solid fa-check mr-1"></i> Approve Car
-              </button>
-              <button onclick="quickApproveEmail('${c.seller_email}')" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-2 rounded-xl text-xs transition">
-                <i class="fa-solid fa-user-plus mr-1"></i> Whitelist Email
-              </button>
-            </div>
-          </div>
-        `).join('');
-      } catch (err) {
-        list.innerHTML = `<div class="text-red-500 text-xs">Failed to load pending cars</div>`;
-      }
-    }
-
-    // Admin: Approve a Car Listing
-    async function approveCarListing(carId) {
-      try {
-        const res = await fetch(`${API_BASE}/cars/admin/approve/${carId}`, { method: 'POST' });
-        if (res.ok) {
-          alert('Car approved and published to marketplace!');
-          loadPendingCars();
-        }
-      } catch (err) {
-        alert('Approval failed');
-      }
-    }
-
-    // Admin: Approve / Whitelist Email
-    async function handleApproveEmail(e) {
-      e.preventDefault();
-      const email = document.getElementById('approveEmailInput').value;
-      const notes = document.getElementById('approveEmailNotes').value;
-      await quickApproveEmail(email, notes);
-      document.getElementById('approveEmailInput').value = '';
-      document.getElementById('approveEmailNotes').value = '';
-    }
-
-    async function quickApproveEmail(email, notes = "Approved by Admin") {
-      try {
-        const res = await fetch(`${API_BASE}/cars/admin/approve-seller-email`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, notes: notes })
-        });
-        if (res.ok) {
-          alert(`✅ Seller Email "${email}" has been Approved & Whitelisted!\nAll pending cars from this seller are now published.`);
-          loadApprovedEmails();
-          loadPendingCars();
-        }
-      } catch (err) {
-        alert('Failed to approve email');
-      }
-    }
-
-    // Admin: Load Approved Seller Emails
-    async function loadApprovedEmails() {
-      const list = document.getElementById('approvedEmailsList');
-      try {
-        const res = await fetch(`${API_BASE}/cars/admin/approved-seller-emails`);
-        const emails = await res.json();
-        if (!emails || emails.length === 0) {
-          list.innerHTML = `<p class="text-xs text-slate-400">No approved emails yet.</p>`;
-          return;
-        }
-        list.innerHTML = emails.map(e => `
-          <div class="bg-white p-2.5 rounded-xl border border-slate-200 text-xs flex justify-between items-center">
-            <div>
-              <strong class="text-slate-800 block">${e.email}</strong>
-              <span class="text-[10px] text-slate-400">${e.notes || 'Verified'}</span>
-            </div>
-            <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Active</span>
-          </div>
-        `).join('');
-      } catch (err) {
-        console.error(err);
-      }
     }
 
     // Initial Load
