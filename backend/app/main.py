@@ -74,9 +74,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 # Mount static files if directory exists
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+# Mount uploads directory for images and videos
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)

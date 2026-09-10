@@ -74,6 +74,16 @@ def process_and_save_image(raw_bytes: bytes, base_filename: str) -> dict:
     }
 
 
+ALLOWED_VIDEO_TYPES = {
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/quicktime": ".mov",
+    "video/x-matroska": ".mkv",
+    "video/ogg": ".ogv",
+}
+MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024  # 100 MB per file
+
+
 @router.post(
     "/images",
     response_model=List[dict],
@@ -134,6 +144,64 @@ async def upload_images(
                 "thumbnail_url": f"{base}/uploads/{meta['thumbnail_file_name']}",
                 "width": meta["width"],
                 "height": meta["height"],
+            }
+        )
+
+    return results
+
+
+@router.post(
+    "/videos",
+    response_model=List[dict],
+    summary="Upload car walkaround or engine sound videos",
+    description="Accepts mp4/webm/mov video files up to 100MB.",
+)
+async def upload_videos(
+    request: Request,
+    files: List[UploadFile] = File(...),
+) -> List[dict]:
+    """Validate and persist uploaded car video files."""
+    if not files:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No video files provided"
+        )
+
+    base = str(request.base_url).rstrip("/")
+    results: List[dict] = []
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+    for f in files:
+        content_type = (f.content_type or "").lower()
+        ext = ALLOWED_VIDEO_TYPES.get(content_type, ".mp4")
+        if content_type not in ALLOWED_VIDEO_TYPES and not f.filename.lower().endswith(tuple(ALLOWED_VIDEO_TYPES.values())):
+            raise HTTPException(
+                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail=f"Unsupported video type '{content_type}'. Allowed: MP4, WebM, MOV",
+            )
+
+        data = await f.read()
+        if not data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Video file '{f.filename}' is empty",
+            )
+        if len(data) > MAX_VIDEO_SIZE_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"Video file '{f.filename}' exceeds 100 MB size limit",
+            )
+
+        video_filename = f"video_{uuid.uuid4().hex}{ext}"
+        filepath = os.path.join(UPLOAD_DIR, video_filename)
+        with open(filepath, "wb") as out_f:
+            out_f.write(data)
+
+        results.append(
+            {
+                "file_name": video_filename,
+                "url": f"{base}/uploads/{video_filename}",
+                "content_type": content_type,
+                "size_bytes": len(data),
             }
         )
 
