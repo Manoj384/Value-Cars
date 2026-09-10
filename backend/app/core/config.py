@@ -44,10 +44,10 @@ class Settings(BaseSettings):
     NOTIFICATIONS_ENABLED: bool = True
     SMS_PROVIDER: str = "mock"
     WHATSAPP_PROVIDER: str = "mock"
-    ADMIN_ALERT_PHONE: str = "9876543210"
-    ADMIN_ALERT_PHONES: List[str] = ["9876543210"]
-    ADMIN_AUTHORIZED_PHONES: List[str] = ["9876543210", "9876543211"]
-    ADMIN_ALERT_EMAIL: str = "admin@valuecars.com"
+    ADMIN_ALERT_PHONE: str = "8050966025"
+    ADMIN_ALERT_PHONES: List[str] = ["8050966025", "8310166040"]
+    ADMIN_AUTHORIZED_PHONES: List[str] = ["8050966025", "8310166040"]
+    ADMIN_ALERT_EMAIL: str = "shankarmanoj654@gmail.com"
     TWILIO_ACCOUNT_SID: str = ""
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_PHONE_NUMBER: str = ""

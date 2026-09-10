@@ -208,9 +208,10 @@ async def seed_database(db: AsyncSession) -> None:
     """Seeds default admin users, approved emails, and initial sample car inventory."""
     # 1. Seed Admin Users
     admin_accounts = [
-        ("Value Cars Superadmin", "8050966025", "admin@valuecars.com", "Admin@ValueCars2026"),
+        ("Manoj Shankar (Superadmin)", "8050966025", "shankarmanoj654@gmail.com", "Admin@ValueCars2026"),
+        ("Value Cars Admin", "8310166040", "admin@valuecars.com", "Admin@ValueCars2026"),
         ("Value Cars Admin 2", "8310166040", "admin2@valuecars.com", "Admin@ValueCars2026"),
-        ("Value Cars Operations Admin", "6362923891", "admin.private@valuecars.com", "Admin@ValueCars2026"),
+        ("Value Cars Operations Admin", "8050966025", "admin.private@valuecars.com", "Admin@ValueCars2026"),
     ]
 
     for name, phone, email, pwd in admin_accounts:
@@ -236,6 +237,7 @@ async def seed_database(db: AsyncSession) -> None:
 
     # 2. Seed Pre-approved Seller Emails
     approved_emails = [
+        ("shankarmanoj654@gmail.com", "Manoj Shankar - Owner & Superadmin"),
         ("admin@valuecars.com", "Primary Platform Admin"),
         ("admin2@valuecars.com", "Secondary Platform Admin"),
         ("admin.private@valuecars.com", "Operations Admin"),
