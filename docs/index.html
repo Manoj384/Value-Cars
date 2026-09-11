@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Value Cars | Spinny-Style Certified Used Cars & Marketplace</title>
+  <title>Value Cars | Certified Pre-Owned Vehicles | Quality • Trust • Great Deals</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script>
     tailwind.config = {
@@ -16,6 +16,7 @@
         extend: {
           fontFamily: {
             sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            heading: ['Outfit', 'sans-serif'],
           },
           colors: {
             brand: {
@@ -24,12 +25,19 @@
               500: '#f43f5e',
               600: '#e11d48',
               700: '#be123c',
+              800: '#9f1239',
               900: '#881337',
+              950: '#4c0519',
             },
-            accent: {
-              50: '#f0fdf4',
-              500: '#22c55e',
-              600: '#16a34a',
+            gold: {
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+            },
+            whatsapp: {
+              500: '#25D366',
+              600: '#128C7E',
+              700: '#075E54',
             }
           }
         }
@@ -37,91 +45,126 @@
     }
   </script>
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0b0f19; color: #f1f5f9; }
     .badge-certified { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
     .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     .brand-card {
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .brand-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 12px 28px -5px rgba(225, 29, 72, 0.18);
     }
     .brand-card.active-brand {
       border-color: #e11d48;
-      background-color: #fff1f2;
+      background-color: rgba(225, 29, 72, 0.12);
       box-shadow: 0 0 0 2px #e11d48;
+    }
+    .brand-img {
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+      transition: transform 0.2s ease;
+    }
+    .brand-card:hover .brand-img {
+      transform: scale(1.1);
     }
   </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="text-slate-100 antialiased min-h-screen flex flex-col bg-slate-950">
 
-  <!-- TOP ANNOUNCEMENT BAR -->
-  <div class="bg-slate-900 text-slate-300 text-xs py-2 px-4 flex justify-between items-center">
-    <div class="flex items-center space-x-4">
-      <span><i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5"></i> 200-Point Inspection Guaranteed</span>
-      <span class="hidden md:inline"><i class="fa-solid fa-rotate-left text-amber-400 mr-1.5"></i> 5-Day Money Back Guarantee</span>
-      <span class="hidden lg:inline"><i class="fa-solid fa-truck text-sky-400 mr-1.5"></i> Free Home Test Drive</span>
-    </div>
-    <div class="flex items-center space-x-4">
-      <span class="text-slate-400">Support: <strong class="text-white">1800-200-VALUE</strong></span>
-      <button onclick="switchTab('admin')" class="text-amber-400 hover:text-amber-300 font-semibold flex items-center">
-        <i class="fa-solid fa-lock text-xs mr-1"></i> Admin Approval Portal
-      </button>
+  <!-- TOP ANNOUNCEMENT & CONTACT BAR (WITH BOTH PHONE NUMBERS) -->
+  <div class="bg-slate-900 text-slate-300 text-xs py-2 px-4 sm:px-8 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center space-x-4">
+        <span class="flex items-center text-emerald-400 font-bold">
+          <i class="fa-solid fa-shield-check mr-1.5 text-sm"></i> 200-Point Quality Checked
+        </span>
+        <span class="hidden md:flex items-center text-amber-400 font-semibold">
+          <i class="fa-solid fa-rotate-left mr-1.5"></i> 5-Day Money Back Guarantee
+        </span>
+        <span class="hidden lg:flex items-center text-sky-400 font-semibold">
+          <i class="fa-solid fa-location-dot mr-1.5"></i> Bangalore Hub • Mallathahalli
+        </span>
+      </div>
+      
+      <!-- Live Contact Actions with Both Phone Numbers & WhatsApp -->
+      <div class="flex items-center space-x-3 sm:space-x-5 flex-wrap">
+        <!-- WhatsApp Number 1 -->
+        <a href="https://wa.me/918050966025?text=Hi%20Value%20Cars,%20I%20am%20looking%20for%20a%20certified%20used%20car." target="_blank" class="text-whatsapp-500 hover:text-white font-bold flex items-center transition">
+          <i class="fa-brands fa-whatsapp text-sm mr-1.5 text-whatsapp-500"></i> WA: 8050966025
+        </a>
+        <!-- WhatsApp Number 2 -->
+        <a href="https://wa.me/918310166040?text=Hi%20Value%20Cars,%20I%20am%20looking%20for%20a%20certified%20used%20car." target="_blank" class="text-whatsapp-500 hover:text-white font-bold flex items-center transition hidden sm:flex">
+          <i class="fa-brands fa-whatsapp text-sm mr-1.5 text-whatsapp-500"></i> WA: 8310166040
+        </a>
+        <!-- Direct Calls -->
+        <a href="tel:+918050966025" class="text-slate-200 hover:text-brand-400 font-bold flex items-center transition">
+          <i class="fa-solid fa-phone text-xs mr-1 text-brand-500"></i> 8050966025
+        </a>
+        <a href="tel:+918310166040" class="text-slate-200 hover:text-brand-400 font-bold flex items-center transition hidden md:flex">
+          <i class="fa-solid fa-phone text-xs mr-1 text-brand-500"></i> 8310166040
+        </a>
+        <!-- Superadmin Whitelist Management -->
+        <button onclick="openManageApprovedEmailsModal()" class="text-amber-400 hover:text-amber-300 font-bold flex items-center pl-3 border-l border-slate-700">
+          <i class="fa-solid fa-user-shield text-xs mr-1.5"></i> Authorized Emails
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- NAVIGATION BAR -->
-  <header class="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+  <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-      <div class="flex items-center space-x-8">
-        <!-- Brand Logo -->
-        <a href="#" onclick="switchTab('browse')" class="flex items-center space-x-2.5">
-          <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center text-white text-xl font-black shadow-md shadow-brand-500/30">
-            <i class="fa-solid fa-car-side"></i>
-          </div>
-          <div>
-            <span class="text-2xl font-black tracking-tight text-slate-900">VALUE<span class="text-brand-600">CARS</span></span>
-            <span class="block text-[10px] uppercase font-bold tracking-widest text-slate-400 -mt-1">Certified Marketplace</span>
+      <div class="flex items-center space-x-4 sm:space-x-6">
+        
+        <!-- Value Cars Official Logo -->
+        <a href="#" onclick="selectBrand('')" class="flex items-center space-x-3 group">
+          <img src="/static/logo_black_clean.png" alt="Value Cars" class="h-12 sm:h-14 w-auto object-contain rounded-xl border border-slate-700/80 shadow-lg group-hover:scale-105 transition duration-300">
+          <div class="hidden sm:block">
+            <div class="text-lg sm:text-xl font-black tracking-tight leading-none text-white font-heading">
+              VALUE <span class="text-brand-600">CARS</span>
+            </div>
+            <div class="text-[9px] uppercase font-extrabold tracking-widest text-amber-400 mt-0.5">
+              Quality • Trust • Great Deals
+            </div>
           </div>
         </a>
 
-        <!-- City Selector -->
-        <div class="hidden md:flex items-center bg-slate-100 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700">
-          <i class="fa-solid fa-location-dot text-brand-600 mr-2"></i>
-          <select id="citySelect" onchange="applyFilters()" class="bg-transparent border-none outline-none cursor-pointer">
-            <option value="">All Cities</option>
-            <option value="Bangalore" selected>Bangalore</option>
-            <option value="Mumbai">Mumbai</option>
-            <option value="Delhi NCR">Delhi NCR</option>
-          </select>
-        </div>
+        <!-- Location Badge (Only Bangalore) -->
+        <a href="#hub-location" class="hidden md:flex items-center bg-slate-800 hover:bg-slate-700/80 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 transition border border-slate-700">
+          <i class="fa-solid fa-location-dot text-brand-500 mr-2 text-sm"></i>
+          <span>Bangalore Hub (Mallathahalli)</span>
+          <span class="ml-2 text-brand-400 hover:text-brand-300 font-extrabold text-[10px] uppercase underline">
+            View Map <i class="fa-solid fa-arrow-down ml-0.5"></i>
+          </span>
+        </a>
       </div>
 
-      <!-- Search Input -->
-      <div class="hidden lg:flex flex-1 max-w-md mx-8 relative">
+      <!-- Global Search -->
+      <div class="hidden lg:flex flex-1 max-w-md mx-6 relative">
         <input
           type="text"
           id="globalSearch"
-          placeholder="Search by Make, Model (e.g. Creta, Thar, Swift)..."
-          class="w-full bg-slate-100 border border-transparent focus:border-brand-500 focus:bg-white pl-10 pr-4 py-2.5 rounded-full text-sm outline-none transition"
+          placeholder="Search Make, Model, Fuel (e.g. Fortuner, Creta, Thar, Swift)..."
+          class="w-full bg-slate-800/80 border border-slate-700 focus:border-brand-500 focus:bg-slate-800 pl-10 pr-4 py-2.5 rounded-full text-xs font-semibold text-slate-100 outline-none transition placeholder-slate-400"
           oninput="debounceSearch()"
         />
-        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="flex items-center space-x-3">
-        <button onclick="switchTab('browse')" id="navBrowse" class="px-4 py-2 text-sm font-bold text-slate-700 hover:text-brand-600 transition">
-          <i class="fa-solid fa-car mr-1.5"></i> Browse Cars
+      <!-- Actions: Hub Location, Valuation Tool & Upload Car -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <a href="#hub-location" class="hidden sm:inline-flex items-center px-3.5 py-2 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition">
+          <i class="fa-solid fa-map-location-dot mr-1.5 text-brand-500"></i> Showroom Map
+        </a>
+
+        <button onclick="openValuationModal()" class="hidden md:inline-flex items-center px-3.5 py-2 text-xs font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-xl transition">
+          <i class="fa-solid fa-calculator mr-1.5"></i> Valuation Tool
         </button>
-        <button onclick="openValuationModal()" class="px-4 py-2 text-sm font-bold text-slate-700 hover:text-brand-600 transition hidden sm:inline-flex items-center">
-          <i class="fa-solid fa-calculator mr-1.5 text-brand-600"></i> Price Estimator
-        </button>
-        <button onclick="openAddCarModal()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-4 py-2.5 rounded-xl shadow-md shadow-brand-500/20 text-sm flex items-center transition">
-          <i class="fa-solid fa-plus mr-1.5"></i> Add / Sell Car
+
+        <!-- Direct Car Upload Button (Supports Local Image & Video Files + URLs) -->
+        <button onclick="openAddCarDirectModal()" class="bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-700 hover:to-rose-700 text-white font-black px-4 py-2.5 rounded-xl shadow-lg shadow-brand-600/30 text-xs sm:text-sm flex items-center transition">
+          <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Upload Car
         </button>
       </div>
     </div>
@@ -130,564 +173,835 @@
   <!-- MAIN CONTENT CONTAINER -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- TAB 1: BROWSE CARS (DEFAULT) -->
-    <div id="tabBrowse">
-
-      <!-- HERO BANNER -->
-      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-900 text-white p-8 sm:p-12 mb-8 shadow-xl">
-        <div class="relative z-10 max-w-2xl">
-          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30 mb-4">
-            <i class="fa-solid fa-award mr-1.5"></i> Spinny-Standard 200-Point Inspection
+    <!--
+    ===================================================================
+    HERO BANNER: BUY AND SELL VERIFIED BLOCK (COMMENTED OUT AS REQUESTED)
+    ===================================================================
+    <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white p-6 sm:p-10 mb-10 border border-slate-800 shadow-2xl">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+        <div class="lg:col-span-7 space-y-4">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/30">
+            <i class="fa-solid fa-award mr-1.5"></i> Official Value Cars Marketplace
           </span>
-          <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight mb-4">
-            Find Your Dream Certified Used Car with Complete Trust.
+          <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white font-heading">
+            Buy & Sell Verified Pre-Owned Cars with Zero Hassle.
           </h1>
-          <p class="text-slate-300 text-base sm:text-lg mb-6">
-            Fixed fair pricing, verified digital health scorecards, free 1-year warranty, and instant test drives at your doorstep.
+          <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+            Every vehicle undergoes a 200-point Spinny certified inspection, transparent pricing, and instant WhatsApp assistance.
           </p>
-          <div class="flex flex-wrap gap-3">
-            <button onclick="setQuickFilter('body_type', 'SUV')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-sm transition">
-              🚙 SUVs
-            </button>
-            <button onclick="setQuickFilter('body_type', 'SEDAN')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-sm transition">
-              🚘 Sedans
-            </button>
-            <button onclick="setQuickFilter('transmission', 'AUTOMATIC')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-sm transition">
-              ⚡ Automatics
-            </button>
-            <button onclick="setQuickFilter('fuel_type', 'PETROL')" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-semibold backdrop-blur-sm transition">
-              ⛽ Petrol
-            </button>
+          <div class="flex flex-wrap items-center gap-3 pt-2">
+            <a href="https://wa.me/918050966025" target="_blank" class="bg-whatsapp-500 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center">
+              <i class="fa-brands fa-whatsapp text-sm mr-2"></i> WhatsApp: 8050966025
+            </a>
+            <a href="https://wa.me/918310166040" target="_blank" class="bg-whatsapp-500 text-white font-black px-4 py-2.5 rounded-xl text-xs flex items-center">
+              <i class="fa-brands fa-whatsapp text-sm mr-2"></i> WhatsApp: 8310166040
+            </a>
           </div>
         </div>
-        <div class="absolute -right-10 -bottom-10 opacity-15 text-[280px] pointer-events-none">
-          <i class="fa-solid fa-car-rear"></i>
+        <div class="lg:col-span-5 flex justify-center">
+          <div class="bg-white/95 p-6 rounded-3xl shadow-2xl border-2 border-amber-400/40 max-w-md">
+            <img src="/static/logo_1_clean.png" alt="Value Cars" class="w-full h-auto object-contain rounded-2xl">
+          </div>
+        </div>
+      </div>
+    </div>
+    ===================================================================
+    -->
+
+    <!-- BRAND SELECTOR GRID (ACCURATE OFFICIAL BRAND LOGOS) -->
+    <section class="mb-10 bg-slate-900/90 p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-xl">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+        <div>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-slate-800 text-brand-400 mb-1.5 border border-slate-700">
+            <i class="fa-solid fa-tags mr-1.5 text-brand-500"></i> Explore by Manufacturer
+          </span>
+          <h2 class="text-2xl font-black text-white tracking-tight font-heading">Select Your Car Brand</h2>
+          <p class="text-xs text-slate-400 font-semibold mt-0.5">Click any brand below to view its verified inventory in Bangalore</p>
+        </div>
+        <button onclick="selectBrand('')" id="brand-clear-btn" class="self-start sm:self-auto text-xs font-bold text-brand-400 hover:text-brand-300 bg-brand-950/60 hover:bg-brand-900/60 border border-brand-800/60 px-3.5 py-1.5 rounded-full transition flex items-center">
+          <i class="fa-solid fa-layer-group mr-1.5"></i> Show All Brands
+        </button>
+      </div>
+
+      <!-- 12-Brand Cards Grid with Official SVG / High-Quality Vector Logos -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4" id="brandGrid">
+        
+        <!-- 1. Maruti Suzuki -->
+        <button onclick="selectBrand('Maruti')" id="brand-Maruti" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Suzuki_logo_2.svg" alt="Maruti Suzuki" class="brand-img h-10 w-auto object-contain brightness-110">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Maruti Suzuki</span>
+        </button>
+
+        <!-- 2. Hyundai -->
+        <button onclick="selectBrand('Hyundai')" id="brand-Hyundai" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Hyundai_Motor_Company_logo.svg" alt="Hyundai" class="brand-img h-8 w-auto object-contain brightness-125">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Hyundai</span>
+        </button>
+
+        <!-- 3. Tata -->
+        <button onclick="selectBrand('Tata')" id="brand-Tata" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Tata_logo.svg" alt="Tata Motors" class="brand-img h-9 w-auto object-contain brightness-110">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Tata Motors</span>
+        </button>
+
+        <!-- 4. Mahindra -->
+        <button onclick="selectBrand('Mahindra')" id="brand-Mahindra" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Mahindra_Rise_New_Logo.svg" alt="Mahindra" class="brand-img h-8 w-auto object-contain brightness-125">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Mahindra</span>
+        </button>
+
+        <!-- 5. Toyota -->
+        <button onclick="selectBrand('Toyota')" id="brand-Toyota" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Toyota.svg" alt="Toyota" class="brand-img h-8 w-auto object-contain brightness-125">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Toyota</span>
+        </button>
+
+        <!-- 6. Kia -->
+        <button onclick="selectBrand('Kia')" id="brand-Kia" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/47/KIA_logo2.svg" alt="Kia" class="brand-img h-6 w-auto object-contain invert brightness-200">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Kia</span>
+        </button>
+
+        <!-- 7. Honda -->
+        <button onclick="selectBrand('Honda')" id="brand-Honda" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/38/Honda.svg" alt="Honda" class="brand-img h-8 w-auto object-contain brightness-125">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Honda</span>
+        </button>
+
+        <!-- 8. Skoda -->
+        <button onclick="selectBrand('Skoda')" id="brand-Skoda" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/47/%C5%A0koda_Auto_logo_%282023%29.svg" alt="Skoda" class="brand-img h-9 w-auto object-contain brightness-110">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Skoda</span>
+        </button>
+
+        <!-- 9. Volkswagen -->
+        <button onclick="selectBrand('Volkswagen')" id="brand-Volkswagen" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6d/Volkswagen_logo_2019.svg" alt="Volkswagen" class="brand-img h-9 w-auto object-contain brightness-125">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Volkswagen</span>
+        </button>
+
+        <!-- 10. Nissan -->
+        <button onclick="selectBrand('Nissan')" id="brand-Nissan" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/8c/Nissan_2020_logo.svg" alt="Nissan" class="brand-img h-9 w-auto object-contain brightness-125">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Nissan</span>
+        </button>
+
+        <!-- 11. Renault -->
+        <button onclick="selectBrand('Renault')" id="brand-Renault" class="brand-card bg-slate-800/80 border border-slate-700/80 hover:border-brand-500 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-14 h-14 flex items-center justify-center mb-2">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b7/Renault_2021.svg" alt="Renault" class="brand-img h-9 w-auto object-contain brightness-125">
+          </div>
+          <span class="text-xs font-extrabold text-slate-200 group-hover:text-brand-400 transition">Renault</span>
+        </button>
+
+        <!-- 12. View All Brands -->
+        <button onclick="selectBrand('')" class="brand-card bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
+          <div class="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 mb-2 group-hover:scale-110 transition">
+            <i class="fa-solid fa-angles-right text-lg"></i>
+          </div>
+          <span class="text-xs font-extrabold text-amber-400 flex items-center">
+            All Brands <i class="fa-solid fa-chevron-right text-[10px] ml-1"></i>
+          </span>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- MOBILE FILTER TRIGGER BAR & SORTING (VISIBLE ON MOBILE / TABLET ONLY) -->
+    <div class="lg:hidden flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 shadow-xl relative z-10">
+      <button onclick="openMobileFilters()" class="flex items-center space-x-2.5 bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-700 hover:to-rose-700 text-white font-black px-4 py-2.5 rounded-xl text-xs shadow-lg shadow-brand-600/30 transition">
+        <i class="fa-solid fa-bars-staggered text-sm"></i>
+        <span>Refine Search & Filters</span>
+        <span id="mobileFilterBadge" class="hidden bg-white text-brand-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1 shadow-sm">0</span>
+      </button>
+
+      <div class="flex items-center space-x-2">
+        <span class="text-slate-400 text-xs font-bold uppercase">Sort:</span>
+        <select id="sortBySelectMobile" onchange="syncAndApplySort(this.value)" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl px-3 py-2 outline-none focus:border-brand-500">
+          <option value="created_at">Recently Added</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="km_asc">KM: Low to High</option>
+          <option value="year_desc">Year: Newest</option>
+          <option value="score_desc">Inspection Score</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- MOBILE FILTER DRAWER & BACKDROP -->
+    <div id="mobileFilterBackdrop" onclick="closeMobileFilters()" class="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm hidden transition-opacity duration-300"></div>
+
+    <div id="mobileFilterDrawer" class="fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-slate-900 border-r border-slate-800 shadow-2xl p-6 overflow-y-auto transform -translate-x-full transition-transform duration-300 flex flex-col justify-between custom-scrollbar">
+      <div>
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-bars-staggered text-brand-500 text-lg"></i>
+            <h3 class="font-black text-white text-lg font-heading">Refine Search</h3>
+          </div>
+          <button onclick="closeMobileFilters()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Active Brand Filter Chip (Mobile) -->
+        <div id="mobileActiveBrandBanner" class="hidden mb-5 bg-brand-950/60 border border-brand-800/60 rounded-xl p-3 flex justify-between items-center text-xs">
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Filtered Brand</span>
+            <strong id="mobileActiveBrandName" class="text-brand-400 font-extrabold text-sm">Hyundai</strong>
+          </div>
+          <button onclick="selectBrand('')" class="text-brand-400 hover:text-brand-300 font-bold text-xs">
+            <i class="fa-solid fa-xmark"></i> Clear
+          </button>
+        </div>
+
+        <!-- Max Price Slider (Mobile) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Budget Range</label>
+          <input type="range" id="mobilePriceRange" min="300000" max="4500000" step="50000" value="4500000" oninput="syncPrice(this.value)" class="w-full accent-brand-600 cursor-pointer">
+          <div class="flex justify-between text-xs font-semibold text-slate-400 mt-1">
+            <span>₹3 L</span>
+            <span id="mobilePriceLabel" class="text-brand-400 font-bold">Up to ₹45.0 L</span>
+          </div>
+        </div>
+
+        <!-- Fuel Type (Mobile) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fuel Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleFuel(this, 'PETROL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Petrol</button>
+            <button onclick="toggleFuel(this, 'DIESEL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Diesel</button>
+            <button onclick="toggleFuel(this, 'CNG')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">CNG</button>
+            <button onclick="toggleFuel(this, 'ELECTRIC')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Electric</button>
+          </div>
+        </div>
+
+        <!-- Transmission (Mobile) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Transmission</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleTransmission(this, 'MANUAL')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Manual</button>
+            <button onclick="toggleTransmission(this, 'AUTOMATIC')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Automatic</button>
+          </div>
+        </div>
+
+        <!-- Body Type (Mobile) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Body Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleBody(this, 'SUV')" class="body-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">SUV</button>
+            <button onclick="toggleBody(this, 'SEDAN')" class="body-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Sedan</button>
+            <button onclick="toggleBody(this, 'HATCHBACK')" class="body-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Hatchback</button>
+          </div>
+        </div>
+
+        <!-- Min Inspection Score (Mobile) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Inspection Score</label>
+          <select id="mobileMinScoreSelect" onchange="syncMinScore(this.value)" class="w-full text-xs font-semibold bg-slate-800 border border-slate-700 text-slate-200 rounded-xl p-2.5 outline-none focus:border-brand-500">
+            <option value="">Any Condition</option>
+            <option value="9.0">9.0+ Excellent Condition</option>
+            <option value="8.5">8.5+ Great Condition</option>
+          </select>
         </div>
       </div>
 
-      <!-- BRAND SELECTOR SECTION (MATCHING SCREENSHOT REFERENCE) -->
-      <section class="mb-10 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-          <div>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-slate-100 text-slate-700 mb-1.5">
-              <i class="fa-solid fa-tags mr-1.5 text-brand-600"></i> Explore by Manufacturer
-            </span>
-            <h2 class="text-2xl font-black text-slate-900 tracking-tight">Select Your Car Brand</h2>
-            <p class="text-xs text-slate-500 font-semibold mt-0.5">Click any brand below to instantly view its verified models</p>
-          </div>
-          <button onclick="selectBrand('')" id="brand-clear-btn" class="self-start sm:self-auto text-xs font-bold text-brand-600 hover:text-brand-700 bg-brand-50 hover:bg-brand-100 px-3.5 py-1.5 rounded-full transition flex items-center">
-            <i class="fa-solid fa-layer-group mr-1.5"></i> Show All Brands
+      <!-- Drawer Bottom Actions -->
+      <div class="pt-6 border-t border-slate-800 flex gap-3 mt-6">
+        <button onclick="resetFilters(); closeMobileFilters();" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-xs transition">
+          Reset All
+        </button>
+        <button onclick="applyFilters(); closeMobileFilters();" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-black py-3 rounded-xl text-xs transition shadow-lg shadow-brand-600/30">
+          Apply & View
+        </button>
+      </div>
+    </div>
+
+    <!-- CATALOG WORKSPACE (DESKTOP FILTERS + VEHICLE CARDS) -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-16 items-start">
+
+      <!-- DESKTOP FILTER SIDEBAR (SOLID OPAQUE BG, ZERO BLEEDTHROUGH, PROPER Z-INDEX) -->
+      <aside class="hidden lg:block lg:col-span-1 bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl h-fit sticky top-24 z-20">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+          <h3 class="font-extrabold text-white text-base flex items-center font-heading">
+            <i class="fa-solid fa-sliders text-brand-500 mr-2"></i> Refine Search
+          </h3>
+          <button onclick="resetFilters()" class="text-xs font-bold text-brand-400 hover:text-brand-300">
+            Reset All
           </button>
         </div>
 
-        <!-- 12-Brand Grid (Maruti, Hyundai, Tata, Mahindra, Toyota, Kia, Honda, Skoda, Volkswagen, Nissan, Renault, View All) -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5 sm:gap-4" id="brandGrid">
-          
-          <!-- 1. Maruti Suzuki -->
-          <button onclick="selectBrand('Maruti')" id="brand-Maruti" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <path d="M78 28L60 46H22l18-18h38zm-56 44l18-18h38l-18 18H22z" fill="#003366"/>
-                <path d="M40 46l20 20H42L22 46h18z" fill="#c00"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Maruti Suzuki</span>
-          </button>
-
-          <!-- 2. Hyundai -->
-          <button onclick="selectBrand('Hyundai')" id="brand-Hyundai" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
-                <ellipse cx="50" cy="50" rx="42" ry="24" fill="none" stroke="#002c5f" stroke-width="6"/>
-                <path d="M38 34c4 10 7 22 7 32M62 34c-4 10-7 22-7 32M40 50h20" fill="none" stroke="#002c5f" stroke-width="6" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Hyundai</span>
-          </button>
-
-          <!-- 3. Tata -->
-          <button onclick="selectBrand('Tata')" id="brand-Tata" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
-                <ellipse cx="50" cy="50" rx="42" ry="24" fill="#004b87"/>
-                <path d="M28 42h44M50 42v28" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
-                <circle cx="34" cy="42" r="5" fill="#fff"/>
-                <circle cx="66" cy="42" r="5" fill="#fff"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Tata</span>
-          </button>
-
-          <!-- 4. Mahindra -->
-          <button onclick="selectBrand('Mahindra')" id="brand-Mahindra" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
-                <path d="M22 68L42 32l8 14-6 10 12-24 14 24-6-10 8-14 20 36H22z" fill="#d32f2f"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Mahindra</span>
-          </button>
-
-          <!-- 5. Toyota -->
-          <button onclick="selectBrand('Toyota')" id="brand-Toyota" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-12 h-12 transition group-hover:scale-110">
-                <ellipse cx="50" cy="50" rx="44" ry="32" fill="none" stroke="#eb0a1e" stroke-width="5"/>
-                <ellipse cx="50" cy="42" rx="30" ry="14" fill="none" stroke="#eb0a1e" stroke-width="5"/>
-                <ellipse cx="50" cy="54" rx="14" ry="24" fill="none" stroke="#eb0a1e" stroke-width="5"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Toyota</span>
-          </button>
-
-          <!-- 6. Kia -->
-          <button onclick="selectBrand('Kia')" id="brand-Kia" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 60" class="w-12 h-10 transition group-hover:scale-110">
-                <path d="M12 45V15l16 30V15M34 15v30M56 15l-14 30h28L84 15" fill="none" stroke="#05141f" stroke-width="8" stroke-linecap="square"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Kia</span>
-          </button>
-
-          <!-- 7. Honda -->
-          <button onclick="selectBrand('Honda')" id="brand-Honda" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <rect x="15" y="15" width="70" height="70" rx="14" fill="none" stroke="#e40521" stroke-width="6"/>
-                <path d="M32 30v40l8-4V50h20v16l8 4V30L60 34v10H40V34z" fill="#e40521"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Honda</span>
-          </button>
-
-          <!-- 8. Skoda -->
-          <button onclick="selectBrand('Skoda')" id="brand-Skoda" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <circle cx="50" cy="50" r="42" fill="none" stroke="#4ba82e" stroke-width="6"/>
-                <path d="M50 25c12 0 20 10 20 20 0 8-6 16-16 16l-8-6 10-6-16-4 10-20z" fill="#4ba82e"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Skoda</span>
-          </button>
-
-          <!-- 9. Volkswagen -->
-          <button onclick="selectBrand('Volkswagen')" id="brand-Volkswagen" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <circle cx="50" cy="50" r="42" fill="none" stroke="#001e50" stroke-width="6"/>
-                <path d="M26 30l16 28 8-16 8 16 16-28M34 46l16 28 16-28" fill="none" stroke="#001e50" stroke-width="5" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Volkswagen</span>
-          </button>
-
-          <!-- 10. Nissan -->
-          <button onclick="selectBrand('Nissan')" id="brand-Nissan" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#c3002f" stroke-width="6"/>
-                <rect x="15" y="42" width="70" height="16" rx="3" fill="#c3002f"/>
-                <text x="50" y="54" fill="#fff" font-size="9" font-weight="bold" font-family="sans-serif" text-anchor="middle">NISSAN</text>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Nissan</span>
-          </button>
-
-          <!-- 11. Renault -->
-          <button onclick="selectBrand('Renault')" id="brand-Renault" class="brand-card bg-white border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-14 h-14 flex items-center justify-center mb-2">
-              <svg viewBox="0 0 100 100" class="w-11 h-11 transition group-hover:scale-110">
-                <path d="M50 15L74 50 50 85 26 50z" fill="none" stroke="#ffcc00" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M50 32L62 50 50 68 38 50z" fill="#ffcc00"/>
-              </svg>
-            </div>
-            <span class="text-xs font-extrabold text-slate-800 group-hover:text-brand-600 transition">Renault</span>
-          </button>
-
-          <!-- 12. View All Brands Action Tile -->
-          <button onclick="selectBrand('')" class="brand-card bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex flex-col items-center justify-center text-center cursor-pointer group">
-            <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 mb-2 group-hover:scale-110 transition">
-              <i class="fa-solid fa-angles-right text-lg"></i>
-            </div>
-            <span class="text-xs font-extrabold text-amber-700 flex items-center">
-              View All <i class="fa-solid fa-chevron-right text-[10px] ml-1"></i>
-            </span>
-          </button>
-
-        </div>
-      </section>
-
-      <!-- CATALOG WORKSPACE (SIDEBAR + GRID) -->
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-
-        <!-- FILTER SIDEBAR -->
-        <aside class="lg:col-span-1 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-fit sticky top-24">
-          <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
-            <h3 class="font-extrabold text-slate-900 text-lg flex items-center">
-              <i class="fa-solid fa-sliders text-brand-600 mr-2"></i> Filters
-            </h3>
-            <button onclick="resetFilters()" class="text-xs font-bold text-brand-600 hover:text-brand-700">
-              Reset All
-            </button>
-          </div>
-
-          <!-- Active Brand Badge (if filtered) -->
-          <div id="activeBrandBanner" class="hidden mb-5 bg-brand-50 border border-brand-200 rounded-xl p-3 flex justify-between items-center text-xs">
-            <div>
-              <span class="text-slate-400 block text-[10px] uppercase font-bold">Active Brand</span>
-              <strong id="activeBrandName" class="text-brand-700 font-extrabold text-sm">Hyundai</strong>
-            </div>
-            <button onclick="selectBrand('')" class="text-brand-600 hover:text-brand-800 font-bold text-xs">
-              <i class="fa-solid fa-xmark"></i> Clear
-            </button>
-          </div>
-
-          <!-- Price Range -->
-          <div class="mb-6">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Max Budget (₹ Lakhs)</label>
-            <input type="range" id="priceRange" min="300000" max="3000000" step="50000" value="3000000" oninput="updatePriceLabel(this.value)" class="w-full accent-brand-600 cursor-pointer">
-            <div class="flex justify-between text-xs font-semibold text-slate-600 mt-1">
-              <span>₹3 Lakh</span>
-              <span id="priceLabel" class="text-brand-600 font-bold">Up to ₹30.0 L</span>
-            </div>
-          </div>
-
-          <!-- Fuel Type -->
-          <div class="mb-6">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Fuel Type</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button onclick="toggleFuel(this, 'PETROL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Petrol</button>
-              <button onclick="toggleFuel(this, 'DIESEL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Diesel</button>
-              <button onclick="toggleFuel(this, 'CNG')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">CNG</button>
-              <button onclick="toggleFuel(this, 'ELECTRIC')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Electric</button>
-            </div>
-          </div>
-
-          <!-- Transmission -->
-          <div class="mb-6">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Transmission</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button onclick="toggleTransmission(this, 'MANUAL')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Manual</button>
-              <button onclick="toggleTransmission(this, 'AUTOMATIC')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Automatic</button>
-            </div>
-          </div>
-
-          <!-- Body Type -->
-          <div class="mb-6">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Body Type</label>
-            <div class="grid grid-cols-2 gap-2">
-              <button onclick="toggleBody(this, 'SUV')" class="body-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">SUV</button>
-              <button onclick="toggleBody(this, 'SEDAN')" class="body-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Sedan</button>
-              <button onclick="toggleBody(this, 'HATCHBACK')" class="body-btn text-xs font-semibold py-2 px-3 rounded-lg border border-slate-200 text-slate-700 hover:border-brand-600 transition">Hatchback</button>
-            </div>
-          </div>
-
-          <!-- Min Inspection Score -->
+        <!-- Active Brand Filter Chip (Desktop) -->
+        <div id="activeBrandBanner" class="hidden mb-5 bg-brand-950/60 border border-brand-800/60 rounded-xl p-3 flex justify-between items-center text-xs">
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Inspection Score</label>
-            <select id="minScoreSelect" onchange="applyFilters()" class="w-full text-xs font-semibold bg-slate-50 border border-slate-200 rounded-lg p-2.5 outline-none focus:border-brand-600">
-              <option value="">Any Score</option>
-              <option value="9.0">9.0+ Excellent Condition</option>
-              <option value="8.5">8.5+ Great Condition</option>
-              <option value="8.0">8.0+ Good Condition</option>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Filtered Brand</span>
+            <strong id="activeBrandName" class="text-brand-400 font-extrabold text-sm">Hyundai</strong>
+          </div>
+          <button onclick="selectBrand('')" class="text-brand-400 hover:text-brand-300 font-bold text-xs">
+            <i class="fa-solid fa-xmark"></i> Clear
+          </button>
+        </div>
+
+        <!-- Max Price Slider (Desktop) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Budget Range</label>
+          <input type="range" id="priceRange" min="300000" max="4500000" step="50000" value="4500000" oninput="syncPrice(this.value)" class="w-full accent-brand-600 cursor-pointer">
+          <div class="flex justify-between text-xs font-semibold text-slate-400 mt-1">
+            <span>₹3 L</span>
+            <span id="priceLabel" class="text-brand-400 font-bold">Up to ₹45.0 L</span>
+          </div>
+        </div>
+
+        <!-- Fuel Type (Desktop) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fuel Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleFuel(this, 'PETROL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Petrol</button>
+            <button onclick="toggleFuel(this, 'DIESEL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Diesel</button>
+            <button onclick="toggleFuel(this, 'CNG')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">CNG</button>
+            <button onclick="toggleFuel(this, 'ELECTRIC')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Electric</button>
+          </div>
+        </div>
+
+        <!-- Transmission (Desktop) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Transmission</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleTransmission(this, 'MANUAL')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Manual</button>
+            <button onclick="toggleTransmission(this, 'AUTOMATIC')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Automatic</button>
+          </div>
+        </div>
+
+        <!-- Body Type (Desktop) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Body Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleBody(this, 'SUV')" class="body-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">SUV</button>
+            <button onclick="toggleBody(this, 'SEDAN')" class="body-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Sedan</button>
+            <button onclick="toggleBody(this, 'HATCHBACK')" class="body-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Hatchback</button>
+          </div>
+        </div>
+
+        <!-- Min Inspection Score (Desktop) -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Inspection Score</label>
+          <select id="minScoreSelect" onchange="syncMinScore(this.value)" class="w-full text-xs font-semibold bg-slate-800 border border-slate-700 text-slate-200 rounded-xl p-2.5 outline-none focus:border-brand-500">
+            <option value="">Any Condition</option>
+            <option value="9.0">9.0+ Excellent Condition</option>
+            <option value="8.5">8.5+ Great Condition</option>
+          </select>
+        </div>
+      </aside>
+
+      <!-- CAR CARDS GRID -->
+      <div class="lg:col-span-3">
+        
+        <!-- Header stats & sorting (Desktop) -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+          <div>
+            <h2 class="text-2xl font-black text-white tracking-tight font-heading" id="catalogTitle">Available Certified Cars</h2>
+            <p id="resultsCount" class="text-xs text-slate-400 font-semibold mt-0.5">Showing verified vehicles in Bangalore</p>
+          </div>
+
+          <!-- Sort dropdown (Desktop) -->
+          <div class="hidden lg:flex items-center space-x-2 text-sm font-semibold">
+            <span class="text-slate-400 text-xs uppercase font-bold">Sort:</span>
+            <select id="sortBySelect" onchange="syncAndApplySort(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 outline-none focus:border-brand-500">
+              <option value="created_at">Recently Added</option>
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="km_asc">Kilometers: Low to High</option>
+              <option value="year_desc">Year: Newest First</option>
+              <option value="score_desc">Inspection Score: Highest First</option>
             </select>
           </div>
-        </aside>
-
-        <!-- CAR CARDS GRID -->
-        <div class="lg:col-span-3">
-          <!-- Header stats & sorting -->
-          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <div>
-              <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight" id="catalogTitle">Available Verified Cars</h2>
-              <p id="resultsCount" class="text-xs text-slate-500 font-semibold mt-0.5">Showing verified vehicles</p>
-            </div>
-
-            <!-- Sort dropdown -->
-            <div class="flex items-center space-x-2 text-sm font-semibold">
-              <span class="text-slate-500 text-xs uppercase font-bold">Sort By:</span>
-              <select id="sortBySelect" onchange="applyFilters()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 outline-none focus:border-brand-600">
-                <option value="created_at">Recently Added</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
-                <option value="km_asc">Kilometers: Low to High</option>
-                <option value="year_desc">Year: Newest First</option>
-                <option value="score_desc">Inspection Score: Highest First</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Dynamic Car Cards Container -->
-          <div id="carsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            <!-- Loading Skeletons -->
-            <div class="col-span-full py-16 text-center text-slate-400">
-              <i class="fa-solid fa-spinner fa-spin text-3xl text-brand-600 mb-3"></i>
-              <p class="font-bold text-sm">Loading verified car inventory...</p>
-            </div>
-          </div>
         </div>
 
+        <!-- Dynamic Car Cards Container -->
+        <div id="carsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 relative z-0">
+          <!-- Loading state -->
+          <div class="col-span-full py-16 text-center text-slate-400">
+            <i class="fa-solid fa-spinner fa-spin text-3xl text-brand-500 mb-3"></i>
+            <p class="font-bold text-sm">Loading verified car inventory...</p>
+          </div>
+        </div>
       </div>
+
     </div>
 
-    <!-- TAB 2: ADMIN APPROVAL PORTAL -->
-    <div id="tabAdmin" class="hidden">
-      <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm mb-8">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center pb-6 border-b border-slate-100 gap-4">
-          <div>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 mb-2">
-              <i class="fa-solid fa-shield-halved mr-1.5"></i> Admin Control Center
-            </span>
-            <h2 class="text-3xl font-extrabold text-slate-900">Seller Email & Car Approval Management</h2>
-            <p class="text-slate-500 text-sm mt-1">Approve verified seller emails or manually review and publish pending user car submissions.</p>
-          </div>
-          <button onclick="switchTab('browse')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2 rounded-xl text-sm transition">
-            <i class="fa-solid fa-arrow-left mr-1.5"></i> Back to Marketplace
-          </button>
-        </div>
+    <!-- SHOWROOM LOCATION & INTERACTIVE GOOGLE MAPS SECTION (ONLY BANGALORE) -->
+    <section id="hub-location" class="mb-16 bg-slate-900/90 rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-2xl">
+      <div class="text-center max-w-3xl mx-auto mb-10">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-brand-500/20 text-brand-300 border border-brand-500/30 mb-3">
+          <i class="fa-solid fa-location-dot mr-1.5"></i> Flagship Showroom Hub
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight font-heading">
+          Visit Our Bangalore Experience Showroom
+        </h2>
+        <p class="text-slate-400 text-sm mt-2">
+          Experience test drives, inspect 200 checkpoints, or complete instant vehicle buy/sell paperwork in person at our Mallathahalli hub.
+        </p>
+      </div>
 
-        <!-- TWO PANELS: 1. Whitelist Email Form & 2. Pending Cars List -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+      <!-- Single Hub Card Details -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center mb-8">
+        
+        <div class="lg:col-span-5 bg-slate-950/90 border-2 border-brand-500/40 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
+          <div class="inline-flex items-center bg-brand-600 text-white text-[11px] font-black uppercase px-3 py-1 rounded-full mb-4">
+            <i class="fa-solid fa-building-flag mr-1.5"></i> Value Cars Bangalore Flagship
+          </div>
           
-          <!-- Whitelist New Seller Email -->
-          <div class="lg:col-span-1 bg-slate-50 p-6 rounded-2xl border border-slate-200">
-            <h3 class="font-black text-slate-900 text-lg mb-4 flex items-center">
-              <i class="fa-solid fa-user-check text-emerald-600 mr-2"></i> Approve New Seller Email
-            </h3>
-            <p class="text-xs text-slate-600 mb-4">Emails added here are authorized to submit and auto-publish cars directly to the marketplace.</p>
-            
-            <form onsubmit="handleApproveEmail(event)" class="space-y-4">
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Seller Email Address *</label>
-                <input type="email" id="approveEmailInput" required placeholder="seller@example.com" class="w-full bg-white border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Approval Notes</label>
-                <input type="text" id="approveEmailNotes" placeholder="e.g. Authorized Dealer / Individual Owner" class="w-full bg-white border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
-              </div>
-              <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm transition shadow-md shadow-emerald-600/20">
-                <i class="fa-solid fa-check mr-1.5"></i> Approve Seller Email
-              </button>
-            </form>
+          <h3 class="text-2xl font-black text-white font-heading mb-2">Mallathahalli Showroom Hub</h3>
+          <p class="text-sm text-slate-300 font-semibold leading-relaxed mb-6">
+            <i class="fa-solid fa-map-pin text-brand-500 mr-2 text-base"></i>
+            Near Bangalore University, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056
+          </p>
 
-            <div class="mt-8">
-              <h4 class="text-xs font-extrabold uppercase text-slate-500 tracking-wider mb-3">Approved Seller Emails</h4>
-              <div id="approvedEmailsList" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
-                <!-- Dynamically loaded -->
-              </div>
-            </div>
+          <div class="space-y-3 text-xs text-slate-300 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 mb-6">
+            <div class="flex items-center"><i class="fa-solid fa-clock text-amber-400 mr-2.5 text-sm"></i> <strong>Working Hours:</strong> Open 7 Days • 9:30 AM – 8:30 PM</div>
+            <div class="flex items-center"><i class="fa-solid fa-phone text-emerald-400 mr-2.5 text-sm"></i> <strong>Primary Call:</strong> +91 80509 66025</div>
+            <div class="flex items-center"><i class="fa-solid fa-phone text-sky-400 mr-2.5 text-sm"></i> <strong>Secondary Call:</strong> +91 83101 66040</div>
+            <div class="flex items-center"><i class="fa-solid fa-envelope text-brand-400 mr-2.5 text-sm"></i> <strong>Admin Email:</strong> shankarmanoj654@gmail.com</div>
           </div>
 
-          <!-- Pending Car Submissions -->
-          <div class="lg:col-span-2">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="font-black text-slate-900 text-lg flex items-center">
-                <i class="fa-solid fa-clock text-amber-500 mr-2"></i> Cars Awaiting Admin Approval
-              </h3>
-              <button onclick="loadPendingCars()" class="text-xs font-bold text-brand-600 hover:underline">
-                <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
-              </button>
-            </div>
-            
-            <div id="pendingCarsList" class="space-y-4">
-              <!-- Dynamically loaded pending car cards -->
-            </div>
+          <div class="grid grid-cols-2 gap-3">
+            <a href="https://maps.google.com/?q=Near+Bangalore+University+Kengunte+Mallathahalli+Bengaluru+Karnataka+560056" target="_blank" class="bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-700 hover:to-rose-700 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center transition shadow-lg shadow-brand-600/30">
+              <i class="fa-solid fa-diamond-turn-right mr-2"></i> Get Directions
+            </a>
+            <a href="https://wa.me/918050966025?text=Hi%20Value%20Cars%20Bangalore%20Hub,%20I%20want%20to%20visit%20the%20showroom." target="_blank" class="bg-whatsapp-500 hover:bg-whatsapp-600 text-white font-bold py-3 rounded-xl text-xs flex items-center justify-center transition shadow-lg shadow-whatsapp-500/20">
+              <i class="fa-brands fa-whatsapp text-sm mr-2"></i> WhatsApp Hub
+            </a>
           </div>
-
         </div>
+
+        <!-- Google Maps Interactive Embed -->
+        <div class="lg:col-span-7 rounded-3xl overflow-hidden border border-slate-800 shadow-2xl relative h-80 sm:h-96 w-full">
+          <iframe
+            src="https://maps.google.com/maps?q=Kengunte%2C%20Mallathahalli%2C%20Bengaluru%2C%20Karnataka%20560056&t=&z=15&ie=UTF8&iwloc=&output=embed"
+            width="100%"
+            height="100%"
+            style="border:0; filter: invert(90%) hue-rotate(180deg);"
+            allowfullscreen=""
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+          </iframe>
+          <div class="absolute bottom-4 left-4 bg-slate-950/90 backdrop-blur-md text-white p-3 rounded-xl border border-slate-700 text-xs font-bold shadow-lg flex items-center space-x-3">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Live Showroom • Kengunte, Mallathahalli, Bengaluru 560056</span>
+            <a href="https://maps.google.com/?q=Near+Bangalore+University+Kengunte+Mallathahalli+Bengaluru+Karnataka+560056" target="_blank" class="text-brand-400 hover:underline pl-2 border-l border-slate-700">
+              Open Maps <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1"></i>
+            </a>
+          </div>
+        </div>
+
       </div>
-    </div>
+    </section>
 
   </main>
 
-  <!-- CAR DETAIL & INSPECTION MODAL -->
-  <div id="carDetailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 sm:p-8 relative">
-      <button onclick="closeCarModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition">
+  <!-- COMPREHENSIVE LUXURY DARK FOOTER -->
+  <footer class="bg-slate-950 text-slate-400 border-t border-slate-800/80 pt-16 pb-12 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Top Footer Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-slate-800">
+        
+        <!-- Col 1: Brand & Logo (Spans 2 cols on LG) -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="flex items-center space-x-3">
+            <img src="/static/logo_black_clean.png" alt="Value Cars Logo" class="h-14 w-auto object-contain rounded-xl border border-slate-800 shadow">
+            <div>
+              <div class="text-xl font-black text-white font-heading tracking-tight">
+                VALUE <span class="text-brand-600">CARS</span>
+              </div>
+              <div class="text-[10px] uppercase font-extrabold text-amber-400 tracking-wider">
+                Pre Owned Vehicles • Quality • Trust • Great Deals
+              </div>
+            </div>
+          </div>
+          
+          <p class="text-xs text-slate-400 leading-relaxed pr-6">
+            India's trusted pre-owned certified car marketplace. Every car is inspected with a 200-point scorecard, fixed fair prices, clean ownership records, and 5-day money-back guarantee.
+          </p>
+
+          <div class="flex items-center space-x-3 text-xs font-bold text-slate-300">
+            <span class="flex items-center text-emerald-400"><i class="fa-solid fa-circle-check mr-1.5"></i> 200 Checkpoints</span>
+            <span class="flex items-center text-amber-400"><i class="fa-solid fa-shield mr-1.5"></i> 1-Year Warranty</span>
+            <span class="flex items-center text-sky-400"><i class="fa-solid fa-truck-fast mr-1.5"></i> Hub Delivery</span>
+          </div>
+        </div>
+
+        <!-- Col 2: Quick Links -->
+        <div class="space-y-3">
+          <h4 class="text-xs font-black uppercase text-white tracking-wider">Explore Inventory</h4>
+          <ul class="space-y-2 text-xs font-semibold">
+            <li><a href="#" onclick="selectBrand('')" class="hover:text-white transition">All Certified Cars</a></li>
+            <li><a href="#" onclick="setQuickFilter('body_type', 'SUV')" class="hover:text-white transition">Verified SUVs</a></li>
+            <li><a href="#" onclick="setQuickFilter('body_type', 'SEDAN')" class="hover:text-white transition">Executive Sedans</a></li>
+            <li><a href="#" onclick="setQuickFilter('transmission', 'AUTOMATIC')" class="hover:text-white transition">Automatic Cars</a></li>
+            <li><a href="#" onclick="openValuationModal()" class="hover:text-amber-400 transition">Used Car Valuation Tool</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Showroom Hub Location -->
+        <div class="space-y-3">
+          <h4 class="text-xs font-black uppercase text-white tracking-wider">Showroom Hub</h4>
+          <div class="text-xs space-y-2 font-medium">
+            <p class="text-slate-300 font-semibold">
+              <i class="fa-solid fa-location-dot text-brand-500 mr-1.5"></i> Value Cars Bangalore Hub
+            </p>
+            <p class="text-slate-400 leading-relaxed">
+              Near Bangalore University, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056
+            </p>
+            <p class="text-amber-400 font-bold">
+              <i class="fa-solid fa-clock mr-1"></i> Open 7 Days: 9:30 AM – 8:30 PM
+            </p>
+            <a href="https://maps.google.com/?q=Near+Bangalore+University+Kengunte+Mallathahalli+Bengaluru+Karnataka+560056" target="_blank" class="text-brand-400 hover:underline flex items-center font-bold pt-1">
+              <i class="fa-solid fa-diamond-turn-right mr-1.5"></i> Google Maps Directions
+            </a>
+          </div>
+        </div>
+
+        <!-- Col 4: Contact & Direct Connect -->
+        <div class="space-y-3">
+          <h4 class="text-xs font-black uppercase text-white tracking-wider">Direct Contact</h4>
+          <div class="space-y-2 text-xs">
+            <div>
+              <span class="text-slate-500 text-[10px] uppercase font-bold block">Primary Contact:</span>
+              <a href="tel:+918050966025" class="text-white font-bold hover:text-brand-400 transition flex items-center mt-0.5">
+                <i class="fa-solid fa-phone text-brand-500 text-[10px] mr-1.5"></i> +91 80509 66025
+              </a>
+            </div>
+            <div>
+              <span class="text-slate-500 text-[10px] uppercase font-bold block">Secondary Contact:</span>
+              <a href="tel:+918310166040" class="text-white font-bold hover:text-brand-400 transition flex items-center mt-0.5">
+                <i class="fa-solid fa-phone text-brand-500 text-[10px] mr-1.5"></i> +91 83101 66040
+              </a>
+            </div>
+            <div>
+              <span class="text-slate-500 text-[10px] uppercase font-bold block">Admin Email:</span>
+              <a href="mailto:shankarmanoj654@gmail.com" class="text-slate-300 hover:text-white transition font-medium">
+                shankarmanoj654@gmail.com
+              </a>
+            </div>
+
+            <!-- WhatsApp Direct CTAs -->
+            <div class="pt-2 flex flex-col gap-1.5">
+              <a href="https://wa.me/918050966025?text=Hi%20Value%20Cars,%20I%20need%20assistance." target="_blank" class="bg-whatsapp-500/20 hover:bg-whatsapp-500 text-whatsapp-500 hover:text-white border border-whatsapp-500/40 font-bold py-1.5 px-3 rounded-lg text-[11px] flex items-center justify-center transition">
+                <i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> WhatsApp: 8050966025
+              </a>
+              <a href="https://wa.me/918310166040?text=Hi%20Value%20Cars,%20I%20need%20assistance." target="_blank" class="bg-whatsapp-500/20 hover:bg-whatsapp-500 text-whatsapp-500 hover:text-white border border-whatsapp-500/40 font-bold py-1.5 px-3 rounded-lg text-[11px] flex items-center justify-center transition">
+                <i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> WhatsApp: 8310166040
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
+        <div>
+          © 2026 <strong class="text-slate-300">Value Cars</strong>. All rights reserved. Quality • Trust • Great Deals.
+        </div>
+        <div class="flex items-center space-x-6 text-xs font-semibold">
+          <button onclick="openManageApprovedEmailsModal()" class="text-amber-400 hover:underline flex items-center">
+            <i class="fa-solid fa-shield-halved mr-1"></i> Authorized Seller Email Whitelist
+          </button>
+          <a href="#" class="hover:text-slate-300 transition">Terms of Service</a>
+          <a href="#" class="hover:text-slate-300 transition">Privacy Policy</a>
+          <a href="#" class="hover:text-slate-300 transition">200-Point Inspection</a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- CAR DETAIL & 200-POINT INSPECTION MODAL (WITH GALLERY, VIDEOS, SCORECARD, WHATSAPP & MAP) -->
+  <div id="carDetailModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-5xl w-full max-h-[94vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 sm:p-8 relative">
+      <button onclick="closeCarModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition z-20">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <div id="carModalContent">
-        <!-- Injected via JavaScript -->
+        <!-- Injected dynamically via JavaScript -->
       </div>
     </div>
   </div>
 
-  <!-- ADD / SELL CAR MODAL (WITH ONLINE SELLER EMAIL VERIFICATION) -->
-  <div id="addCarModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 sm:p-8 relative">
-      <button onclick="closeAddCarModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition">
+  <!-- DIRECT CAR UPLOAD MODAL (SUPPORTS LOCAL IMAGE & VIDEO FILES + URLS) -->
+  <div id="addCarDirectModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl p-6 sm:p-8 relative">
+      <button onclick="closeAddCarDirectModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition z-20">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <div class="mb-6">
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brand-100 text-brand-700 mb-2">
-          <i class="fa-solid fa-circle-plus mr-1.5"></i> Seller Submission Portal
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-brand-500/20 text-brand-300 border border-brand-500/30 mb-2">
+          <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Direct Server Upload Studio
         </span>
-        <h3 class="text-2xl font-black text-slate-900">List Your Vehicle Online</h3>
-        <p class="text-xs text-slate-500 mt-1">Verified emails get published immediately; new seller emails are reviewed & approved by admin.</p>
+        <h3 class="text-2xl font-black text-white font-heading">Add Vehicle (Photos & Videos)</h3>
+        <p class="text-xs text-slate-400 mt-1">Upload photos/videos locally or via URL. Authorized emails publish directly to live server instantly.</p>
       </div>
 
-      <form onsubmit="handleCarSubmission(event)" class="space-y-4">
+      <form onsubmit="handleDirectCarUpload(event)" class="space-y-4">
         
-        <!-- Seller Email & Verification Status -->
-        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-          <label class="block text-xs font-bold text-slate-700 mb-1">Your Email Address *</label>
+        <!-- Authorized Email Verification Input -->
+        <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
+          <label class="block text-xs font-bold text-slate-300 mb-1">Authorized Admin / Seller Email Address *</label>
           <div class="flex gap-2">
-            <input type="email" id="sellerEmail" required placeholder="your.name@example.com" onchange="checkEmailVerificationStatus(this.value)" class="flex-1 bg-white border border-slate-300 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
-            <button type="button" onclick="checkEmailVerificationStatus(document.getElementById('sellerEmail').value)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold">
-              Check Status
+            <input type="email" id="uploadEmail" required value="shankarmanoj654@gmail.com" onchange="verifyUploadEmail(this.value)" class="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold">
+            <button type="button" onclick="verifyUploadEmail(document.getElementById('uploadEmail').value)" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition">
+              Verify
             </button>
           </div>
-          <div id="emailStatusBadge" class="mt-2 text-xs font-semibold text-slate-500">
-            Enter your email to check if you are pre-approved to publish directly.
+          <div id="uploadEmailStatus" class="mt-2 text-xs font-bold text-emerald-400">
+            <i class="fa-solid fa-circle-check mr-1"></i> Authorized Superadmin Email! Vehicle will be published live immediately.
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Seller Full Name *</label>
-            <input type="text" id="sellerName" required placeholder="Manoj Shankar" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Seller / Manager Name *</label>
+            <input type="text" id="uploadSellerName" required value="Manoj Shankar (Owner)" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number *</label>
-            <input type="tel" id="sellerPhone" required placeholder="9876543210" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Contact Phone (for WhatsApp & Calls) *</label>
+            <input type="tel" id="uploadSellerPhone" required value="8050966025" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold">
           </div>
         </div>
 
         <!-- Vehicle Details -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Make *</label>
-            <input type="text" id="carMake" required placeholder="e.g. Hyundai" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Make *</label>
+            <input type="text" id="uploadMake" required placeholder="e.g. Toyota, Hyundai, Mahindra" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Model *</label>
-            <input type="text" id="carModel" required placeholder="e.g. Creta" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Model *</label>
+            <input type="text" id="uploadModel" required placeholder="e.g. Fortuner, Creta, Thar" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Variant *</label>
-            <input type="text" id="carVariant" required placeholder="e.g. 1.5 SX (O)" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Variant *</label>
+            <input type="text" id="uploadVariant" required placeholder="e.g. 2.8 4x4 AT, SX(O)" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Manufacturing Year *</label>
-            <input type="number" id="carYear" required min="2000" max="2026" value="2022" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Manufacturing Year *</label>
+            <input type="number" id="uploadYear" required min="2005" max="2026" value="2023" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Kilometers Driven *</label>
-            <input type="number" id="carKm" required placeholder="25000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Kilometers Driven *</label>
+            <input type="number" id="uploadKm" required placeholder="18000" value="18000" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Selling Price (₹) *</label>
-            <input type="number" id="carPrice" required placeholder="1250000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Selling Price (₹) *</label>
+            <input type="number" id="uploadPrice" required placeholder="1550000" value="1550000" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-bold text-amber-400">
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Fuel Type</label>
-            <select id="carFuel" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
-              <option value="PETROL">Petrol</option>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Fuel</label>
+            <select id="uploadFuel" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-xs font-bold outline-none">
               <option value="DIESEL">Diesel</option>
+              <option value="PETROL">Petrol</option>
               <option value="CNG">CNG</option>
               <option value="ELECTRIC">Electric</option>
             </select>
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Transmission</label>
-            <select id="carTrans" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
-              <option value="MANUAL">Manual</option>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Transmission</label>
+            <select id="uploadTrans" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-xs font-bold outline-none">
               <option value="AUTOMATIC">Automatic</option>
+              <option value="MANUAL">Manual</option>
             </select>
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Body Type</label>
-            <select id="carBody" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Body</label>
+            <select id="uploadBody" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-xs font-bold outline-none">
               <option value="SUV">SUV</option>
               <option value="SEDAN">Sedan</option>
               <option value="HATCHBACK">Hatchback</option>
             </select>
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">City</label>
-            <input type="text" id="carCity" required value="Bangalore" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-bold outline-none">
+            <label class="block text-xs font-bold text-slate-300 mb-1">City Hub</label>
+            <input type="text" id="uploadCity" required readonly value="Bangalore" class="w-full bg-slate-900 border border-slate-700 text-slate-300 rounded-xl p-3 text-xs font-bold outline-none cursor-not-allowed">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Car Registration Number *</label>
-          <input type="text" id="carReg" required placeholder="KA-01-AB-1234" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+          <label class="block text-xs font-bold text-slate-300 mb-1">Vehicle Registration Number *</label>
+          <input type="text" id="uploadReg" required placeholder="KA-01-MJ-9999" value="KA-01-MJ-2024" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold uppercase">
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">Car Image URL (HD Photo)</label>
-          <input type="url" id="carImage" placeholder="https://images.unsplash.com/photo-1549399542-7e3f8b79c341" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:border-brand-600">
+        <!-- Local Image Files & Image URLs -->
+        <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
+          <div class="flex justify-between items-center">
+            <label class="block text-xs font-bold text-slate-200">
+              <i class="fa-solid fa-camera text-brand-500 mr-1.5"></i> Vehicle Images (Upload Local Files or enter URL)
+            </label>
+            <span class="text-[10px] text-slate-400">JPG, PNG, WebP</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <span class="text-[11px] text-slate-400 font-semibold block mb-1">Option A: Select From Device / Phone</span>
+              <input type="file" id="uploadLocalImages" multiple accept="image/*" onchange="handleLocalImageSelection(event)" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-brand-600 file:text-white hover:file:bg-brand-700 cursor-pointer bg-slate-800 border border-slate-700 rounded-xl p-1.5">
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-400 font-semibold block mb-1">Option B: Image Web URL (Optional)</span>
+              <input type="url" id="uploadImageUrl" placeholder="https://images.unsplash.com/..." class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500">
+            </div>
+          </div>
+          <!-- Image preview container -->
+          <div id="imagePreviewContainer" class="flex gap-2 overflow-x-auto pt-2 hidden custom-scrollbar"></div>
         </div>
 
-        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-black py-4 rounded-2xl text-base transition shadow-lg shadow-brand-500/25">
-          <i class="fa-solid fa-paper-plane mr-2"></i> Submit Car Listing
+        <!-- Local Video File & Video URL -->
+        <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
+          <div class="flex justify-between items-center">
+            <label class="block text-xs font-bold text-slate-200">
+              <i class="fa-solid fa-video text-amber-400 mr-1.5"></i> Vehicle Walkaround Video (Upload File or URL)
+            </label>
+            <span class="text-[10px] text-slate-400">MP4, WebM, MOV (Up to 100MB)</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <span class="text-[11px] text-slate-400 font-semibold block mb-1">Option A: Upload Local Video File</span>
+              <input type="file" id="uploadLocalVideo" accept="video/*" onchange="handleLocalVideoSelection(event)" class="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-600 file:text-white hover:file:bg-amber-700 cursor-pointer bg-slate-800 border border-slate-700 rounded-xl p-1.5">
+            </div>
+            <div>
+              <span class="text-[11px] text-slate-400 font-semibold block mb-1">Option B: Video Web URL (e.g. YouTube / Direct Link)</span>
+              <input type="url" id="uploadVideoUrl" placeholder="https://www.youtube.com/watch?v=... or .mp4" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500">
+            </div>
+          </div>
+          <div id="videoPreviewStatus" class="text-xs text-slate-400 hidden"></div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" id="uploadSubmitBtn" class="w-full bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-700 hover:to-rose-700 text-white font-black py-4 rounded-2xl text-base transition shadow-xl shadow-brand-600/30 flex items-center justify-center">
+          <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Upload & Publish Vehicle to Live Server
         </button>
       </form>
     </div>
   </div>
 
-  <!-- VALUATION ESTIMATOR MODAL -->
-  <div id="valuationModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 overflow-y-auto">
-    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl p-6 sm:p-8 relative">
-      <button onclick="closeValuationModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center font-bold transition">
+  <!-- MANAGE APPROVED ADMIN / SELLER EMAILS MODAL -->
+  <div id="manageApprovedEmailsModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-xl w-full shadow-2xl p-6 sm:p-8 relative">
+      <button onclick="closeManageApprovedEmailsModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition">
         <i class="fa-solid fa-xmark"></i>
       </button>
 
       <div class="mb-6">
-        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-2">
-          <i class="fa-solid fa-chart-line mr-1.5"></i> Algorithmic Pricing
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-2">
+          <i class="fa-solid fa-shield-halved mr-1.5"></i> Superadmin Control
         </span>
-        <h3 class="text-2xl font-black text-slate-900">Instant Valuation Calculator</h3>
-        <p class="text-xs text-slate-500 mt-1">Get instant fair market quotes based on age, depreciation, and mileage factors.</p>
+        <h3 class="text-2xl font-black text-white font-heading">Manage Authorized Listing Emails</h3>
+        <p class="text-xs text-slate-400 mt-1">Whitelisted emails can add and directly publish cars without waiting for approval.</p>
+      </div>
+
+      <!-- Add New Approved Email Form -->
+      <form onsubmit="handleWhitelistEmail(event)" class="space-y-3 bg-slate-950/80 p-4 rounded-2xl border border-slate-800 mb-6">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Grant Direct Upload Access to Email *</label>
+          <input type="email" id="newAdminEmail" required placeholder="manager@valuecars.com" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500 font-semibold">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Manager / Role Description</label>
+          <input type="text" id="newAdminNotes" placeholder="e.g. Bangalore Hub Manager / Authorized Dealer" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500">
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md shadow-emerald-600/20">
+          <i class="fa-solid fa-user-plus mr-1.5"></i> Authorize & Whitelist Email
+        </button>
+      </form>
+
+      <!-- List of Currently Approved Emails -->
+      <div>
+        <h4 class="text-xs font-extrabold uppercase text-slate-400 tracking-wider mb-3">Currently Authorized Emails</h4>
+        <div id="authorizedEmailsList" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar">
+          <!-- Dynamically injected -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VALUATION MODAL -->
+  <div id="valuationModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-lg w-full shadow-2xl p-6 sm:p-8 relative">
+      <button onclick="closeValuationModal()" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="mb-6">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-2">
+          <i class="fa-solid fa-chart-line mr-1.5"></i> Instant Price Algorithm
+        </span>
+        <h3 class="text-2xl font-black text-white font-heading">Used Car Price Estimator</h3>
+        <p class="text-xs text-slate-400 mt-1">Get instant fair market quotes based on age depreciation and mileage.</p>
       </div>
 
       <form onsubmit="handleCalculateValuation(event)" class="space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Make</label>
-            <input type="text" id="valMake" required value="Hyundai" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Make</label>
+            <input type="text" id="valMake" required value="Toyota" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-500">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Model</label>
-            <input type="text" id="valModel" required value="Creta" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Model</label>
+            <input type="text" id="valModel" required value="Fortuner" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-500">
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Year</label>
-            <input type="number" id="valYear" required value="2022" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Year</label>
+            <input type="number" id="valYear" required value="2023" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-500">
           </div>
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Kilometers Driven</label>
-            <input type="number" id="valKm" required value="25000" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-600">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Kilometers Driven</label>
+            <input type="number" id="valKm" required value="15000" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm font-semibold outline-none focus:border-brand-500">
           </div>
         </div>
 
-        <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-md">
-          Calculate Fair Market Value
+        <button type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl text-sm transition shadow-lg shadow-brand-600/20">
+          Calculate Fair Market Price
         </button>
       </form>
 
-      <div id="valuationResult" class="hidden mt-6 bg-emerald-50 border border-emerald-200 rounded-2xl p-5 text-center">
-        <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">Estimated Fair Market Value</span>
-        <div id="valRangeText" class="text-2xl font-black text-emerald-950 mt-1">₹12.4 L – ₹13.8 L</div>
-        <p class="text-xs text-emerald-800 mt-2 font-medium">Recommended Procurement Quote: <strong id="valBuyText" class="font-bold">₹11.6 L</strong></p>
+      <div id="valuationResult" class="hidden mt-6 bg-slate-950 border border-emerald-500/40 rounded-2xl p-5 text-center">
+        <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Estimated Fair Market Value</span>
+        <div id="valRangeText" class="text-2xl font-black text-white mt-1">₹34.5 L – ₹38.2 L</div>
+        <p class="text-xs text-slate-300 mt-2 font-medium">Recommended Value Cars Procurement Quote: <strong id="valBuyText" class="font-bold text-amber-400">₹33.2 L</strong></p>
       </div>
     </div>
   </div>
 
-  <!-- JAVASCRIPT APPLICATION CONTROLLER -->
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
   <script>
     const API_BASE = '/api/v1';
     let currentFilters = {
@@ -695,12 +1009,16 @@
       fuel_type: null,
       transmission: null,
       body_type: null,
-      max_price: 3000000,
+      max_price: 4500000,
       min_score: null,
       city: 'Bangalore',
       search: '',
       sort_by: 'created_at'
     };
+
+    // Both Official Phone Numbers
+    const PRIMARY_PHONE = '8050966025';
+    const SECONDARY_PHONE = '8310166040';
 
     // Format INR Currency (Lakhs)
     function formatLakhs(amount) {
@@ -713,53 +1031,46 @@
 
     // Select Brand Filter
     function selectBrand(brandName) {
-      // Remove active class from all brand cards
       document.querySelectorAll('.brand-card').forEach(b => b.classList.remove('active-brand'));
+
+      const b1 = document.getElementById('activeBrandBanner');
+      const b2 = document.getElementById('mobileActiveBrandBanner');
+      const n1 = document.getElementById('activeBrandName');
+      const n2 = document.getElementById('mobileActiveBrandName');
 
       if (!brandName || currentFilters.make === brandName) {
         currentFilters.make = null;
-        document.getElementById('activeBrandBanner').classList.add('hidden');
-        document.getElementById('catalogTitle').innerText = 'Available Verified Cars';
+        if (b1) b1.classList.add('hidden');
+        if (b2) b2.classList.add('hidden');
+        document.getElementById('catalogTitle').innerText = 'Available Certified Cars';
       } else {
         currentFilters.make = brandName;
         const targetBtn = document.getElementById(`brand-${brandName}`);
         if (targetBtn) targetBtn.classList.add('active-brand');
         
-        document.getElementById('activeBrandBanner').classList.remove('hidden');
-        document.getElementById('activeBrandName').innerText = brandName;
-        document.getElementById('catalogTitle').innerText = `Available Verified ${brandName} Cars`;
+        if (b1) b1.classList.remove('hidden');
+        if (b2) b2.classList.remove('hidden');
+        if (n1) n1.innerText = brandName;
+        if (n2) n2.innerText = brandName;
+        document.getElementById('catalogTitle').innerText = `Available Certified ${brandName} Cars`;
       }
 
+      updateFilterBadge();
       loadCars();
     }
 
-    // Switch between Marketplace & Admin Tab
-    function switchTab(tab) {
-      if (tab === 'admin') {
-        document.getElementById('tabBrowse').classList.add('hidden');
-        document.getElementById('tabAdmin').classList.remove('hidden');
-        loadPendingCars();
-        loadApprovedEmails();
-      } else {
-        document.getElementById('tabAdmin').classList.add('hidden');
-        document.getElementById('tabBrowse').classList.remove('hidden');
-        loadCars();
-      }
-    }
-
-    // Fetch and render cars
+    // Load & Render Live Cars
     async function loadCars() {
       const grid = document.getElementById('carsGrid');
       grid.innerHTML = `
         <div class="col-span-full py-16 text-center text-slate-400">
-          <i class="fa-solid fa-spinner fa-spin text-3xl text-brand-600 mb-3"></i>
-          <p class="font-bold text-sm">Loading verified car inventory...</p>
+          <i class="fa-solid fa-spinner fa-spin text-3xl text-brand-500 mb-3"></i>
+          <p class="font-bold text-sm">Loading verified car inventory in Bangalore...</p>
         </div>
       `;
 
       const params = new URLSearchParams();
       if (currentFilters.make) params.append('make', currentFilters.make);
-      if (currentFilters.city) params.append('city', currentFilters.city);
       if (currentFilters.fuel_type) params.append('fuel_type', currentFilters.fuel_type);
       if (currentFilters.transmission) params.append('transmission', currentFilters.transmission);
       if (currentFilters.body_type) params.append('body_type', currentFilters.body_type);
@@ -773,17 +1084,17 @@
         const data = await res.json();
 
         const countText = currentFilters.make 
-          ? `Showing ${data.total} verified ${currentFilters.make} vehicle${data.total === 1 ? '' : 's'}`
-          : `Showing ${data.total} verified vehicle${data.total === 1 ? '' : 's'}`;
+          ? `Showing ${data.total} verified ${currentFilters.make} vehicle${data.total === 1 ? '' : 's'} in Bangalore`
+          : `Showing ${data.total} verified vehicle${data.total === 1 ? '' : 's'} in Bangalore`;
         document.getElementById('resultsCount').innerText = countText;
 
         if (!data.items || data.items.length === 0) {
           grid.innerHTML = `
-            <div class="col-span-full py-16 text-center bg-white rounded-3xl border border-slate-200">
-              <i class="fa-solid fa-car-tunnel text-4xl text-slate-300 mb-3"></i>
-              <h4 class="font-bold text-slate-700 text-lg">No ${currentFilters.make ? currentFilters.make + ' ' : ''}cars match the selected filters</h4>
-              <p class="text-xs text-slate-400 mt-1">Try resetting your filters or selecting another brand.</p>
-              <button onclick="resetFilters()" class="mt-4 bg-brand-600 text-white font-bold px-4 py-2 rounded-xl text-xs">Reset All Filters</button>
+            <div class="col-span-full py-16 text-center bg-slate-900 rounded-3xl border border-slate-800">
+              <i class="fa-solid fa-car-tunnel text-4xl text-slate-600 mb-3"></i>
+              <h4 class="font-bold text-white text-lg">No ${currentFilters.make ? currentFilters.make + ' ' : ''}cars found</h4>
+              <p class="text-xs text-slate-400 mt-1">Try resetting search filters.</p>
+              <button onclick="resetFilters()" class="mt-4 bg-brand-600 hover:bg-brand-700 text-white font-bold px-4 py-2 rounded-xl text-xs">Reset All Filters</button>
             </div>
           `;
           return;
@@ -791,58 +1102,79 @@
 
         grid.innerHTML = data.items.map(car => {
           const coverImg = car.images && car.images.length > 0 ? car.images[0].image_url : 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341';
-          return `
-            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col group">
-              <!-- Cover Image -->
-              <div class="relative h-48 bg-slate-100 overflow-hidden">
-                <img src="${coverImg}" alt="${car.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                <div class="absolute top-3 left-3 flex gap-1.5">
-                  <span class="badge-certified text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md shadow flex items-center">
-                    <i class="fa-solid fa-circle-check mr-1"></i> Certified
-                  </span>
-                  <span class="bg-slate-900/80 backdrop-blur-md text-amber-400 text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow flex items-center">
-                    <i class="fa-solid fa-star mr-1"></i> ${car.inspection_score.toFixed(1)}/10
-                  </span>
-                </div>
-                <div class="absolute bottom-3 right-3 bg-slate-900/80 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-md">
-                  <i class="fa-solid fa-location-dot text-brand-500 mr-1"></i> ${car.city}
-                </div>
-              </div>
+          const hubLoc = 'Bangalore Hub • Mallathahalli';
+          const sellerPhone = car.seller_phone || PRIMARY_PHONE;
+          const waMessage = encodeURIComponent(`Hi Value Cars! I am interested in this verified car: ${car.title} (Reg: ${car.reg_number}) listed for ${formatLakhs(car.price)} at Bangalore Hub. Can I get more details?`);
 
-              <!-- Content -->
-              <div class="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  <h3 class="font-bold text-slate-900 text-base line-clamp-1 group-hover:text-brand-600 transition">
+          return `
+            <div onclick="viewCarDetail('${car.id}')" class="bg-slate-900 rounded-3xl border border-slate-800/90 shadow-xl hover:border-brand-500/60 transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer">
+              <!-- Cover Image & Badges -->
+              <div>
+                <div class="relative h-48 bg-slate-950 overflow-hidden">
+                  <img src="${coverImg}" alt="${car.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                  <div class="absolute top-3 left-3 flex gap-1.5">
+                    <span class="badge-certified text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md shadow flex items-center">
+                      <i class="fa-solid fa-circle-check mr-1"></i> Certified
+                    </span>
+                    <span class="bg-slate-950/80 backdrop-blur-md text-amber-400 text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow flex items-center border border-amber-500/30">
+                      <i class="fa-solid fa-star mr-1"></i> ${car.inspection_score.toFixed(1)}/10
+                    </span>
+                  </div>
+                  
+                  <!-- Hub Location Badge -->
+                  <div class="absolute bottom-3 left-3 bg-slate-950/90 text-slate-200 text-[10px] font-bold px-2.5 py-1 rounded-md backdrop-blur-md flex items-center border border-slate-800">
+                    <i class="fa-solid fa-location-dot text-brand-500 mr-1.5"></i> Bangalore Hub
+                  </div>
+                </div>
+
+                <!-- Content -->
+                <div class="p-5">
+                  <h3 class="font-black text-white text-base line-clamp-1 group-hover:text-brand-400 transition font-heading">
                     ${car.title}
                   </h3>
                   
+                  <!-- Location Subtext -->
+                  <div class="flex items-center text-[11px] text-slate-400 font-semibold mt-1">
+                    <i class="fa-solid fa-warehouse text-slate-500 mr-1.5"></i> Near Bangalore University, Mallathahalli
+                  </div>
+
                   <!-- Chips -->
                   <div class="flex flex-wrap gap-1.5 mt-3">
-                    <span class="bg-slate-100 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">
+                    <span class="bg-slate-800 text-slate-300 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-slate-700">
                       ${car.year}
                     </span>
-                    <span class="bg-slate-100 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">
+                    <span class="bg-slate-800 text-slate-300 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-slate-700">
                       ${(car.kilometers_driven).toLocaleString('en-IN')} km
                     </span>
-                    <span class="bg-slate-100 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">
+                    <span class="bg-slate-800 text-slate-300 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-slate-700">
                       ${car.fuel_type}
                     </span>
-                    <span class="bg-slate-100 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-md">
+                    <span class="bg-slate-800 text-slate-300 text-[11px] font-semibold px-2 py-0.5 rounded-md border border-slate-700">
                       ${car.transmission}
                     </span>
                   </div>
-                </div>
 
-                <!-- Price & Action -->
-                <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
-                  <div>
-                    <span class="text-xs text-slate-400 font-bold uppercase block">Fixed Price</span>
-                    <span class="text-xl font-black text-slate-900">${formatLakhs(car.price)}</span>
+                  <!-- Price -->
+                  <div class="mt-4 flex items-baseline justify-between">
+                    <div>
+                      <span class="text-[10px] text-slate-400 font-extrabold uppercase block">Fixed Value Price</span>
+                      <span class="text-xl font-black text-amber-400">${formatLakhs(car.price)}</span>
+                    </div>
+                    <span class="text-brand-400 group-hover:text-brand-300 font-extrabold text-xs flex items-center">
+                      View Details <i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i>
+                    </span>
                   </div>
-                  <button onclick="viewCarDetail('${car.id}')" class="bg-brand-50 hover:bg-brand-600 hover:text-white text-brand-700 font-bold px-4 py-2 rounded-xl text-xs transition duration-200 flex items-center">
-                    View Specs & Report <i class="fa-solid fa-arrow-right ml-1.5 text-[10px]"></i>
-                  </button>
                 </div>
+              </div>
+
+              <!-- Quick Contact Bar (WhatsApp & Call) -->
+              <div class="p-4 bg-slate-950/80 border-t border-slate-800 grid grid-cols-2 gap-2" onclick="event.stopPropagation()">
+                <a href="https://wa.me/91${sellerPhone}?text=${waMessage}" target="_blank" class="bg-whatsapp-500 hover:bg-whatsapp-600 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center transition shadow-sm">
+                  <i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> WhatsApp
+                </a>
+                <a href="tel:+91${sellerPhone}" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center border border-slate-700 transition shadow-sm">
+                  <i class="fa-solid fa-phone text-xs mr-1.5 text-brand-400"></i> Call Hub
+                </a>
               </div>
             </div>
           `;
@@ -850,15 +1182,15 @@
 
       } catch (err) {
         console.error('Error loading cars:', err);
-        grid.innerHTML = `<div class="col-span-full text-center text-red-500 font-bold py-8">Failed to connect to Value Cars API. Ensure backend is running.</div>`;
+        grid.innerHTML = `<div class="col-span-full text-center text-red-400 font-bold py-8">Failed to connect to Value Cars API.</div>`;
       }
     }
 
-    // View Detailed Car Modal with 100+ Point Inspection Report
+    // View Detailed Car Modal with Image Gallery, Video Player, 200-Point Inspection Scorecard, Location, & CTAs
     async function viewCarDetail(carId) {
       const modal = document.getElementById('carDetailModal');
       const content = document.getElementById('carModalContent');
-      content.innerHTML = `<div class="py-16 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl text-brand-600 mb-2"></i><p>Loading vehicle scorecard...</p></div>`;
+      content.innerHTML = `<div class="py-16 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl text-brand-500 mb-2"></i><p>Loading vehicle scorecard, photos, and video...</p></div>`;
       modal.classList.remove('hidden');
       modal.classList.add('flex');
 
@@ -870,66 +1202,112 @@
         const car = await carRes.json();
         let insp = inspRes && inspRes.ok ? await inspRes.json() : null;
 
-        const coverImg = car.images && car.images.length > 0 ? car.images[0].image_url : 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341';
+        const allImages = car.images && car.images.length > 0 ? car.images.map(img => img.image_url) : ['https://images.unsplash.com/photo-1549399542-7e3f8b79c341'];
+        const coverImg = allImages[0];
+        const hubLoc = 'Near Bangalore University, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056';
+        const sellerPhone = car.seller_phone || PRIMARY_PHONE;
+        const waMessage = encodeURIComponent(`Hello Value Cars! I want to inquire about: ${car.title} (${car.reg_number}) at Bangalore Hub priced at ${formatLakhs(car.price)}.`);
+
+        // Find if any image URL is a video or if car has video
+        const videoItem = car.images && car.images.find(img => img.tag === 'VIDEO' || img.image_url.endsWith('.mp4') || img.image_url.includes('youtube') || img.image_url.includes('/uploads/video_'));
 
         content.innerHTML = `
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Left: Gallery & Specs -->
-            <div>
-              <div class="rounded-2xl overflow-hidden h-64 bg-slate-100 mb-4 shadow">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left: Gallery, Video, Location & Specs (7 cols) -->
+            <div class="lg:col-span-7 space-y-4">
+              
+              <!-- Main Display (Image or Video) -->
+              <div class="rounded-3xl overflow-hidden h-72 sm:h-80 bg-slate-950 shadow-2xl border border-slate-800 relative group" id="modalMediaViewer">
                 <img src="${coverImg}" class="w-full h-full object-cover" id="modalMainImage">
               </div>
-              ${car.images && car.images.length > 1 ? `
-                <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                  ${car.images.map(img => `
-                    <img src="${img.image_url}" onclick="document.getElementById('modalMainImage').src='${img.image_url}'" class="w-16 h-16 object-cover rounded-lg cursor-pointer border-2 border-transparent hover:border-brand-600 transition">
+
+              <!-- Thumbnails Slider -->
+              ${allImages.length > 1 || videoItem ? `
+                <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar items-center">
+                  ${allImages.map((imgUrl, i) => `
+                    <img src="${imgUrl}" onclick="showModalImage('${imgUrl}')" class="w-20 h-16 object-cover rounded-xl cursor-pointer border-2 border-slate-700 hover:border-brand-500 transition shrink-0">
                   `).join('')}
+                  ${videoItem ? `
+                    <button onclick="showModalVideo('${videoItem.image_url}')" class="w-20 h-16 bg-slate-800 border-2 border-amber-500/80 hover:border-amber-400 rounded-xl flex flex-col items-center justify-center text-amber-400 shrink-0 transition">
+                      <i class="fa-solid fa-play text-lg"></i>
+                      <span class="text-[9px] font-black uppercase mt-1">Video</span>
+                    </button>
+                  ` : ''}
                 </div>
               ` : ''}
 
+              <!-- Showroom Location with Google Maps -->
+              <div class="bg-slate-950/90 border border-slate-800 p-4 rounded-2xl flex items-center justify-between text-xs">
+                <div>
+                  <span class="text-slate-400 font-bold uppercase text-[10px] block">Test-Drive & Inspection Hub</span>
+                  <strong class="text-white text-xs font-black flex items-center mt-0.5">
+                    <i class="fa-solid fa-location-dot text-brand-500 mr-1.5"></i> ${hubLoc}
+                  </strong>
+                </div>
+                <a href="https://maps.google.com/?q=Near+Bangalore+University+Kengunte+Mallathahalli+Bengaluru+Karnataka+560056" target="_blank" class="bg-brand-600/20 hover:bg-brand-600 text-brand-300 hover:text-white border border-brand-500/40 px-3 py-1.5 rounded-lg font-bold flex items-center text-xs transition">
+                  <i class="fa-solid fa-map-location-dot mr-1.5"></i> Maps
+                </a>
+              </div>
+
               <!-- Spec Grid -->
-              <div class="bg-slate-50 p-4 rounded-2xl mt-4 grid grid-cols-2 gap-3 text-xs">
-                <div><span class="text-slate-400 block font-semibold">Make & Model</span><strong class="text-slate-800 font-bold">${car.make} ${car.model}</strong></div>
-                <div><span class="text-slate-400 block font-semibold">Variant</span><strong class="text-slate-800 font-bold">${car.variant}</strong></div>
-                <div><span class="text-slate-400 block font-semibold">Year of Mfd</span><strong class="text-slate-800 font-bold">${car.year}</strong></div>
-                <div><span class="text-slate-400 block font-semibold">Kilometers</span><strong class="text-slate-800 font-bold">${(car.kilometers_driven).toLocaleString('en-IN')} KM</strong></div>
-                <div><span class="text-slate-400 block font-semibold">Fuel Type</span><strong class="text-slate-800 font-bold">${car.fuel_type}</strong></div>
-                <div><span class="text-slate-400 block font-semibold">Transmission</span><strong class="text-slate-800 font-bold">${car.transmission}</strong></div>
-                <div><span class="text-slate-400 block font-semibold">Reg Number</span><strong class="text-slate-800 font-bold">${car.reg_number}</strong></div>
-                <div><span class="text-slate-400 block font-semibold">Ownership</span><strong class="text-slate-800 font-bold">${car.ownership} Owner</strong></div>
+              <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div><span class="text-slate-400 block font-semibold">Make</span><strong class="text-slate-200 font-bold">${car.make}</strong></div>
+                <div><span class="text-slate-400 block font-semibold">Model</span><strong class="text-slate-200 font-bold">${car.model}</strong></div>
+                <div><span class="text-slate-400 block font-semibold">Year</span><strong class="text-slate-200 font-bold">${car.year}</strong></div>
+                <div><span class="text-slate-400 block font-semibold">Kilometers</span><strong class="text-slate-200 font-bold">${(car.kilometers_driven).toLocaleString('en-IN')} KM</strong></div>
+                <div><span class="text-slate-400 block font-semibold">Fuel</span><strong class="text-slate-200 font-bold">${car.fuel_type}</strong></div>
+                <div><span class="text-slate-400 block font-semibold">Transmission</span><strong class="text-slate-200 font-bold">${car.transmission}</strong></div>
+                <div><span class="text-slate-400 block font-semibold">Reg Number</span><strong class="text-slate-200 font-bold uppercase">${car.reg_number}</strong></div>
+                <div><span class="text-slate-400 block font-semibold">Ownership</span><strong class="text-slate-200 font-bold">${car.ownership} Owner</strong></div>
               </div>
 
               <!-- Features -->
               ${car.features && car.features.length > 0 ? `
-                <div class="mt-4">
-                  <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Key Highlights</h4>
+                <div>
+                  <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Key Highlights</h4>
                   <div class="flex flex-wrap gap-1.5">
-                    ${car.features.map(f => `<span class="bg-emerald-50 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-md border border-emerald-200/60"><i class="fa-solid fa-check text-emerald-600 mr-1"></i> ${f.name}</span>`).join('')}
+                    ${car.features.map(f => `<span class="bg-emerald-500/10 text-emerald-300 text-[11px] font-bold px-2.5 py-1 rounded-md border border-emerald-500/30"><i class="fa-solid fa-check text-emerald-400 mr-1"></i> ${f.name}</span>`).join('')}
                   </div>
                 </div>
               ` : ''}
             </div>
 
-            <!-- Right: Price & Digital Inspection Report -->
-            <div class="flex flex-col justify-between">
+            <!-- Right: Price, Scorecard, WhatsApp, Calls & Actions (5 cols) -->
+            <div class="lg:col-span-5 flex flex-col justify-between space-y-6">
               <div>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 mb-2">
                   <i class="fa-solid fa-shield-check mr-1"></i> 100% Value Cars Certified
                 </span>
-                <h2 class="text-2xl font-black text-slate-900">${car.title}</h2>
+                <h2 class="text-2xl sm:text-3xl font-black text-white font-heading">${car.title}</h2>
                 <div class="flex items-baseline gap-2 mt-2">
-                  <span class="text-3xl font-black text-slate-900">${formatLakhs(car.price)}</span>
-                  ${car.original_price ? `<span class="text-sm line-through text-slate-400 font-semibold">${formatLakhs(car.original_price)}</span>` : ''}
+                  <span class="text-3xl font-black text-amber-400">${formatLakhs(car.price)}</span>
+                  ${car.original_price ? `<span class="text-sm line-through text-slate-500 font-semibold">${formatLakhs(car.original_price)}</span>` : ''}
+                </div>
+
+                <!-- Instant Direct Contact Bar with Both Numbers -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-5">
+                  <a href="https://wa.me/918050966025?text=${waMessage}" target="_blank" class="bg-whatsapp-500 hover:bg-whatsapp-600 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center transition shadow-md shadow-whatsapp-500/20">
+                    <i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> WA 1: 8050966025
+                  </a>
+                  <a href="https://wa.me/918310166040?text=${waMessage}" target="_blank" class="bg-whatsapp-500 hover:bg-whatsapp-600 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center transition shadow-md shadow-whatsapp-500/20">
+                    <i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> WA 2: 8310166040
+                  </a>
+                  <a href="tel:+918050966025" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center border border-slate-700 transition">
+                    <i class="fa-solid fa-phone text-xs mr-1.5 text-brand-400"></i> Call: 8050966025
+                  </a>
+                  <a href="tel:+918310166040" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 rounded-xl text-xs flex items-center justify-center border border-slate-700 transition">
+                    <i class="fa-solid fa-phone text-xs mr-1.5 text-brand-400"></i> Call: 8310166040
+                  </a>
                 </div>
 
                 <!-- Inspection Score Card Breakdown -->
-                <div class="mt-6 bg-slate-900 text-white p-5 rounded-2xl">
+                <div class="mt-6 bg-slate-950 text-white p-5 rounded-2xl border border-slate-800 shadow-xl">
                   <div class="flex justify-between items-center pb-3 border-b border-slate-800">
                     <div>
-                      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Overall Health Score</span>
+                      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">200-Pt Inspection Health</span>
                       <h4 class="text-2xl font-black text-amber-400">${car.inspection_score.toFixed(1)} <span class="text-sm font-semibold text-slate-400">/ 10</span></h4>
                     </div>
-                    <span class="bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    <span class="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full">
                       Passed 200 Points
                     </span>
                   </div>
@@ -948,12 +1326,12 @@
               </div>
 
               <!-- Action CTAs -->
-              <div class="mt-8 space-y-3">
-                <button onclick="bookTestDrive('${car.id}', '${car.title.replace(/'/g, "\\'")}')" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-2xl text-sm transition shadow-lg shadow-brand-500/20 flex items-center justify-center">
-                  <i class="fa-solid fa-calendar-check mr-2"></i> Book Free Test Drive
+              <div class="space-y-2.5 pt-2">
+                <button onclick="bookTestDrive('${car.id}', '${car.title.replace(/'/g, "\'")}')" class="w-full bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-700 hover:to-rose-700 text-white font-bold py-3.5 rounded-2xl text-xs transition shadow-lg shadow-brand-600/30 flex items-center justify-center">
+                  <i class="fa-solid fa-calendar-check mr-2"></i> Book Doorstep / Hub Test Drive
                 </button>
-                <button onclick="reserveCar('${car.id}', '${car.title.replace(/'/g, "\\'")}')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-2xl text-sm transition flex items-center justify-center">
-                  <i class="fa-solid fa-lock mr-2 text-emerald-400"></i> Reserve Now (₹10,000 Refundable)
+                <button onclick="reserveCar('${car.id}', '${car.title.replace(/'/g, "\'")}')" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3.5 rounded-2xl text-xs transition border border-slate-700 flex items-center justify-center">
+                  <i class="fa-solid fa-lock mr-2 text-emerald-400"></i> Reserve Car (₹10,000 Refundable Token)
                 </button>
               </div>
             </div>
@@ -961,7 +1339,25 @@
         `;
       } catch (err) {
         console.error(err);
-        content.innerHTML = `<div class="text-red-500 font-bold text-center py-8">Failed to load vehicle details.</div>`;
+        content.innerHTML = `<div class="text-red-400 font-bold text-center py-8">Failed to load vehicle details.</div>`;
+      }
+    }
+
+    function showModalImage(imgUrl) {
+      const viewer = document.getElementById('modalMediaViewer');
+      viewer.innerHTML = `<img src="${imgUrl}" class="w-full h-full object-cover">`;
+    }
+
+    function showModalVideo(videoUrl) {
+      const viewer = document.getElementById('modalMediaViewer');
+      if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+        let embedUrl = videoUrl;
+        if (videoUrl.includes('watch?v=')) {
+          embedUrl = videoUrl.replace('watch?v=', 'embed/');
+        }
+        viewer.innerHTML = `<iframe src="${embedUrl}?autoplay=1" class="w-full h-full border-0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+      } else {
+        viewer.innerHTML = `<video controls autoplay class="w-full h-full object-contain bg-black"><source src="${videoUrl}" type="video/mp4">Your browser does not support HTML5 video.</video>`;
       }
     }
 
@@ -970,98 +1366,23 @@
       document.getElementById('carDetailModal').classList.remove('flex');
     }
 
-    // Filter Helpers
-    function updatePriceLabel(val) {
-      currentFilters.max_price = Number(val);
-      document.getElementById('priceLabel').innerText = `Up to ${formatLakhs(Number(val))}`;
-      applyFilters();
+    // Modal Toggles
+    function openAddCarDirectModal() {
+      document.getElementById('addCarDirectModal').classList.remove('hidden');
+      document.getElementById('addCarDirectModal').classList.add('flex');
     }
-
-    function toggleFuel(btn, val) {
-      document.querySelectorAll('.fuel-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600'));
-      if (currentFilters.fuel_type === val) {
-        currentFilters.fuel_type = null;
-      } else {
-        currentFilters.fuel_type = val;
-        btn.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
-      }
-      applyFilters();
+    function closeAddCarDirectModal() {
+      document.getElementById('addCarDirectModal').classList.add('hidden');
+      document.getElementById('addCarDirectModal').classList.remove('flex');
     }
-
-    function toggleTransmission(btn, val) {
-      document.querySelectorAll('.trans-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600'));
-      if (currentFilters.transmission === val) {
-        currentFilters.transmission = null;
-      } else {
-        currentFilters.transmission = val;
-        btn.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
-      }
-      applyFilters();
+    function openManageApprovedEmailsModal() {
+      document.getElementById('manageApprovedEmailsModal').classList.remove('hidden');
+      document.getElementById('manageApprovedEmailsModal').classList.add('flex');
+      loadAuthorizedEmails();
     }
-
-    function toggleBody(btn, val) {
-      document.querySelectorAll('.body-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600'));
-      if (currentFilters.body_type === val) {
-        currentFilters.body_type = null;
-      } else {
-        currentFilters.body_type = val;
-        btn.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
-      }
-      applyFilters();
-    }
-
-    function setQuickFilter(key, val) {
-      currentFilters[key] = val;
-      applyFilters();
-    }
-
-    function applyFilters() {
-      currentFilters.city = document.getElementById('citySelect').value;
-      currentFilters.min_score = document.getElementById('minScoreSelect').value || null;
-      currentFilters.sort_by = document.getElementById('sortBySelect').value;
-      loadCars();
-    }
-
-    let searchTimer = null;
-    function debounceSearch() {
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(() => {
-        currentFilters.search = document.getElementById('globalSearch').value.trim();
-        loadCars();
-      }, 300);
-    }
-
-    function resetFilters() {
-      currentFilters = {
-        make: null,
-        fuel_type: null,
-        transmission: null,
-        body_type: null,
-        max_price: 3000000,
-        min_score: null,
-        city: 'Bangalore',
-        search: '',
-        sort_by: 'created_at'
-      };
-      document.querySelectorAll('.brand-card').forEach(b => b.classList.remove('active-brand'));
-      document.getElementById('activeBrandBanner').classList.add('hidden');
-      document.getElementById('catalogTitle').innerText = 'Available Verified Cars';
-      document.getElementById('priceRange').value = 3000000;
-      document.getElementById('priceLabel').innerText = 'Up to ₹30.0 L';
-      document.getElementById('globalSearch').value = '';
-      document.getElementById('minScoreSelect').value = '';
-      document.querySelectorAll('.fuel-btn, .trans-btn, .body-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600'));
-      loadCars();
-    }
-
-    // Modal Helpers
-    function openAddCarModal() {
-      document.getElementById('addCarModal').classList.remove('hidden');
-      document.getElementById('addCarModal').classList.add('flex');
-    }
-    function closeAddCarModal() {
-      document.getElementById('addCarModal').classList.add('hidden');
-      document.getElementById('addCarModal').classList.remove('flex');
+    function closeManageApprovedEmailsModal() {
+      document.getElementById('manageApprovedEmailsModal').classList.add('hidden');
+      document.getElementById('manageApprovedEmailsModal').classList.remove('flex');
     }
     function openValuationModal() {
       document.getElementById('valuationModal').classList.remove('hidden');
@@ -1072,65 +1393,228 @@
       document.getElementById('valuationModal').classList.remove('flex');
     }
 
-    // Check Seller Email Verification
-    async function checkEmailVerificationStatus(email) {
+    // Local Image Preview handler
+    let selectedImageFiles = [];
+    function handleLocalImageSelection(e) {
+      const files = Array.from(e.target.files);
+      selectedImageFiles = files;
+      const container = document.getElementById('imagePreviewContainer');
+      container.innerHTML = '';
+      if (files.length > 0) {
+        container.classList.remove('hidden');
+        files.forEach((file) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            img.className = 'w-16 h-14 object-cover rounded-lg border border-brand-500/80';
+            container.appendChild(img);
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+
+    // Local Video Preview handler
+    let selectedVideoFile = null;
+    function handleLocalVideoSelection(e) {
+      const file = e.target.files[0];
+      selectedVideoFile = file;
+      const statusEl = document.getElementById('videoPreviewStatus');
+      if (file) {
+        statusEl.classList.remove('hidden');
+        statusEl.innerHTML = `<span class="text-amber-400 font-bold"><i class="fa-solid fa-video mr-1"></i> Selected:</span> ${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB)`;
+      }
+    }
+
+    // Verify if Upload Email is Approved
+    async function verifyUploadEmail(email) {
       if (!email || !email.includes('@')) return;
-      const badge = document.getElementById('emailStatusBadge');
-      badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Checking email verification status...`;
+      const statusEl = document.getElementById('uploadEmailStatus');
+      statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Verifying authorization...`;
 
       try {
         const res = await fetch(`${API_BASE}/cars/check-seller-email?email=${encodeURIComponent(email)}`);
         const data = await res.json();
         if (data.is_approved) {
-          badge.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Verified & Pre-Approved Seller!</span> Your car will go live immediately.`;
+          statusEl.innerHTML = `<span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Authorized Email!</span> Any car added with this email will directly upload & publish to the live server.`;
+          document.getElementById('uploadSubmitBtn').disabled = false;
         } else {
-          badge.innerHTML = `<span class="text-amber-600 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Unverified Email.</span> Your car will be submitted for Admin Review & Approval.`;
+          statusEl.innerHTML = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-circle-xmark mr-1"></i> Unauthorized Email.</span> Only pre-approved emails can directly upload cars. Contact superadmin to authorize this email.`;
         }
       } catch (err) {
-        badge.innerText = 'Could not verify status.';
+        statusEl.innerText = 'Verification failed.';
       }
     }
 
-    // Handle Online Car Submission
-    async function handleCarSubmission(e) {
+    // Direct Car Upload Submission (Uploads Local Files First if selected)
+    async function handleDirectCarUpload(e) {
       e.preventDefault();
-      const payload = {
-        seller_email: document.getElementById('sellerEmail').value,
-        seller_name: document.getElementById('sellerName').value,
-        seller_phone: document.getElementById('sellerPhone').value,
-        title: `${document.getElementById('carYear').value} ${document.getElementById('carMake').value} ${document.getElementById('carModel').value} ${document.getElementById('carVariant').value}`,
-        reg_number: document.getElementById('carReg').value,
-        make: document.getElementById('carMake').value,
-        model: document.getElementById('carModel').value,
-        variant: document.getElementById('carVariant').value,
-        year: parseInt(document.getElementById('carYear').value),
-        kilometers_driven: parseInt(document.getElementById('carKm').value),
-        fuel_type: document.getElementById('carFuel').value,
-        transmission: document.getElementById('carTrans').value,
-        ownership: 'FIRST',
-        body_type: document.getElementById('carBody').value,
-        color: 'White',
-        city: document.getElementById('carCity').value,
-        price: parseFloat(document.getElementById('carPrice').value),
-        image_urls: document.getElementById('carImage').value ? [document.getElementById('carImage').value] : []
-      };
+      const submitBtn = document.getElementById('uploadSubmitBtn');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Uploading media and publishing...`;
+      submitBtn.disabled = true;
+
+      const email = document.getElementById('uploadEmail').value.trim();
 
       try {
+        // Check authorization first
+        const authRes = await fetch(`${API_BASE}/cars/check-seller-email?email=${encodeURIComponent(email)}`);
+        const authData = await authRes.json();
+        if (!authData.is_approved) {
+          alert(`❌ Access Denied: "${email}" is not authorized by Superadmin.
+Please use shankarmanoj654@gmail.com or authorize this email in the "Authorized Emails" panel.`);
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+          return;
+        }
+
+        let uploadedImageUrls = [];
+        const makeVal = document.getElementById('uploadMake').value.trim() || 'General';
+        
+        // 1. If local image files were selected, upload to /api/v1/uploads/images with brand partitioning
+        if (selectedImageFiles && selectedImageFiles.length > 0) {
+          const imgFormData = new FormData();
+          imgFormData.append('brand', makeVal);
+          selectedImageFiles.forEach(file => {
+            imgFormData.append('files', file);
+          });
+          const imgUploadRes = await fetch(`${API_BASE}/uploads/images`, {
+            method: 'POST',
+            body: imgFormData
+          });
+          if (imgUploadRes.ok) {
+            const imgData = await imgUploadRes.json();
+            uploadedImageUrls = imgData.map(item => item.url);
+          }
+        }
+
+        // 2. Add URL input image if provided
+        const manualImageUrl = document.getElementById('uploadImageUrl').value.trim();
+        if (manualImageUrl) {
+          uploadedImageUrls.push(manualImageUrl);
+        }
+
+        // Default fallback image if none provided
+        if (uploadedImageUrls.length === 0) {
+          uploadedImageUrls.push('https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80');
+        }
+
+        // 3. If local video file was selected, upload to /api/v1/uploads/videos with brand partitioning
+        if (selectedVideoFile) {
+          const vidFormData = new FormData();
+          vidFormData.append('brand', makeVal);
+          vidFormData.append('files', selectedVideoFile);
+          const vidUploadRes = await fetch(`${API_BASE}/uploads/videos`, {
+            method: 'POST',
+            body: vidFormData
+          });
+          if (vidUploadRes.ok) {
+            const vidData = await vidUploadRes.json();
+            if (vidData && vidData.length > 0) {
+              uploadedImageUrls.push(vidData[0].url);
+            }
+          }
+        }
+
+        // Add Video URL if provided
+        const manualVideoUrl = document.getElementById('uploadVideoUrl').value.trim();
+        if (manualVideoUrl) {
+          uploadedImageUrls.push(manualVideoUrl);
+        }
+
+        const payload = {
+          seller_email: email,
+          seller_name: document.getElementById('uploadSellerName').value,
+          seller_phone: document.getElementById('uploadSellerPhone').value,
+          title: `${document.getElementById('uploadYear').value} ${document.getElementById('uploadMake').value} ${document.getElementById('uploadModel').value} ${document.getElementById('uploadVariant').value}`,
+          reg_number: document.getElementById('uploadReg').value.toUpperCase(),
+          make: document.getElementById('uploadMake').value,
+          model: document.getElementById('uploadModel').value,
+          variant: document.getElementById('uploadVariant').value,
+          year: parseInt(document.getElementById('uploadYear').value),
+          kilometers_driven: parseInt(document.getElementById('uploadKm').value),
+          fuel_type: document.getElementById('uploadFuel').value,
+          transmission: document.getElementById('uploadTrans').value,
+          ownership: 'FIRST',
+          body_type: document.getElementById('uploadBody').value,
+          color: 'White',
+          city: 'Bangalore',
+          price: parseFloat(document.getElementById('uploadPrice').value),
+          image_urls: uploadedImageUrls
+        };
+
         const res = await fetch(`${API_BASE}/cars/submit`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
         const result = await res.json();
-        alert(result.message);
-        closeAddCarModal();
+        alert(`🎉 Success!
+${result.message}
+Car ID: ${result.car_id}`);
+        closeAddCarDirectModal();
         loadCars();
       } catch (err) {
-        alert('Failed to submit car: ' + err.message);
+        alert('Upload failed: ' + err.message);
+      } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
       }
     }
 
-    // Handle Valuation Calculation
+    // Superadmin: Whitelist / Authorize an Email
+    async function handleWhitelistEmail(e) {
+      e.preventDefault();
+      const email = document.getElementById('newAdminEmail').value.trim();
+      const notes = document.getElementById('newAdminNotes').value.trim();
+
+      try {
+        const res = await fetch(`${API_BASE}/cars/admin/approve-seller-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, notes: notes || "Authorized Admin/Manager" })
+        });
+        if (res.ok) {
+          alert(`✅ Email "${email}" has been Approved & Whitelisted!
+They can now add cars and directly publish to the live server.`);
+          document.getElementById('newAdminEmail').value = '';
+          document.getElementById('newAdminNotes').value = '';
+          loadAuthorizedEmails();
+        }
+      } catch (err) {
+        alert('Failed to authorize email');
+      }
+    }
+
+    // Load Authorized Emails List
+    async function loadAuthorizedEmails() {
+      const container = document.getElementById('authorizedEmailsList');
+      container.innerHTML = `<div class="py-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-sm"></i></div>`;
+      try {
+        const res = await fetch(`${API_BASE}/cars/admin/approved-seller-emails`);
+        const list = await res.json();
+        if (!list || list.length === 0) {
+          container.innerHTML = `<p class="text-xs text-slate-400">No authorized emails yet.</p>`;
+          return;
+        }
+        container.innerHTML = list.map(item => `
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+            <div>
+              <strong class="text-white block font-bold">${item.email}</strong>
+              <span class="text-[10px] text-slate-400">${item.notes || 'Authorized Manager'}</span>
+            </div>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2 py-0.5 rounded-md border border-emerald-500/30">
+              <i class="fa-solid fa-check text-[9px] mr-1"></i> Authorized
+            </span>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<p class="text-xs text-red-400">Failed to load emails.</p>`;
+      }
+    }
+
+    // Valuation Calculator
     async function handleCalculateValuation(e) {
       e.preventDefault();
       const payload = {
@@ -1138,8 +1622,8 @@
         model: document.getElementById('valModel').value,
         year: parseInt(document.getElementById('valYear').value),
         kilometers_driven: parseInt(document.getElementById('valKm').value),
-        fuel_type: 'PETROL',
-        transmission: 'MANUAL',
+        fuel_type: 'DIESEL',
+        transmission: 'AUTOMATIC',
         ownership: 'FIRST',
         city: 'Bangalore'
       };
@@ -1161,9 +1645,10 @@
 
     // Book Test Drive
     async function bookTestDrive(carId, title) {
-      const name = prompt(`Book Free Test Drive for ${title}\nEnter your full name:`, "Manoj Shankar");
+      const name = prompt(`Book Test Drive for ${title}
+Enter your name:`, "Manoj Shankar");
       if (!name) return;
-      const phone = prompt("Enter your 10-digit mobile number:", "9876543210");
+      const phone = prompt("Enter your 10-digit mobile number:", PRIMARY_PHONE);
       if (!phone) return;
 
       const payload = {
@@ -1182,7 +1667,8 @@
           body: JSON.stringify(payload)
         });
         if (res.ok) {
-          alert(`🎉 Test drive booked successfully for ${title}! Our representative will contact you at ${phone}.`);
+          alert(`🎉 Test drive booked successfully for ${title}!
+Our Bangalore Hub manager will contact you at ${phone}.`);
           closeCarModal();
         }
       } catch (err) {
@@ -1190,11 +1676,12 @@
       }
     }
 
-    // Reserve Car Token
+    // Reserve Car
     async function reserveCar(carId, title) {
-      const name = prompt(`Reserve ${title} (₹10,000 Refundable Token)\nEnter your name:`, "Manoj Shankar");
+      const name = prompt(`Reserve ${title} (₹10,000 Refundable Token)
+Enter your name:`, "Manoj Shankar");
       if (!name) return;
-      const phone = prompt("Enter your mobile number:", "9876543210");
+      const phone = prompt("Enter your mobile number:", PRIMARY_PHONE);
       if (!phone) return;
 
       const payload = {
@@ -1214,124 +1701,203 @@
         });
         const result = await res.json();
         if (res.ok) {
-          alert(`✅ Car Reserved Successfully!\nOrder Reference: ${result.order_number}\nPayment Status: SUCCESS (Simulated Razorpay)\nThe vehicle is now held exclusively for you.`);
+          alert(`✅ Car Reserved Successfully!
+Order Reference: ${result.order_number}
+The car is now reserved for you at Bangalore Hub.`);
           closeCarModal();
           loadCars();
-        } else {
-          alert(result.detail || 'Reservation failed');
         }
       } catch (err) {
         alert('Reservation error: ' + err.message);
       }
     }
 
-    // Admin: Load Pending Cars
-    async function loadPendingCars() {
-      const list = document.getElementById('pendingCarsList');
-      list.innerHTML = `<div class="py-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl text-brand-600 mb-2"></i><p>Loading pending cars...</p></div>`;
-
-      try {
-        const res = await fetch(`${API_BASE}/cars/admin/pending`);
-        const cars = await res.json();
-        if (!cars || cars.length === 0) {
-          list.innerHTML = `
-            <div class="bg-slate-50 p-8 rounded-2xl text-center border border-slate-200">
-              <i class="fa-solid fa-circle-check text-3xl text-emerald-500 mb-2"></i>
-              <h4 class="font-bold text-slate-700">All submissions are reviewed!</h4>
-              <p class="text-xs text-slate-400 mt-1">No car listings currently pending approval.</p>
-            </div>
-          `;
-          return;
-        }
-
-        list.innerHTML = cars.map(c => `
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded">PENDING APPROVAL</span>
-                <span class="text-xs text-slate-500 font-semibold">${c.reg_number}</span>
-              </div>
-              <h4 class="font-bold text-slate-900 text-base mt-1">${c.title}</h4>
-              <p class="text-xs text-slate-500 mt-0.5">Submitted by: <strong class="text-slate-800">${c.seller_name || 'Seller'}</strong> (${c.seller_email})</p>
-              <div class="text-xs font-bold text-slate-900 mt-2">${formatLakhs(c.price)} &bull; ${c.city}</div>
-            </div>
-            <div class="flex gap-2">
-              <button onclick="approveCarListing('${c.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition">
-                <i class="fa-solid fa-check mr-1"></i> Approve Car
-              </button>
-              <button onclick="quickApproveEmail('${c.seller_email}')" class="bg-slate-900 hover:bg-slate-800 text-white font-bold px-3 py-2 rounded-xl text-xs transition">
-                <i class="fa-solid fa-user-plus mr-1"></i> Whitelist Email
-              </button>
-            </div>
-          </div>
-        `).join('');
-      } catch (err) {
-        list.innerHTML = `<div class="text-red-500 text-xs">Failed to load pending cars</div>`;
+    // Mobile Drawer Handlers
+    function openMobileFilters() {
+      const drawer = document.getElementById('mobileFilterDrawer');
+      const backdrop = document.getElementById('mobileFilterBackdrop');
+      if (drawer && backdrop) {
+        backdrop.classList.remove('hidden');
+        drawer.classList.remove('-translate-x-full');
       }
     }
 
-    // Admin: Approve a Car Listing
-    async function approveCarListing(carId) {
-      try {
-        const res = await fetch(`${API_BASE}/cars/admin/approve/${carId}`, { method: 'POST' });
-        if (res.ok) {
-          alert('Car approved and published to marketplace!');
-          loadPendingCars();
-        }
-      } catch (err) {
-        alert('Approval failed');
+    function closeMobileFilters() {
+      const drawer = document.getElementById('mobileFilterDrawer');
+      const backdrop = document.getElementById('mobileFilterBackdrop');
+      if (drawer && backdrop) {
+        drawer.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
       }
     }
 
-    // Admin: Approve / Whitelist Email
-    async function handleApproveEmail(e) {
-      e.preventDefault();
-      const email = document.getElementById('approveEmailInput').value;
-      const notes = document.getElementById('approveEmailNotes').value;
-      await quickApproveEmail(email, notes);
-      document.getElementById('approveEmailInput').value = '';
-      document.getElementById('approveEmailNotes').value = '';
+    // Filter Helpers & Synchronizers
+    function syncPrice(val) {
+      currentFilters.max_price = Number(val);
+      const text = `Up to ${formatLakhs(Number(val))}`;
+      const p1 = document.getElementById('priceLabel');
+      const p2 = document.getElementById('mobilePriceLabel');
+      const r1 = document.getElementById('priceRange');
+      const r2 = document.getElementById('mobilePriceRange');
+      if (p1) p1.innerText = text;
+      if (p2) p2.innerText = text;
+      if (r1) r1.value = val;
+      if (r2) r2.value = val;
+      updateFilterBadge();
+      applyFilters();
     }
 
-    async function quickApproveEmail(email, notes = "Approved by Admin") {
-      try {
-        const res = await fetch(`${API_BASE}/cars/admin/approve-seller-email`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email, notes: notes })
-        });
-        if (res.ok) {
-          alert(`✅ Seller Email "${email}" has been Approved & Whitelisted!\nAll pending cars from this seller are now published.`);
-          loadApprovedEmails();
-          loadPendingCars();
+    function syncMinScore(val) {
+      currentFilters.min_score = val || null;
+      const s1 = document.getElementById('minScoreSelect');
+      const s2 = document.getElementById('mobileMinScoreSelect');
+      if (s1) s1.value = val;
+      if (s2) s2.value = val;
+      updateFilterBadge();
+      applyFilters();
+    }
+
+    function syncAndApplySort(val) {
+      currentFilters.sort_by = val;
+      const s1 = document.getElementById('sortBySelect');
+      const s2 = document.getElementById('sortBySelectMobile');
+      if (s1) s1.value = val;
+      if (s2) s2.value = val;
+      applyFilters();
+    }
+
+    function updateFilterBadge() {
+      let count = 0;
+      if (currentFilters.make) count++;
+      if (currentFilters.fuel_type) count++;
+      if (currentFilters.transmission) count++;
+      if (currentFilters.body_type) count++;
+      if (currentFilters.max_price < 4500000) count++;
+      if (currentFilters.min_score) count++;
+
+      const badge = document.getElementById('mobileFilterBadge');
+      if (badge) {
+        if (count > 0) {
+          badge.innerText = count;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
         }
-      } catch (err) {
-        alert('Failed to approve email');
       }
     }
 
-    // Admin: Load Approved Seller Emails
-    async function loadApprovedEmails() {
-      const list = document.getElementById('approvedEmailsList');
-      try {
-        const res = await fetch(`${API_BASE}/cars/admin/approved-seller-emails`);
-        const emails = await res.json();
-        if (!emails || emails.length === 0) {
-          list.innerHTML = `<p class="text-xs text-slate-400">No approved emails yet.</p>`;
-          return;
+    function toggleFuel(btn, val) {
+      const isSelected = currentFilters.fuel_type === val;
+      currentFilters.fuel_type = isSelected ? null : val;
+      
+      document.querySelectorAll('.fuel-btn').forEach(b => {
+        if (!isSelected && b.innerText.trim().toUpperCase() === val) {
+          b.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+        } else {
+          b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
         }
-        list.innerHTML = emails.map(e => `
-          <div class="bg-white p-2.5 rounded-xl border border-slate-200 text-xs flex justify-between items-center">
-            <div>
-              <strong class="text-slate-800 block">${e.email}</strong>
-              <span class="text-[10px] text-slate-400">${e.notes || 'Verified'}</span>
-            </div>
-            <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Active</span>
-          </div>
-        `).join('');
-      } catch (err) {
-        console.error(err);
-      }
+      });
+      updateFilterBadge();
+      applyFilters();
+    }
+
+    function toggleTransmission(btn, val) {
+      const isSelected = currentFilters.transmission === val;
+      currentFilters.transmission = isSelected ? null : val;
+      
+      document.querySelectorAll('.trans-btn').forEach(b => {
+        if (!isSelected && b.innerText.trim().toUpperCase() === val) {
+          b.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+        } else {
+          b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
+        }
+      });
+      updateFilterBadge();
+      applyFilters();
+    }
+
+    function toggleBody(btn, val) {
+      const isSelected = currentFilters.body_type === val;
+      currentFilters.body_type = isSelected ? null : val;
+      
+      document.querySelectorAll('.body-btn').forEach(b => {
+        if (!isSelected && b.innerText.trim().toUpperCase() === val) {
+          b.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+        } else {
+          b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
+        }
+      });
+      updateFilterBadge();
+      applyFilters();
+    }
+
+    function setQuickFilter(key, val) {
+      currentFilters[key] = val;
+      updateFilterBadge();
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const scoreEl = document.getElementById('minScoreSelect');
+      if (scoreEl) currentFilters.min_score = scoreEl.value || null;
+      const sortEl = document.getElementById('sortBySelect');
+      if (sortEl) currentFilters.sort_by = sortEl.value;
+      updateFilterBadge();
+      loadCars();
+    }
+
+    let searchTimer = null;
+    function debounceSearch() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        currentFilters.search = document.getElementById('globalSearch').value.trim();
+        loadCars();
+      }, 300);
+    }
+
+    function resetFilters() {
+      currentFilters = {
+        make: null,
+        fuel_type: null,
+        transmission: null,
+        body_type: null,
+        max_price: 4500000,
+        min_score: null,
+        city: 'Bangalore',
+        search: '',
+        sort_by: 'created_at'
+      };
+      document.querySelectorAll('.brand-card').forEach(b => b.classList.remove('active-brand'));
+      
+      const b1 = document.getElementById('activeBrandBanner');
+      const b2 = document.getElementById('mobileActiveBrandBanner');
+      if (b1) b1.classList.add('hidden');
+      if (b2) b2.classList.add('hidden');
+
+      document.getElementById('catalogTitle').innerText = 'Available Certified Cars';
+      
+      const p1 = document.getElementById('priceRange');
+      const p2 = document.getElementById('mobilePriceRange');
+      if (p1) p1.value = 4500000;
+      if (p2) p2.value = 4500000;
+
+      const pl1 = document.getElementById('priceLabel');
+      const pl2 = document.getElementById('mobilePriceLabel');
+      if (pl1) pl1.innerText = 'Up to ₹45.0 L';
+      if (pl2) pl2.innerText = 'Up to ₹45.0 L';
+
+      const s = document.getElementById('globalSearch');
+      if (s) s.value = '';
+
+      const ms1 = document.getElementById('minScoreSelect');
+      const ms2 = document.getElementById('mobileMinScoreSelect');
+      if (ms1) ms1.value = '';
+      if (ms2) ms2.value = '';
+
+      document.querySelectorAll('.fuel-btn, .trans-btn, .body-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600'));
+      
+      updateFilterBadge();
+      loadCars();
     }
 
     // Initial Load

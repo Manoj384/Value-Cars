@@ -327,42 +327,65 @@
       </div>
     </section>
 
-    <!-- CATALOG WORKSPACE (FILTERS + VEHICLE CARDS) -->
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-16">
+    <!-- MOBILE FILTER TRIGGER BAR & SORTING (VISIBLE ON MOBILE / TABLET ONLY) -->
+    <div class="lg:hidden flex flex-wrap items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 shadow-xl relative z-10">
+      <button onclick="openMobileFilters()" class="flex items-center space-x-2.5 bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-700 hover:to-rose-700 text-white font-black px-4 py-2.5 rounded-xl text-xs shadow-lg shadow-brand-600/30 transition">
+        <i class="fa-solid fa-bars-staggered text-sm"></i>
+        <span>Refine Search & Filters</span>
+        <span id="mobileFilterBadge" class="hidden bg-white text-brand-700 text-[10px] font-black px-2 py-0.5 rounded-full ml-1 shadow-sm">0</span>
+      </button>
 
-      <!-- FILTER SIDEBAR -->
-      <aside class="lg:col-span-1 bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl h-fit sticky top-24">
+      <div class="flex items-center space-x-2">
+        <span class="text-slate-400 text-xs font-bold uppercase">Sort:</span>
+        <select id="sortBySelectMobile" onchange="syncAndApplySort(this.value)" class="bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold rounded-xl px-3 py-2 outline-none focus:border-brand-500">
+          <option value="created_at">Recently Added</option>
+          <option value="price_asc">Price: Low to High</option>
+          <option value="price_desc">Price: High to Low</option>
+          <option value="km_asc">KM: Low to High</option>
+          <option value="year_desc">Year: Newest</option>
+          <option value="score_desc">Inspection Score</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- MOBILE FILTER DRAWER & BACKDROP -->
+    <div id="mobileFilterBackdrop" onclick="closeMobileFilters()" class="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm hidden transition-opacity duration-300"></div>
+
+    <div id="mobileFilterDrawer" class="fixed inset-y-0 left-0 z-50 w-80 max-w-[85vw] bg-slate-900 border-r border-slate-800 shadow-2xl p-6 overflow-y-auto transform -translate-x-full transition-transform duration-300 flex flex-col justify-between custom-scrollbar">
+      <div>
+        <!-- Drawer Header -->
         <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-          <h3 class="font-extrabold text-white text-base flex items-center font-heading">
-            <i class="fa-solid fa-sliders text-brand-500 mr-2"></i> Refine Search
-          </h3>
-          <button onclick="resetFilters()" class="text-xs font-bold text-brand-400 hover:text-brand-300">
-            Reset All
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-bars-staggered text-brand-500 text-lg"></i>
+            <h3 class="font-black text-white text-lg font-heading">Refine Search</h3>
+          </div>
+          <button onclick="closeMobileFilters()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition">
+            <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
-        <!-- Active Brand Filter Chip -->
-        <div id="activeBrandBanner" class="hidden mb-5 bg-brand-950/60 border border-brand-800/60 rounded-xl p-3 flex justify-between items-center text-xs">
+        <!-- Active Brand Filter Chip (Mobile) -->
+        <div id="mobileActiveBrandBanner" class="hidden mb-5 bg-brand-950/60 border border-brand-800/60 rounded-xl p-3 flex justify-between items-center text-xs">
           <div>
             <span class="text-slate-400 block text-[10px] uppercase font-bold">Filtered Brand</span>
-            <strong id="activeBrandName" class="text-brand-400 font-extrabold text-sm">Hyundai</strong>
+            <strong id="mobileActiveBrandName" class="text-brand-400 font-extrabold text-sm">Hyundai</strong>
           </div>
           <button onclick="selectBrand('')" class="text-brand-400 hover:text-brand-300 font-bold text-xs">
             <i class="fa-solid fa-xmark"></i> Clear
           </button>
         </div>
 
-        <!-- Max Price Slider -->
+        <!-- Max Price Slider (Mobile) -->
         <div class="mb-6">
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Budget Range</label>
-          <input type="range" id="priceRange" min="300000" max="4500000" step="50000" value="4500000" oninput="updatePriceLabel(this.value)" class="w-full accent-brand-600 cursor-pointer">
+          <input type="range" id="mobilePriceRange" min="300000" max="4500000" step="50000" value="4500000" oninput="syncPrice(this.value)" class="w-full accent-brand-600 cursor-pointer">
           <div class="flex justify-between text-xs font-semibold text-slate-400 mt-1">
             <span>₹3 L</span>
-            <span id="priceLabel" class="text-brand-400 font-bold">Up to ₹45.0 L</span>
+            <span id="mobilePriceLabel" class="text-brand-400 font-bold">Up to ₹45.0 L</span>
           </div>
         </div>
 
-        <!-- Fuel Type -->
+        <!-- Fuel Type (Mobile) -->
         <div class="mb-6">
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fuel Type</label>
           <div class="grid grid-cols-2 gap-2">
@@ -373,7 +396,7 @@
           </div>
         </div>
 
-        <!-- Transmission -->
+        <!-- Transmission (Mobile) -->
         <div class="mb-6">
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Transmission</label>
           <div class="grid grid-cols-2 gap-2">
@@ -382,7 +405,7 @@
           </div>
         </div>
 
-        <!-- Body Type -->
+        <!-- Body Type (Mobile) -->
         <div class="mb-6">
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Body Type</label>
           <div class="grid grid-cols-2 gap-2">
@@ -392,10 +415,97 @@
           </div>
         </div>
 
-        <!-- Min Inspection Score -->
+        <!-- Min Inspection Score (Mobile) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Inspection Score</label>
+          <select id="mobileMinScoreSelect" onchange="syncMinScore(this.value)" class="w-full text-xs font-semibold bg-slate-800 border border-slate-700 text-slate-200 rounded-xl p-2.5 outline-none focus:border-brand-500">
+            <option value="">Any Condition</option>
+            <option value="9.0">9.0+ Excellent Condition</option>
+            <option value="8.5">8.5+ Great Condition</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Drawer Bottom Actions -->
+      <div class="pt-6 border-t border-slate-800 flex gap-3 mt-6">
+        <button onclick="resetFilters(); closeMobileFilters();" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-xs transition">
+          Reset All
+        </button>
+        <button onclick="applyFilters(); closeMobileFilters();" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-black py-3 rounded-xl text-xs transition shadow-lg shadow-brand-600/30">
+          Apply & View
+        </button>
+      </div>
+    </div>
+
+    <!-- CATALOG WORKSPACE (DESKTOP FILTERS + VEHICLE CARDS) -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-16 items-start">
+
+      <!-- DESKTOP FILTER SIDEBAR (SOLID OPAQUE BG, ZERO BLEEDTHROUGH, PROPER Z-INDEX) -->
+      <aside class="hidden lg:block lg:col-span-1 bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl h-fit sticky top-24 z-20">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+          <h3 class="font-extrabold text-white text-base flex items-center font-heading">
+            <i class="fa-solid fa-sliders text-brand-500 mr-2"></i> Refine Search
+          </h3>
+          <button onclick="resetFilters()" class="text-xs font-bold text-brand-400 hover:text-brand-300">
+            Reset All
+          </button>
+        </div>
+
+        <!-- Active Brand Filter Chip (Desktop) -->
+        <div id="activeBrandBanner" class="hidden mb-5 bg-brand-950/60 border border-brand-800/60 rounded-xl p-3 flex justify-between items-center text-xs">
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-bold">Filtered Brand</span>
+            <strong id="activeBrandName" class="text-brand-400 font-extrabold text-sm">Hyundai</strong>
+          </div>
+          <button onclick="selectBrand('')" class="text-brand-400 hover:text-brand-300 font-bold text-xs">
+            <i class="fa-solid fa-xmark"></i> Clear
+          </button>
+        </div>
+
+        <!-- Max Price Slider (Desktop) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Budget Range</label>
+          <input type="range" id="priceRange" min="300000" max="4500000" step="50000" value="4500000" oninput="syncPrice(this.value)" class="w-full accent-brand-600 cursor-pointer">
+          <div class="flex justify-between text-xs font-semibold text-slate-400 mt-1">
+            <span>₹3 L</span>
+            <span id="priceLabel" class="text-brand-400 font-bold">Up to ₹45.0 L</span>
+          </div>
+        </div>
+
+        <!-- Fuel Type (Desktop) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Fuel Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleFuel(this, 'PETROL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Petrol</button>
+            <button onclick="toggleFuel(this, 'DIESEL')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Diesel</button>
+            <button onclick="toggleFuel(this, 'CNG')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">CNG</button>
+            <button onclick="toggleFuel(this, 'ELECTRIC')" class="fuel-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Electric</button>
+          </div>
+        </div>
+
+        <!-- Transmission (Desktop) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Transmission</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleTransmission(this, 'MANUAL')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Manual</button>
+            <button onclick="toggleTransmission(this, 'AUTOMATIC')" class="trans-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Automatic</button>
+          </div>
+        </div>
+
+        <!-- Body Type (Desktop) -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Body Type</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="toggleBody(this, 'SUV')" class="body-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">SUV</button>
+            <button onclick="toggleBody(this, 'SEDAN')" class="body-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Sedan</button>
+            <button onclick="toggleBody(this, 'HATCHBACK')" class="body-btn text-xs font-semibold py-2 px-3 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:border-brand-500 transition">Hatchback</button>
+          </div>
+        </div>
+
+        <!-- Min Inspection Score (Desktop) -->
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Inspection Score</label>
-          <select id="minScoreSelect" onchange="applyFilters()" class="w-full text-xs font-semibold bg-slate-800 border border-slate-700 text-slate-200 rounded-xl p-2.5 outline-none focus:border-brand-500">
+          <select id="minScoreSelect" onchange="syncMinScore(this.value)" class="w-full text-xs font-semibold bg-slate-800 border border-slate-700 text-slate-200 rounded-xl p-2.5 outline-none focus:border-brand-500">
             <option value="">Any Condition</option>
             <option value="9.0">9.0+ Excellent Condition</option>
             <option value="8.5">8.5+ Great Condition</option>
@@ -406,17 +516,17 @@
       <!-- CAR CARDS GRID -->
       <div class="lg:col-span-3">
         
-        <!-- Header stats & sorting -->
+        <!-- Header stats & sorting (Desktop) -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div>
             <h2 class="text-2xl font-black text-white tracking-tight font-heading" id="catalogTitle">Available Certified Cars</h2>
             <p id="resultsCount" class="text-xs text-slate-400 font-semibold mt-0.5">Showing verified vehicles in Bangalore</p>
           </div>
 
-          <!-- Sort dropdown -->
-          <div class="flex items-center space-x-2 text-sm font-semibold">
+          <!-- Sort dropdown (Desktop) -->
+          <div class="hidden lg:flex items-center space-x-2 text-sm font-semibold">
             <span class="text-slate-400 text-xs uppercase font-bold">Sort:</span>
-            <select id="sortBySelect" onchange="applyFilters()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 outline-none focus:border-brand-500">
+            <select id="sortBySelect" onchange="syncAndApplySort(this.value)" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-200 outline-none focus:border-brand-500">
               <option value="created_at">Recently Added</option>
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>
@@ -428,7 +538,7 @@
         </div>
 
         <!-- Dynamic Car Cards Container -->
-        <div id="carsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div id="carsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 relative z-0">
           <!-- Loading state -->
           <div class="col-span-full py-16 text-center text-slate-400">
             <i class="fa-solid fa-spinner fa-spin text-3xl text-brand-500 mb-3"></i>
@@ -923,20 +1033,29 @@
     function selectBrand(brandName) {
       document.querySelectorAll('.brand-card').forEach(b => b.classList.remove('active-brand'));
 
+      const b1 = document.getElementById('activeBrandBanner');
+      const b2 = document.getElementById('mobileActiveBrandBanner');
+      const n1 = document.getElementById('activeBrandName');
+      const n2 = document.getElementById('mobileActiveBrandName');
+
       if (!brandName || currentFilters.make === brandName) {
         currentFilters.make = null;
-        document.getElementById('activeBrandBanner').classList.add('hidden');
+        if (b1) b1.classList.add('hidden');
+        if (b2) b2.classList.add('hidden');
         document.getElementById('catalogTitle').innerText = 'Available Certified Cars';
       } else {
         currentFilters.make = brandName;
         const targetBtn = document.getElementById(`brand-${brandName}`);
         if (targetBtn) targetBtn.classList.add('active-brand');
         
-        document.getElementById('activeBrandBanner').classList.remove('hidden');
-        document.getElementById('activeBrandName').innerText = brandName;
+        if (b1) b1.classList.remove('hidden');
+        if (b2) b2.classList.remove('hidden');
+        if (n1) n1.innerText = brandName;
+        if (n2) n2.innerText = brandName;
         document.getElementById('catalogTitle').innerText = `Available Certified ${brandName} Cars`;
       }
 
+      updateFilterBadge();
       loadCars();
     }
 
@@ -1351,10 +1470,12 @@ Please use shankarmanoj654@gmail.com or authorize this email in the "Authorized 
         }
 
         let uploadedImageUrls = [];
+        const makeVal = document.getElementById('uploadMake').value.trim() || 'General';
         
-        // 1. If local image files were selected, upload to /api/v1/uploads/images
+        // 1. If local image files were selected, upload to /api/v1/uploads/images with brand partitioning
         if (selectedImageFiles && selectedImageFiles.length > 0) {
           const imgFormData = new FormData();
+          imgFormData.append('brand', makeVal);
           selectedImageFiles.forEach(file => {
             imgFormData.append('files', file);
           });
@@ -1379,9 +1500,10 @@ Please use shankarmanoj654@gmail.com or authorize this email in the "Authorized 
           uploadedImageUrls.push('https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80');
         }
 
-        // 3. If local video file was selected, upload to /api/v1/uploads/videos
+        // 3. If local video file was selected, upload to /api/v1/uploads/videos with brand partitioning
         if (selectedVideoFile) {
           const vidFormData = new FormData();
+          vidFormData.append('brand', makeVal);
           vidFormData.append('files', selectedVideoFile);
           const vidUploadRes = await fetch(`${API_BASE}/uploads/videos`, {
             method: 'POST',
@@ -1590,54 +1712,137 @@ The car is now reserved for you at Bangalore Hub.`);
       }
     }
 
-    // Filter Helpers
-    function updatePriceLabel(val) {
+    // Mobile Drawer Handlers
+    function openMobileFilters() {
+      const drawer = document.getElementById('mobileFilterDrawer');
+      const backdrop = document.getElementById('mobileFilterBackdrop');
+      if (drawer && backdrop) {
+        backdrop.classList.remove('hidden');
+        drawer.classList.remove('-translate-x-full');
+      }
+    }
+
+    function closeMobileFilters() {
+      const drawer = document.getElementById('mobileFilterDrawer');
+      const backdrop = document.getElementById('mobileFilterBackdrop');
+      if (drawer && backdrop) {
+        drawer.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    // Filter Helpers & Synchronizers
+    function syncPrice(val) {
       currentFilters.max_price = Number(val);
-      document.getElementById('priceLabel').innerText = `Up to ${formatLakhs(Number(val))}`;
+      const text = `Up to ${formatLakhs(Number(val))}`;
+      const p1 = document.getElementById('priceLabel');
+      const p2 = document.getElementById('mobilePriceLabel');
+      const r1 = document.getElementById('priceRange');
+      const r2 = document.getElementById('mobilePriceRange');
+      if (p1) p1.innerText = text;
+      if (p2) p2.innerText = text;
+      if (r1) r1.value = val;
+      if (r2) r2.value = val;
+      updateFilterBadge();
       applyFilters();
     }
 
-    function toggleFuel(btn, val) {
-      document.querySelectorAll('.fuel-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600'));
-      if (currentFilters.fuel_type === val) {
-        currentFilters.fuel_type = null;
-      } else {
-        currentFilters.fuel_type = val;
-        btn.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+    function syncMinScore(val) {
+      currentFilters.min_score = val || null;
+      const s1 = document.getElementById('minScoreSelect');
+      const s2 = document.getElementById('mobileMinScoreSelect');
+      if (s1) s1.value = val;
+      if (s2) s2.value = val;
+      updateFilterBadge();
+      applyFilters();
+    }
+
+    function syncAndApplySort(val) {
+      currentFilters.sort_by = val;
+      const s1 = document.getElementById('sortBySelect');
+      const s2 = document.getElementById('sortBySelectMobile');
+      if (s1) s1.value = val;
+      if (s2) s2.value = val;
+      applyFilters();
+    }
+
+    function updateFilterBadge() {
+      let count = 0;
+      if (currentFilters.make) count++;
+      if (currentFilters.fuel_type) count++;
+      if (currentFilters.transmission) count++;
+      if (currentFilters.body_type) count++;
+      if (currentFilters.max_price < 4500000) count++;
+      if (currentFilters.min_score) count++;
+
+      const badge = document.getElementById('mobileFilterBadge');
+      if (badge) {
+        if (count > 0) {
+          badge.innerText = count;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
       }
+    }
+
+    function toggleFuel(btn, val) {
+      const isSelected = currentFilters.fuel_type === val;
+      currentFilters.fuel_type = isSelected ? null : val;
+      
+      document.querySelectorAll('.fuel-btn').forEach(b => {
+        if (!isSelected && b.innerText.trim().toUpperCase() === val) {
+          b.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+        } else {
+          b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
+        }
+      });
+      updateFilterBadge();
       applyFilters();
     }
 
     function toggleTransmission(btn, val) {
-      document.querySelectorAll('.trans-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600'));
-      if (currentFilters.transmission === val) {
-        currentFilters.transmission = null;
-      } else {
-        currentFilters.transmission = val;
-        btn.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
-      }
+      const isSelected = currentFilters.transmission === val;
+      currentFilters.transmission = isSelected ? null : val;
+      
+      document.querySelectorAll('.trans-btn').forEach(b => {
+        if (!isSelected && b.innerText.trim().toUpperCase() === val) {
+          b.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+        } else {
+          b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
+        }
+      });
+      updateFilterBadge();
       applyFilters();
     }
 
     function toggleBody(btn, val) {
-      document.querySelectorAll('.body-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600'));
-      if (currentFilters.body_type === val) {
-        currentFilters.body_type = null;
-      } else {
-        currentFilters.body_type = val;
-        btn.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
-      }
+      const isSelected = currentFilters.body_type === val;
+      currentFilters.body_type = isSelected ? null : val;
+      
+      document.querySelectorAll('.body-btn').forEach(b => {
+        if (!isSelected && b.innerText.trim().toUpperCase() === val) {
+          b.classList.add('bg-brand-600', 'text-white', 'border-brand-600');
+        } else {
+          b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600');
+        }
+      });
+      updateFilterBadge();
       applyFilters();
     }
 
     function setQuickFilter(key, val) {
       currentFilters[key] = val;
+      updateFilterBadge();
       applyFilters();
     }
 
     function applyFilters() {
-      currentFilters.min_score = document.getElementById('minScoreSelect').value || null;
-      currentFilters.sort_by = document.getElementById('sortBySelect').value;
+      const scoreEl = document.getElementById('minScoreSelect');
+      if (scoreEl) currentFilters.min_score = scoreEl.value || null;
+      const sortEl = document.getElementById('sortBySelect');
+      if (sortEl) currentFilters.sort_by = sortEl.value;
+      updateFilterBadge();
       loadCars();
     }
 
@@ -1663,13 +1868,35 @@ The car is now reserved for you at Bangalore Hub.`);
         sort_by: 'created_at'
       };
       document.querySelectorAll('.brand-card').forEach(b => b.classList.remove('active-brand'));
-      document.getElementById('activeBrandBanner').classList.add('hidden');
+      
+      const b1 = document.getElementById('activeBrandBanner');
+      const b2 = document.getElementById('mobileActiveBrandBanner');
+      if (b1) b1.classList.add('hidden');
+      if (b2) b2.classList.add('hidden');
+
       document.getElementById('catalogTitle').innerText = 'Available Certified Cars';
-      document.getElementById('priceRange').value = 4500000;
-      document.getElementById('priceLabel').innerText = 'Up to ₹45.0 L';
-      document.getElementById('globalSearch').value = '';
-      document.getElementById('minScoreSelect').value = '';
+      
+      const p1 = document.getElementById('priceRange');
+      const p2 = document.getElementById('mobilePriceRange');
+      if (p1) p1.value = 4500000;
+      if (p2) p2.value = 4500000;
+
+      const pl1 = document.getElementById('priceLabel');
+      const pl2 = document.getElementById('mobilePriceLabel');
+      if (pl1) pl1.innerText = 'Up to ₹45.0 L';
+      if (pl2) pl2.innerText = 'Up to ₹45.0 L';
+
+      const s = document.getElementById('globalSearch');
+      if (s) s.value = '';
+
+      const ms1 = document.getElementById('minScoreSelect');
+      const ms2 = document.getElementById('mobileMinScoreSelect');
+      if (ms1) ms1.value = '';
+      if (ms2) ms2.value = '';
+
       document.querySelectorAll('.fuel-btn, .trans-btn, .body-btn').forEach(b => b.classList.remove('bg-brand-600', 'text-white', 'border-brand-600'));
+      
+      updateFilterBadge();
       loadCars();
     }
 

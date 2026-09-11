@@ -1,10 +1,11 @@
 import io
 import os
+import re
 import uuid
-from typing import List
+from typing import List, Optional
 from PIL import Image, ImageOps
 
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile, status
 
 router = APIRouter()
 
@@ -26,8 +27,40 @@ UPLOAD_DIR = os.path.join(
 )
 
 
-def process_and_save_image(raw_bytes: bytes, base_filename: str) -> dict:
-    """Process raw image bytes: auto-orient, optimize to WebP, and create thumbnail."""
+def sanitize_brand_slug(brand: Optional[str]) -> str:
+    """Normalize and sanitize brand name for clean directory organization."""
+    if not brand or not brand.strip():
+        return "general"
+    clean = brand.strip().lower()
+    if "maruti" in clean or "suzuki" in clean:
+        return "maruti"
+    if "hyundai" in clean:
+        return "hyundai"
+    if "tata" in clean:
+        return "tata"
+    if "mahindra" in clean:
+        return "mahindra"
+    if "toyota" in clean:
+        return "toyota"
+    if "kia" in clean:
+        return "kia"
+    if "honda" in clean:
+        return "honda"
+    if "skoda" in clean:
+        return "skoda"
+    if "volkswagen" in clean or "vw" in clean:
+        return "volkswagen"
+    if "nissan" in clean:
+        return "nissan"
+    if "renault" in clean:
+        return "renault"
+    # General fallback for any other brand
+    slug = re.sub(r"[^a-z0-9_-]", "_", clean).strip("_")
+    return slug or "general"
+
+
+def process_and_save_image(raw_bytes: bytes, base_filename: str, brand_slug: str = "general") -> dict:
+    """Process raw image bytes: auto-orient, optimize to WebP, and create thumbnail in brand folder."""
     try:
         img = Image.open(io.BytesIO(raw_bytes))
         # Auto-rotate based on EXIF orientation tag from cameras/phones
@@ -48,25 +81,27 @@ def process_and_save_image(raw_bytes: bytes, base_filename: str) -> dict:
     elif img.mode != "RGB":
         img = img.convert("RGB")
 
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    brand_dir = os.path.join(UPLOAD_DIR, brand_slug)
+    os.makedirs(brand_dir, exist_ok=True)
 
     # 1. Main Display Image (WebP format, max 1200x800)
     display_img = img.copy()
     display_img.thumbnail(MAX_DISPLAY_SIZE, Image.Resampling.LANCZOS)
     main_filename = f"{base_filename}.webp"
-    main_filepath = os.path.join(UPLOAD_DIR, main_filename)
+    main_filepath = os.path.join(brand_dir, main_filename)
     display_img.save(main_filepath, "WEBP", quality=85, optimize=True)
 
     # 2. Card Grid Thumbnail (WebP format, max 400x300)
     thumb_img = img.copy()
     thumb_img.thumbnail(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
     thumb_filename = f"{base_filename}_thumb.webp"
-    thumb_filepath = os.path.join(UPLOAD_DIR, thumb_filename)
+    thumb_filepath = os.path.join(brand_dir, thumb_filename)
     thumb_img.save(thumb_filepath, "WEBP", quality=80, optimize=True)
 
     return {
-        "file_name": main_filename,
-        "thumbnail_file_name": thumb_filename,
+        "file_name": f"{brand_slug}/{main_filename}",
+        "thumbnail_file_name": f"{brand_slug}/{thumb_filename}",
+        "brand": brand_slug,
         "width": display_img.width,
         "height": display_img.height,
         "thumbnail_width": thumb_img.width,
@@ -87,17 +122,19 @@ MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024  # 100 MB per file
 @router.post(
     "/images",
     response_model=List[dict],
-    summary="Upload and optimize car images (WebP + Thumbnails)",
+    summary="Upload and optimize car images partitioned by brand (WebP + Thumbnails)",
     description=(
-        "Accepts jpg/png/webp files, converts and optimizes them to modern WebP "
-        "format (1200x800 display image and 400x300 grid thumbnail), reducing payload size by ~70%."
+        "Accepts jpg/png/webp files and optional brand name, converts and optimizes them to modern WebP "
+        "format (1200x800 display image and 400x300 grid thumbnail), partitioned under the brand directory."
     ),
 )
 async def upload_images(
     request: Request,
     files: List[UploadFile] = File(...),
+    brand: Optional[str] = Form(None),
+    brand_query: Optional[str] = Query(None, alias="brand"),
 ) -> List[dict]:
-    """Validate, optimize to WebP, and persist uploaded image files."""
+    """Validate, optimize to WebP, and persist uploaded image files into brand directories."""
     if not files:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No files were provided"
@@ -108,6 +145,8 @@ async def upload_images(
             detail=f"At most {MAX_FILES_PER_REQUEST} images per request",
         )
 
+    target_brand = brand or brand_query or "general"
+    brand_slug = sanitize_brand_slug(target_brand)
     base = str(request.base_url).rstrip("/")
     results: List[dict] = []
 
@@ -135,13 +174,14 @@ async def upload_images(
             )
 
         base_id = uuid.uuid4().hex
-        meta = process_and_save_image(data, base_id)
+        meta = process_and_save_image(data, base_id, brand_slug=brand_slug)
 
         results.append(
             {
                 "file_name": meta["file_name"],
                 "url": f"{base}/uploads/{meta['file_name']}",
                 "thumbnail_url": f"{base}/uploads/{meta['thumbnail_file_name']}",
+                "brand": brand_slug,
                 "width": meta["width"],
                 "height": meta["height"],
             }
@@ -153,22 +193,28 @@ async def upload_images(
 @router.post(
     "/videos",
     response_model=List[dict],
-    summary="Upload car walkaround or engine sound videos",
-    description="Accepts mp4/webm/mov video files up to 100MB.",
+    summary="Upload car walkaround or engine sound videos organized by brand",
+    description="Accepts mp4/webm/mov video files up to 100MB organized into brand folders.",
 )
 async def upload_videos(
     request: Request,
     files: List[UploadFile] = File(...),
+    brand: Optional[str] = Form(None),
+    brand_query: Optional[str] = Query(None, alias="brand"),
 ) -> List[dict]:
-    """Validate and persist uploaded car video files."""
+    """Validate and persist uploaded car video files into brand subdirectories."""
     if not files:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No video files provided"
         )
 
+    target_brand = brand or brand_query or "general"
+    brand_slug = sanitize_brand_slug(target_brand)
+    brand_dir = os.path.join(UPLOAD_DIR, brand_slug)
+    os.makedirs(brand_dir, exist_ok=True)
+
     base = str(request.base_url).rstrip("/")
     results: List[dict] = []
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
 
     for f in files:
         content_type = (f.content_type or "").lower()
@@ -192,14 +238,16 @@ async def upload_videos(
             )
 
         video_filename = f"video_{uuid.uuid4().hex}{ext}"
-        filepath = os.path.join(UPLOAD_DIR, video_filename)
+        filepath = os.path.join(brand_dir, video_filename)
         with open(filepath, "wb") as out_f:
             out_f.write(data)
 
+        rel_path = f"{brand_slug}/{video_filename}"
         results.append(
             {
-                "file_name": video_filename,
-                "url": f"{base}/uploads/{video_filename}",
+                "file_name": rel_path,
+                "url": f"{base}/uploads/{rel_path}",
+                "brand": brand_slug,
                 "content_type": content_type,
                 "size_bytes": len(data),
             }
