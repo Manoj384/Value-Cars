@@ -1,3 +1,4 @@
+import base64
 import io
 import os
 import re
@@ -5,7 +6,13 @@ import uuid
 from typing import List, Optional
 from PIL import Image, ImageOps
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.core.database import get_db
+from app.models.uploaded_media import UploadedMedia
 
 router = APIRouter()
 
@@ -21,8 +28,6 @@ MAX_FILES_PER_REQUEST = 8
 # Target dimensions
 MAX_DISPLAY_SIZE = (1200, 800)
 THUMBNAIL_SIZE = (400, 300)
-
-from app.core.config import settings
 
 UPLOAD_DIR = settings.UPLOAD_DIR
 
@@ -89,14 +94,26 @@ def process_and_save_image(raw_bytes: bytes, base_filename: str, brand_slug: str
     display_img.thumbnail(MAX_DISPLAY_SIZE, Image.Resampling.LANCZOS)
     main_filename = f"{base_filename}.webp"
     main_filepath = os.path.join(brand_dir, main_filename)
-    display_img.save(main_filepath, "WEBP", quality=85, optimize=True)
+    
+    out_buf = io.BytesIO()
+    display_img.save(out_buf, "WEBP", quality=85, optimize=True)
+    webp_bytes = out_buf.getvalue()
+    
+    with open(main_filepath, "wb") as f:
+        f.write(webp_bytes)
 
     # 2. Card Grid Thumbnail (WebP format, max 400x300)
     thumb_img = img.copy()
     thumb_img.thumbnail(THUMBNAIL_SIZE, Image.Resampling.LANCZOS)
     thumb_filename = f"{base_filename}_thumb.webp"
     thumb_filepath = os.path.join(brand_dir, thumb_filename)
-    thumb_img.save(thumb_filepath, "WEBP", quality=80, optimize=True)
+    
+    thumb_buf = io.BytesIO()
+    thumb_img.save(thumb_buf, "WEBP", quality=80, optimize=True)
+    thumb_bytes = thumb_buf.getvalue()
+    
+    with open(thumb_filepath, "wb") as f:
+        f.write(thumb_bytes)
 
     return {
         "file_name": f"{brand_slug}/{main_filename}",
@@ -106,6 +123,9 @@ def process_and_save_image(raw_bytes: bytes, base_filename: str, brand_slug: str
         "height": display_img.height,
         "thumbnail_width": thumb_img.width,
         "thumbnail_height": thumb_img.height,
+        "data_base64": base64.b64encode(webp_bytes).decode("ascii"),
+        "thumb_data_base64": base64.b64encode(thumb_bytes).decode("ascii"),
+        "size_bytes": len(webp_bytes),
     }
 
 
@@ -133,8 +153,9 @@ async def upload_images(
     files: List[UploadFile] = File(...),
     brand: Optional[str] = Form(None),
     brand_query: Optional[str] = Query(None, alias="brand"),
+    db: AsyncSession = Depends(get_db),
 ) -> List[dict]:
-    """Validate, optimize to WebP, and persist uploaded image files into brand directories."""
+    """Validate, optimize to WebP, and persist uploaded image files into brand directories and database."""
     if not files:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No files were provided"
@@ -175,6 +196,30 @@ async def upload_images(
 
         base_id = uuid.uuid4().hex
         meta = process_and_save_image(data, base_id, brand_slug=brand_slug)
+
+        # Persist image binary into Supabase database to survive container restarts/redeploys
+        try:
+            media_main = UploadedMedia(
+                filename=meta["file_name"],
+                brand=brand_slug,
+                content_type="image/webp",
+                media_type="IMAGE",
+                data_base64=meta["data_base64"],
+                size_bytes=meta["size_bytes"],
+            )
+            media_thumb = UploadedMedia(
+                filename=meta["thumbnail_file_name"],
+                brand=brand_slug,
+                content_type="image/webp",
+                media_type="IMAGE",
+                data_base64=meta["thumb_data_base64"],
+                size_bytes=len(meta["thumb_data_base64"]),
+            )
+            db.add(media_main)
+            db.add(media_thumb)
+            await db.commit()
+        except Exception as e:
+            await db.rollback()
 
         results.append(
             {

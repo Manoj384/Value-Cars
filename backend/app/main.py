@@ -81,11 +81,57 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-# Mount uploads directory for images and videos
-app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+
+@app.get("/uploads/{path:path}", summary="Serve Media with Permanent Database Recovery")
+async def serve_uploaded_media(path: str):
+    """Serves uploaded car media from local disk or automatically recovers it from Supabase DB."""
+    import base64
+    from sqlalchemy import select
+    from app.models.uploaded_media import UploadedMedia
+    from fastapi.responses import Response
+
+    clean_path = path.replace("\\", "/").strip("/")
+    local_path = os.path.join(settings.UPLOAD_DIR, clean_path)
+
+    # 1. Fast path: If file is cached on local disk
+    if os.path.exists(local_path) and os.path.isfile(local_path):
+        return FileResponse(local_path)
+
+    # 2. Check flat filename without brand directory
+    flat_name = os.path.basename(clean_path)
+    flat_path = os.path.join(settings.UPLOAD_DIR, flat_name)
+    if os.path.exists(flat_path) and os.path.isfile(flat_path):
+        return FileResponse(flat_path)
+
+    # 3. Persistent Database Fallback: Retrieve binary from Supabase PostgreSQL (survives Render restarts)
+    try:
+        async with AsyncSessionLocal() as db:
+            query = select(UploadedMedia).where(
+                (UploadedMedia.filename == clean_path) |
+                (UploadedMedia.filename == flat_name) |
+                (UploadedMedia.filename.like(f"%{flat_name}"))
+            )
+            result = await db.execute(query)
+            media = result.scalar_one_or_none()
+
+            if media and media.data_base64:
+                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                raw_bytes = base64.b64decode(media.data_base64)
+                with open(local_path, "wb") as f:
+                    f.write(raw_bytes)
+                return Response(content=raw_bytes, media_type=media.content_type)
+    except Exception as e:
+        logger.error(f"Error fetching media '{clean_path}' from database: {e}")
+
+    # 4. Graceful Fallback Placeholder if media not found
+    default_car_img = os.path.join(STATIC_DIR, "logo_black_clean.png")
+    if os.path.exists(default_car_img):
+        return FileResponse(default_car_img)
+
+    return JSONResponse(status_code=404, content={"detail": "Media file not found"})
 
 
 @app.get("/", summary="Web Application Home")

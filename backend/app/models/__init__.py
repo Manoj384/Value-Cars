@@ -5,6 +5,7 @@ from app.models.inspection import Inspection, InspectionItem, InspectionStatus, 
 from app.models.lead import Lead, LeadType, LeadStatus
 from app.models.test_drive import TestDrive, TestDriveLocation, TestDriveStatus
 from app.models.order import Order, Payment, OrderType, OrderStatus, PaymentStatus
+from app.models.uploaded_media import UploadedMedia
 
 __all__ = [
     "Base",
@@ -34,4 +35,5 @@ __all__ = [
     "OrderType",
     "OrderStatus",
     "PaymentStatus",
+    "UploadedMedia",
 ]
