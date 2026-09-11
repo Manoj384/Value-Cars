@@ -22,9 +22,9 @@ MAX_FILES_PER_REQUEST = 8
 MAX_DISPLAY_SIZE = (1200, 800)
 THUMBNAIL_SIZE = (400, 300)
 
-UPLOAD_DIR = os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "uploads"
-)
+from app.core.config import settings
+
+UPLOAD_DIR = settings.UPLOAD_DIR
 
 
 def sanitize_brand_slug(brand: Optional[str]) -> str:
@@ -179,8 +179,8 @@ async def upload_images(
         results.append(
             {
                 "file_name": meta["file_name"],
-                "url": f"{base}/uploads/{meta['file_name']}",
-                "thumbnail_url": f"{base}/uploads/{meta['thumbnail_file_name']}",
+                "url": f"/uploads/{meta['file_name']}",
+                "thumbnail_url": f"/uploads/{meta['thumbnail_file_name']}",
                 "brand": brand_slug,
                 "width": meta["width"],
                 "height": meta["height"],
@@ -213,7 +213,6 @@ async def upload_videos(
     brand_dir = os.path.join(UPLOAD_DIR, brand_slug)
     os.makedirs(brand_dir, exist_ok=True)
 
-    base = str(request.base_url).rstrip("/")
     results: List[dict] = []
 
     for f in files:
@@ -246,7 +245,7 @@ async def upload_videos(
         results.append(
             {
                 "file_name": rel_path,
-                "url": f"{base}/uploads/{rel_path}",
+                "url": f"/uploads/{rel_path}",
                 "brand": brand_slug,
                 "content_type": content_type,
                 "size_bytes": len(data),

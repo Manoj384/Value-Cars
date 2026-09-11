@@ -1,4 +1,5 @@
 import json
+import os
 from typing import List, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -9,6 +10,9 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
     ENVIRONMENT: str = "development"
+    
+    # Upload & Storage Directory
+    UPLOAD_DIR: str = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
 
     # Security
     SECRET_KEY: str = "value-cars-super-secret-key-change-in-production-2026-secure"

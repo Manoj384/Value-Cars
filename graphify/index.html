@@ -1,0 +1,189 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Value Cars — Graphify System Architecture</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose' });
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased flex flex-col font-sans">
+
+  <!-- HEADER -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-600 to-amber-500 flex items-center justify-center font-black text-white shadow-md">
+          <i class="fa-solid fa-diagram-project text-sm"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-black tracking-tight text-white">Value Cars <span class="text-rose-500">Graphify</span></h1>
+          <p class="text-[10px] uppercase font-bold text-slate-400">Interactive Architecture & Topology Map</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-3">
+        <a href="https://value-cars.onrender.com" target="_blank" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center transition shadow">
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] mr-1.5"></i> Open Live Platform
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN DASHBOARD -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-10">
+
+    <!-- 1. FULL SYSTEM TOPOLOGY -->
+    <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <span class="text-xs font-extrabold text-rose-400 uppercase tracking-wider block mb-1">Topology 01</span>
+          <h2 class="text-xl sm:text-2xl font-black text-white">Full Stack Ecosystem Map</h2>
+        </div>
+        <span class="bg-emerald-500/20 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/30">
+          🟢 Live Production
+        </span>
+      </div>
+
+      <div class="bg-slate-950 p-4 sm:p-6 rounded-2xl border border-slate-800 overflow-x-auto flex justify-center">
+        <div class="mermaid w-full">
+flowchart TD
+    subgraph Clients["📱 1. Client Platforms"]
+        Mob["Mobile Browser (Drawer ☰ & File Pickers)"]
+        PC["Desktop Browser (Sticky Refine Search)"]
+        Admin["Superadmin (shankarmanoj654@gmail.com)"]
+    end
+
+    subgraph AppServer["⚡ 2. Render Cloud Backend (FastAPI Async Engine)"]
+        WebStatic["Static UI Mount (/static, /index.html)"]
+        UploadAPI["Upload API (/api/v1/uploads/images, /videos)"]
+        CarAPI["Inventory API (/api/v1/cars, /submit)"]
+        StorageEngine["Brand Media Partition (/uploads/maruti, /mahindra, etc.)"]
+    end
+
+    subgraph Database["🗄️ 3. Cloud Database Tier (Supabase PostgreSQL Tokyo)"]
+        PgPool["IPv4 Session Pooler (aws-0-ap-northeast-1.pooler.supabase.com)"]
+        PostgresDB[("PostgreSQL 15 Tables (cars, car_images, approved_emails)")]
+    end
+
+    subgraph PhysicalHub["📍 4. Experience Showroom"]
+        Showroom["Bangalore Flagship Hub (Kengunte, Mallathahalli, 560056)"]
+        Hotlines["WhatsApp / Phone (8050966025 / 8310166040)"]
+    end
+
+    Mob -->|HTTPS| WebStatic
+    PC -->|HTTPS| WebStatic
+    Admin -->|Direct Whitelisted Publish| CarAPI
+    WebStatic -->|Multipart Form Upload| UploadAPI
+    UploadAPI -->|Optimize WebP & Save| StorageEngine
+    CarAPI -->|Async SQLAlchemy Engine| PgPool
+    PgPool --> PostgresDB
+    Clients -.->|Inquiries & Test Drives| Showroom
+    Clients -.->|Instant WhatsApp Chat| Hotlines
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. BRAND-PARTITIONED MEDIA PIPELINE -->
+    <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+      <div class="mb-6">
+        <span class="text-xs font-extrabold text-amber-400 uppercase tracking-wider block mb-1">Workflow 02</span>
+        <h2 class="text-xl sm:text-2xl font-black text-white">Brand-Partitioned Media & Upload Pipeline</h2>
+      </div>
+
+      <div class="bg-slate-950 p-4 sm:p-6 rounded-2xl border border-slate-800 overflow-x-auto flex justify-center">
+        <div class="mermaid w-full">
+sequenceDiagram
+    autonumber
+    actor User as User / Admin (Mobile or PC)
+    participant UI as Web Client (index.html)
+    participant API as FastAPI /api/v1/uploads
+    participant FS as Brand Storage (/uploads/{brand})
+    participant DB as Supabase PostgreSQL
+
+    User->>UI: Selects Images/Videos & Enters Make ("Maruti", "Mahindra", etc.)
+    UI->>API: POST /api/v1/uploads/images (FormData: files + brand)
+    API->>API: Sanitize Brand Slug ("maruti", "mahindra", etc.)
+    API->>FS: Convert to WebP (1200x800) + Thumbnail (400x300) in /uploads/maruti/
+    API-->>UI: Return Root-Relative URLs ["/uploads/maruti/abc.webp"]
+
+    UI->>API: POST /api/v1/cars/submit (Car Data + Relative URLs)
+    API->>DB: Check if seller_email in approved_seller_emails
+    API->>DB: INSERT INTO cars & car_images
+    API-->>UI: 201 Created (Instant Live Listing for All Buyers)
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. DATABASE ERD -->
+    <section class="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+      <div class="mb-6">
+        <span class="text-xs font-extrabold text-sky-400 uppercase tracking-wider block mb-1">Data Model 03</span>
+        <h2 class="text-xl sm:text-2xl font-black text-white">Database Relational Schema (ERD)</h2>
+      </div>
+
+      <div class="bg-slate-950 p-4 sm:p-6 rounded-2xl border border-slate-800 overflow-x-auto flex justify-center">
+        <div class="mermaid w-full">
+erDiagram
+    APPROVED_SELLER_EMAILS ||--o| CARS : "authorizes direct publish"
+    CARS ||--o{ CAR_IMAGES : "has many photos/videos"
+    CARS ||--o| INSPECTIONS : "has 200-point report"
+    CARS ||--o{ TEST_DRIVES : "booked for"
+    CARS ||--o{ ORDERS : "reserved in"
+
+    APPROVED_SELLER_EMAILS {
+        uuid id PK
+        string email UK "shankarmanoj654@gmail.com"
+        boolean is_active
+        datetime created_at
+    }
+
+    CARS {
+        uuid id PK
+        string title
+        string reg_number UK
+        string make "Maruti, Hyundai, Mahindra, etc."
+        string model
+        integer year
+        float price
+        integer kilometers_driven
+        string fuel_type
+        string transmission
+        string city "Bangalore"
+        string hub_location "Mallathahalli 560056"
+        string status "PUBLISHED"
+        boolean is_verified_seller
+    }
+
+    CAR_IMAGES {
+        uuid id PK
+        uuid car_id FK
+        string image_url "/uploads/brand/xyz.webp"
+        string tag "EXTERIOR | INTERIOR | VIDEO"
+        integer display_order
+        boolean is_cover
+    }
+
+    INSPECTIONS {
+        uuid id PK
+        uuid car_id FK
+        float overall_score "8.8 / 10"
+        float engine_score
+        float transmission_score
+    }
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bg-slate-900 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+    Value Cars Graphify Architecture Engine • Bangalore Flagship Hub
+  </footer>
+
+</body>
+</html>
