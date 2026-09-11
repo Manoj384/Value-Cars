@@ -1368,6 +1368,11 @@
 
     // Modal Toggles
     function openAddCarDirectModal() {
+      const regInput = document.getElementById('uploadReg');
+      if (regInput && (!regInput.value || regInput.value.startsWith('KA-04-VC-'))) {
+        const randNum = Math.floor(1000 + Math.random() * 9000);
+        regInput.value = `KA-04-VC-${randNum}`;
+      }
       document.getElementById('addCarDirectModal').classList.remove('hidden');
       document.getElementById('addCarDirectModal').classList.add('flex');
     }
@@ -1462,8 +1467,7 @@
         const authRes = await fetch(`${API_BASE}/cars/check-seller-email?email=${encodeURIComponent(email)}`);
         const authData = await authRes.json();
         if (!authData.is_approved) {
-          alert(`❌ Access Denied: "${email}" is not authorized by Superadmin.
-Please use shankarmanoj654@gmail.com or authorize this email in the "Authorized Emails" panel.`);
+          alert(`❌ Access Denied: "${email}" is not authorized by Superadmin.\nPlease use shankarmanoj654@gmail.com or authorize this email in the "Authorized Emails" panel.`);
           submitBtn.innerHTML = originalText;
           submitBtn.disabled = false;
           return;
@@ -1550,13 +1554,24 @@ Please use shankarmanoj654@gmail.com or authorize this email in the "Authorized 
           body: JSON.stringify(payload)
         });
         const result = await res.json();
-        alert(`🎉 Success!
-${result.message}
-Car ID: ${result.car_id}`);
+        if (!res.ok) {
+          throw new Error(result.detail || 'Failed to submit vehicle. Please check that registration number is unique.');
+        }
+
+        alert(`🎉 Success!\n${result.message || 'Car successfully added to inventory!'}\nCar ID: ${result.car_id || ''}`);
+        
+        // Reset file selections
+        selectedImageFiles = [];
+        selectedVideoFile = null;
+        const imgPrev = document.getElementById('imagePreviewContainer');
+        if (imgPrev) { imgPrev.innerHTML = ''; imgPrev.classList.add('hidden'); }
+        const vidPrev = document.getElementById('videoPreviewStatus');
+        if (vidPrev) { vidPrev.innerHTML = ''; vidPrev.classList.add('hidden'); }
+        
         closeAddCarDirectModal();
         loadCars();
       } catch (err) {
-        alert('Upload failed: ' + err.message);
+        alert('❌ Upload failed: ' + err.message);
       } finally {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
