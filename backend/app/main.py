@@ -22,7 +22,11 @@ async def lifespan(app: FastAPI):
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        print("Connected to database successfully. Tables initialized.")
+            if engine.dialect.name == "postgresql":
+                from sqlalchemy import text
+                for table_name in Base.metadata.tables.keys():
+                    await conn.execute(text(f'ALTER TABLE public."{table_name}" ENABLE ROW LEVEL SECURITY;'))
+        print("Connected to database successfully. Tables initialized with RLS policy check.")
     except Exception as e:
         print(f"Warning during database table sync on startup: {e}")
 
