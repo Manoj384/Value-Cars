@@ -5,8 +5,10 @@ from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.api.v1.auth import get_current_admin
 from app.models.car import Car, CarStatus
 from app.models.test_drive import TestDrive, TestDriveStatus
+from app.models.user import User
 from app.schemas.test_drive import TestDriveCreate, TestDriveResponse, TestDriveUpdate
 from app.services.notification_service import NotificationService
 
@@ -63,6 +65,7 @@ async def list_test_drives(
     status: Optional[TestDriveStatus] = None,
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
 ):
     """Retrieve test drive bookings for customer service & hub operations."""
     query = select(TestDrive).order_by(desc(TestDrive.booking_date)).limit(limit)
@@ -77,6 +80,7 @@ async def update_test_drive(
     booking_id: uuid.UUID,
     booking_update: TestDriveUpdate,
     db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
 ):
     """Confirm, complete, or cancel a test drive."""
     query = select(TestDrive).where(TestDrive.id == booking_id)

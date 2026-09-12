@@ -115,7 +115,7 @@ export interface TestDriveRequest {
   customer_phone: string;
   customer_email?: string;
   city: string;
-  location_type: 'HOME_DELIVERY' | 'VALUE_CARS_HUB';
+  location_type: 'HOME_DELIVERY' | 'HUB_VISIT';
   address?: string;
   booking_date: string;
   time_slot: string;
@@ -571,11 +571,11 @@ export const apiClient = {
     const key = cacheKeyHash('cars', query.toString());
     const url = `${API_BASE_URL}/cars?${query.toString()}`;
 
-    // 1) Fresh cache hit → return instantly, no network.
+    // 1) Fresh cache hit -> return instantly, no network.
     const cached = cacheGet<PaginatedCars>(key);
     if (cached) return cached.value;
 
-    // 2) Stale cache → serve it immediately while refreshing in the background
+    // 2) Stale cache -> serve it immediately while refreshing in the background
     //    (stale-while-revalidate), so the UI is never blank on a slow network.
     const stale = cacheGetStale<PaginatedCars>(key);
     if (stale) {
@@ -589,7 +589,7 @@ export const apiClient = {
       return stale;
     }
 
-    // 3) No cache at all → network now.
+    // 3) No cache at all -> network now.
     const data = await readJson<PaginatedCars>(await fetchGet(url));
     if (data) {
       recordSuccess(true);
@@ -597,7 +597,7 @@ export const apiClient = {
       return data;
     }
 
-    // 4) Network miss (backend down / offline) → demo data for GitHub Pages.
+    // 4) Network miss (backend down / offline) -> demo data for GitHub Pages.
     return mockGetCars(params);
   },
 

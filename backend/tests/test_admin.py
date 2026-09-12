@@ -25,7 +25,7 @@ async def test_admin_orders_list(client: AsyncClient, admin_headers: dict):
 
 
 @pytest.mark.asyncio
-async def test_crm_leads_workflow(client: AsyncClient):
+async def test_crm_leads_workflow(client: AsyncClient, admin_headers: dict):
     # 1. Create a lead
     lead_payload = {
         "name": "Rohan Sharma",
@@ -41,7 +41,7 @@ async def test_crm_leads_workflow(client: AsyncClient):
     lead_id = create_res.json()["id"]
 
     # 2. List leads
-    list_res = await client.get("/api/v1/leads")
+    list_res = await client.get("/api/v1/leads", headers=admin_headers)
     assert list_res.status_code == 200
     assert any(item["id"] == lead_id for item in list_res.json())
 
@@ -49,6 +49,7 @@ async def test_crm_leads_workflow(client: AsyncClient):
     update_res = await client.patch(
         f"/api/v1/leads/{lead_id}",
         json={"status": "CONTACTED", "notes": "Called user, inspection scheduled"},
+        headers=admin_headers,
     )
     assert update_res.status_code == 200
     assert update_res.json()["status"] == "CONTACTED"

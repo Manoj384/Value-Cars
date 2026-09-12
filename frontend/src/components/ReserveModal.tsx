@@ -51,7 +51,7 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
         customer_phone: phone,
         customer_email: email || undefined,
         city: car.city || 'Bangalore',
-        location_type: 'VALUE_CARS_HUB',
+        location_type: 'HUB_VISIT',
         booking_date: preferredDate,
         time_slot: timeSlot,
       });

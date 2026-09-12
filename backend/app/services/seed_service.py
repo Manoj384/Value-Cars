@@ -206,34 +206,62 @@ SAMPLE_CARS = [
 
 async def seed_database(db: AsyncSession) -> None:
     """Seeds default admin users, approved emails, and initial sample car inventory."""
-    # 1. Seed Admin Users
+
+    # NOTE: `users.phone_number` and `users.email` are both UNIQUE columns, so it is
+    # impossible for two admin rows to share the same phone/email. Each account below
+    # therefore gets its own unique phone number while remaining reachable via email login.
     admin_accounts = [
         ("Manoj Shankar (Superadmin)", "8050966025", "shankarmanoj654@gmail.com", "Admin@ValueCars2026"),
         ("Value Cars Admin", "8310166040", "admin@valuecars.com", "Admin@ValueCars2026"),
-        ("Value Cars Admin 2", "8310166040", "admin2@valuecars.com", "Admin@ValueCars2026"),
-        ("Value Cars Operations Admin", "8050966025", "admin.private@valuecars.com", "Admin@ValueCars2026"),
+        ("Value Cars Admin 2", "8310166041", "admin2@valuecars.com", "Admin@ValueCars2026"),
+        ("Value Cars Operations Admin", "8050966026", "admin.private@valuecars.com", "Admin@ValueCars2026"),
     ]
 
+    seen_phones: set[str] = set()
+    seen_emails: set[str] = set()
+
     for name, phone, email, pwd in admin_accounts:
-        existing_admin = await db.execute(select(User).where((User.email == email) | (User.phone_number == phone)))
-        admin = existing_admin.scalar_one_or_none()
-        if not admin:
-            admin = User(
-                full_name=name,
-                phone_number=phone,
-                email=email,
-                hashed_password=get_password_hash(pwd),
-                role=UserRole.ADMIN,
-                is_active=True,
-                is_verified=True,
-                is_approved_seller=True,
-                city="Bangalore",
+        email = (email or "").strip().lower() or None
+
+        # Reuse an existing account that already matches this phone OR email.
+        existing_admin = await db.execute(
+            select(User).where(
+                (User.email == email) | (User.phone_number == phone)
             )
-            db.add(admin)
-        else:
+        )
+        admin = existing_admin.scalars().first() if existing_admin else None
+
+        if admin:
             admin.role = UserRole.ADMIN
             admin.is_approved_seller = True
             admin.is_verified = True
+            if not admin.full_name or admin.full_name == "Valued Customer":
+                admin.full_name = name
+            seen_phones.add(admin.phone_number)
+            if admin.email:
+                seen_emails.add(admin.email)
+            continue
+
+        # Defensive guard: never insert a row that would violate a UNIQUE constraint
+        # already used by a brand-new account created earlier in this same batch.
+        if phone in seen_phones or (email and email in seen_emails):
+            continue
+
+        admin = User(
+            full_name=name,
+            phone_number=phone,
+            email=email,
+            hashed_password=get_password_hash(pwd),
+            role=UserRole.ADMIN,
+            is_active=True,
+            is_verified=True,
+            is_approved_seller=True,
+            city="Bangalore",
+        )
+        db.add(admin)
+        seen_phones.add(phone)
+        if email:
+            seen_emails.add(email)
 
     # 2. Seed Pre-approved Seller Emails
     approved_emails = [

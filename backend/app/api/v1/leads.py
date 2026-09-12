@@ -5,7 +5,9 @@ from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.api.v1.auth import get_current_admin
 from app.models.lead import Lead, LeadStatus
+from app.models.user import User
 from app.schemas.lead import LeadCreate, LeadResponse, LeadUpdate, SellCarValuationRequest, SellCarValuationResponse
 from app.services.valuation_engine import ValuationEngine
 from app.services.notification_service import NotificationService
@@ -62,6 +64,7 @@ async def list_leads(
     status: Optional[LeadStatus] = None,
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
 ):
     """Admin CRM pipeline to track and convert leads."""
     query = select(Lead).order_by(desc(Lead.created_at)).limit(limit)
@@ -76,6 +79,7 @@ async def update_lead(
     lead_id: uuid.UUID,
     lead_update: LeadUpdate,
     db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
 ):
     """Update lead stage (e.g., CONTACTED -> TEST_DRIVE -> WON/LOST)."""
     query = select(Lead).where(Lead.id == lead_id)

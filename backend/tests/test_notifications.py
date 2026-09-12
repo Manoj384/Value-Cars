@@ -165,6 +165,7 @@ async def test_api_test_drive_triggers_notifications(client: AsyncClient, admin_
     patch_res = await client.patch(
         f"/api/v1/test-drives/{booking_id}",
         json={"status": "CONFIRMED"},
+        headers=admin_headers,
     )
     assert patch_res.status_code == 200
     history_after = NotificationService.get_history()

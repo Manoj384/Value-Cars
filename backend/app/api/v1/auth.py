@@ -76,10 +76,10 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
         )
 
     clean_phone = user_in.phone_number.replace("+91", "").replace("+", "").strip()
-    is_admin_phone = any(
-        clean_phone in p.replace("+91", "").replace("+", "").strip()
+    is_admin_phone = clean_phone in {
+        p.replace("+91", "").replace("+", "").strip()
         for p in settings.ADMIN_AUTHORIZED_PHONES
-    )
+    }
     assigned_role = UserRole.ADMIN if is_admin_phone else user_in.role
 
     user = User(
@@ -143,10 +143,10 @@ async def verify_otp(request: OTPVerify, db: AsyncSession = Depends(get_db)):
         )
 
     clean_phone = request.phone_number.replace("+91", "").replace("+", "").strip()
-    is_admin_phone = any(
-        clean_phone in p.replace("+91", "").replace("+", "").strip()
+    is_admin_phone = clean_phone in {
+        p.replace("+91", "").replace("+", "").strip()
         for p in settings.ADMIN_AUTHORIZED_PHONES
-    )
+    }
 
     query = select(User).where(User.phone_number == request.phone_number)
     result = await db.execute(query)

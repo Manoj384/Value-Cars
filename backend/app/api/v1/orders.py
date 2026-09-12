@@ -7,8 +7,10 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
+from app.api.v1.auth import get_current_admin
 from app.models.car import Car, CarStatus
 from app.models.order import Order, OrderStatus, Payment, PaymentStatus
+from app.models.user import User
 from app.schemas.order import OrderCreate, OrderResponse, PaymentCreate, PaymentResponse
 from app.services.notification_service import NotificationService
 
@@ -82,7 +84,11 @@ async def reserve_car(order_in: OrderCreate, db: AsyncSession = Depends(get_db))
 
 
 @router.get("/{order_number}", response_model=OrderResponse, summary="Get Order Status")
-async def get_order_details(order_number: str, db: AsyncSession = Depends(get_db)):
+async def get_order_details(
+    order_number: str,
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
     """Fetch order status, payment summary, and vehicle delivery info."""
     query = (
         select(Order)

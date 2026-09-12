@@ -17,7 +17,7 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [city, setCity] = useState(car?.city || 'Bangalore');
-  const [locationType, setLocationType] = useState<'HOME_DELIVERY' | 'VALUE_CARS_HUB'>('HOME_DELIVERY');
+  const [locationType, setLocationType] = useState<'HOME_DELIVERY' | 'HUB_VISIT'>('HOME_DELIVERY');
   const [address, setAddress] = useState('');
   const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
   const [timeSlot, setTimeSlot] = useState('11:00 AM - 01:00 PM');
@@ -180,9 +180,9 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
                 </button>
                 <button
                   type="button"
-                  onClick={() => setLocationType('VALUE_CARS_HUB')}
+                  onClick={() => setLocationType('HUB_VISIT')}
                   className={`py-2 px-3 rounded-xl text-xs font-bold border transition ${
-                    locationType === 'VALUE_CARS_HUB'
+                    locationType === 'HUB_VISIT'
                       ? 'border-rose-600 bg-rose-50 text-rose-700'
                       : 'border-slate-200 bg-slate-50 text-slate-600'
                   }`}
