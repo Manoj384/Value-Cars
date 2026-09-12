@@ -44,6 +44,9 @@ class Settings(BaseSettings):
             return v
         return ["*"]
 
+    # App URL
+    BASE_URL: str = "https://value-cars.onrender.com"
+
     # Notifications & Alerts
     NOTIFICATIONS_ENABLED: bool = True
     SMS_PROVIDER: str = "mock"
@@ -52,6 +55,15 @@ class Settings(BaseSettings):
     ADMIN_ALERT_PHONES: List[str] = ["8050966025", "8310166040"]
     ADMIN_AUTHORIZED_PHONES: List[str] = ["8050966025", "8310166040"]
     ADMIN_ALERT_EMAIL: str = "shankarmanoj654@gmail.com"
+    
+    # SMTP / Email Service
+    SMTP_HOST: str = ""
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "noreply@valuecars.in"
+    SMTP_FROM_NAME: str = "Value Cars"
+
     TWILIO_ACCOUNT_SID: str = ""
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_PHONE_NUMBER: str = ""

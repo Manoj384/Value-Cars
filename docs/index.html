@@ -5,7 +5,698 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Value Cars | Certified Pre-Owned Vehicles | Quality • Trust • Great Deals</title>
   <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com">
+  // ==========================================
+  // AUTHENTICATION & USER LIFECYCLE CONTROLLER
+  // ==========================================
+  let currentUser = null;
+  let userFavorites = new Set();
+
+  async function initAuthAndSession() {
+    const token = localStorage.getItem('valcars_token');
+    if (!token) {
+      currentUser = null;
+      renderNavAuth();
+      return;
+    }
+
+    try {
+      const resp = await fetch('/api/v1/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (resp.ok) {
+        currentUser = await resp.json();
+        localStorage.setItem('valcars_user', JSON.stringify(currentUser));
+        if (currentUser.role === 'ADMIN' && currentUser.email) {
+          localStorage.setItem('adminManagerEmail', currentUser.email);
+        }
+        await loadUserFavorites();
+      } else {
+        // Token expired
+        localStorage.removeItem('valcars_token');
+        localStorage.removeItem('valcars_user');
+        currentUser = null;
+      }
+    } catch (e) {
+      console.error('Session validation error:', e);
+    }
+    renderNavAuth();
+  }
+
+  function renderNavAuth() {
+    const container = document.getElementById('navAuthContainer');
+    if (!container) return;
+
+    if (!currentUser) {
+      container.innerHTML = `
+        <button onclick="openAuthModal()" class="inline-flex items-center px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition shadow-sm">
+          <i class="fa-solid fa-user mr-1.5 text-brand-500"></i> Sign In / Register
+        </button>
+      `;
+    } else {
+      const favCount = userFavorites.size;
+      const isAdmin = currentUser.role === 'ADMIN';
+      const badgeColor = isAdmin ? 'text-amber-400 border-amber-500/40' : 'text-emerald-400 border-emerald-500/40';
+      const icon = isAdmin ? 'fa-crown text-amber-400' : 'fa-user-check text-emerald-400';
+      const name = currentUser.full_name || 'My Account';
+
+      container.innerHTML = `
+        <button onclick="openUserProfileModal()" class="inline-flex items-center px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border ${badgeColor} rounded-xl transition shadow-sm">
+          <i class="fa-solid ${icon} mr-1.5"></i> <span>${name.split(' ')[0]}</span>
+          <span id="navFavBadge" class="ml-2 bg-brand-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">♥ ${favCount}</span>
+        </button>
+      `;
+    }
+  }
+
+  async function loadUserFavorites() {
+    if (!currentUser) {
+      userFavorites.clear();
+      return;
+    }
+    const token = localStorage.getItem('valcars_token');
+    try {
+      const res = await fetch('/api/v1/favorites', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const favs = await res.json();
+        userFavorites = new Set(favs.map(f => f.id));
+        const badge = document.getElementById('navFavBadge');
+        if (badge) badge.textContent = `♥ ${userFavorites.size}`;
+        const profCount = document.getElementById('profileSavedCount');
+        if (profCount) profCount.textContent = userFavorites.size;
+      }
+    } catch (e) {
+      console.error('Failed to load favorites:', e);
+    }
+  }
+
+  async function toggleFavoriteCar(carId, event) {
+    if (event) event.stopPropagation();
+    if (!currentUser) {
+      openAuthModal();
+      showToast('Please sign in or register to save favorite cars.', 'info');
+      return;
+    }
+    const token = localStorage.getItem('valcars_token');
+    try {
+      const res = await fetch(`/api/v1/favorites/${carId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.is_favorited) {
+          userFavorites.add(carId);
+          showToast('❤️ Car saved to your favorites!', 'success');
+        } else {
+          userFavorites.delete(carId);
+          showToast('Removed car from favorites.', 'info');
+        }
+        renderNavAuth();
+        renderCars(allCars);
+        if (document.getElementById('userProfileModal') && !document.getElementById('userProfileModal').classList.contains('hidden')) {
+          loadUserSavedCars();
+        }
+      }
+    } catch (e) {
+      showToast('Error saving favorite car', 'error');
+    }
+  }
+
+  function openAuthModal() {
+    resetAuthStepEmail();
+    const modal = document.getElementById('authModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  function resetAuthStepEmail() {
+    document.getElementById('authStepEmail').classList.remove('hidden');
+    document.getElementById('authStepPassword').classList.add('hidden');
+    document.getElementById('authStepPending').classList.add('hidden');
+    document.getElementById('authStepRequest').classList.add('hidden');
+  }
+
+  async function handleAuthCheckEmail(e) {
+    e.preventDefault();
+    const email = document.getElementById('authEmailInput').value.trim();
+    if (!email) return;
+
+    const btn = document.getElementById('authEmailContinueBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Checking...';
+
+    try {
+      const res = await fetch('/api/v1/auth/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      const data = await res.json();
+
+      document.getElementById('authStepEmail').classList.add('hidden');
+
+      if (data.status === 'ACTIVE') {
+        document.getElementById('authPasswordEmailDisplay').textContent = email;
+        document.getElementById('authPasswordInput').value = '';
+        document.getElementById('authStepPassword').classList.remove('hidden');
+        document.getElementById('authPasswordInput').focus();
+      } else if (data.status === 'PENDING') {
+        document.getElementById('authStepPending').classList.remove('hidden');
+      } else if (data.status === 'APPROVED_PENDING_PASSWORD') {
+        showToast('Your account is approved! Please check your email for the password setup link.', 'success');
+        document.getElementById('authStepEmail').classList.remove('hidden');
+      } else {
+        // NEW user
+        document.getElementById('authRequestEmailInput').value = email;
+        document.getElementById('authStepRequest').classList.remove('hidden');
+      }
+    } catch (err) {
+      showToast('Error checking email status: ' + err.message, 'error');
+      document.getElementById('authStepEmail').classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span>Continue</span> <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>';
+    }
+  }
+
+  async function handleAuthPasswordLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('authPasswordEmailDisplay').textContent.trim();
+    const password = document.getElementById('authPasswordInput').value;
+
+    const btn = document.getElementById('authLoginBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Signing In...';
+
+    try {
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Login failed');
+      }
+
+      const data = await res.json();
+      localStorage.setItem('valcars_token', data.access_token);
+      localStorage.setItem('valcars_user', JSON.stringify(data.user));
+      currentUser = data.user;
+      if (currentUser.role === 'ADMIN' && currentUser.email) {
+        localStorage.setItem('adminManagerEmail', currentUser.email);
+      }
+
+      closeAuthModal();
+      await loadUserFavorites();
+      renderNavAuth();
+      showToast(`Welcome back, ${currentUser.full_name}!`, 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-2"></i> Sign In';
+    }
+  }
+
+  async function handleAuthRequestVerification(e) {
+    e.preventDefault();
+    const email = document.getElementById('authRequestEmailInput').value.trim();
+    const fullName = document.getElementById('authRequestNameInput').value.trim();
+    const phone = document.getElementById('authRequestPhoneInput').value.trim();
+
+    const btn = document.getElementById('authSubmitRequestBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Submitting...';
+
+    try {
+      const res = await fetch('/api/v1/auth/request-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          full_name: fullName,
+          phone_number: phone || null,
+          city: 'Bangalore'
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to submit request');
+
+      document.getElementById('authStepRequest').classList.add('hidden');
+      document.getElementById('authStepPending').classList.remove('hidden');
+      showToast('Verification request submitted to our operations team!', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> Request Account Verification';
+    }
+  }
+
+  function openForgotPasswordModal() {
+    closeAuthModal();
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeForgotPasswordModal() {
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  async function handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgotEmailInput').value.trim();
+    const btn = document.getElementById('forgotSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Sending...';
+
+    try {
+      const res = await fetch('/api/v1/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      const data = await res.json();
+      closeForgotPasswordModal();
+      showToast(data.message, 'success');
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-envelope mr-2"></i> Send Reset Link';
+    }
+  }
+
+  async function handleCreatePassword(e) {
+    e.preventDefault();
+    const token = document.getElementById('createPasswordToken').value;
+    const password = document.getElementById('createPasswordInput').value;
+    const confirm = document.getElementById('createPasswordConfirmInput').value;
+
+    if (password !== confirm) {
+      showToast('Passwords do not match!', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('createPasswordSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Activating Account...';
+
+    try {
+      const res = await fetch('/api/v1/auth/create-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: token,
+          password: password,
+          confirm_password: confirm
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Password creation failed');
+      }
+
+      const data = await res.json();
+      localStorage.setItem('valcars_token', data.access_token);
+      localStorage.setItem('valcars_user', JSON.stringify(data.user));
+      currentUser = data.user;
+
+      document.getElementById('createPasswordModal').classList.add('hidden');
+      document.getElementById('createPasswordModal').classList.remove('flex');
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      await loadUserFavorites();
+      renderNavAuth();
+      showToast('Account activated! You are now signed in.', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-circle-check mr-2"></i> Activate Account & Sign In';
+    }
+  }
+
+  async function handleResetPassword(e) {
+    e.preventDefault();
+    const token = document.getElementById('resetPasswordToken').value;
+    const password = document.getElementById('resetPasswordInput').value;
+    const confirm = document.getElementById('resetPasswordConfirmInput').value;
+
+    if (password !== confirm) {
+      showToast('Passwords do not match!', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('resetPasswordSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Updating...';
+
+    try {
+      const res = await fetch('/api/v1/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: token,
+          new_password: password,
+          confirm_password: confirm
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Password reset failed');
+      }
+
+      document.getElementById('resetPasswordModal').classList.add('hidden');
+      document.getElementById('resetPasswordModal').classList.remove('flex');
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      showToast('Password updated successfully! Please sign in.', 'success');
+      openAuthModal();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-key mr-2"></i> Update Password & Continue';
+    }
+  }
+
+  function openUserProfileModal() {
+    if (!currentUser) {
+      openAuthModal();
+      return;
+    }
+
+    document.getElementById('profileUserFullName').textContent = currentUser.full_name;
+    document.getElementById('profileUserEmail').textContent = currentUser.email;
+    const badge = document.getElementById('profileUserRoleBadge');
+    if (currentUser.role === 'ADMIN') {
+      badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+      badge.textContent = 'Administrator';
+    } else {
+      badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      badge.textContent = 'Verified Customer';
+    }
+
+    switchProfileTab('savedCars');
+    const modal = document.getElementById('userProfileModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeUserProfileModal() {
+    const modal = document.getElementById('userProfileModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  function switchProfileTab(tab) {
+    const btnSaved = document.getElementById('tabBtnSavedCars');
+    const btnRecent = document.getElementById('tabBtnRecentlyViewed');
+    const tabSaved = document.getElementById('profileSavedCarsTab');
+    const tabRecent = document.getElementById('profileRecentlyViewedTab');
+
+    if (tab === 'savedCars') {
+      btnSaved.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white transition flex items-center';
+      btnRecent.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center';
+      tabSaved.classList.remove('hidden');
+      tabRecent.classList.add('hidden');
+      loadUserSavedCars();
+    } else {
+      btnRecent.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white transition flex items-center';
+      btnSaved.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center';
+      tabRecent.classList.remove('hidden');
+      tabSaved.classList.add('hidden');
+      loadUserRecentCars();
+    }
+  }
+
+  async function loadUserSavedCars() {
+    const grid = document.getElementById('profileSavedCarsGrid');
+    grid.innerHTML = '<div class="col-span-full text-center py-8 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-xl"></i> Loading saved cars...</div>';
+
+    const token = localStorage.getItem('valcars_token');
+    try {
+      const res = await fetch('/api/v1/favorites', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const favs = await res.json();
+      if (!favs || favs.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-10 text-slate-400 bg-slate-950/60 rounded-2xl border border-slate-800">
+            <i class="fa-regular fa-heart text-3xl mb-2 text-slate-500"></i>
+            <p class="font-bold text-white">No saved cars yet</p>
+            <p class="text-xs text-slate-400 mt-1">Tap the heart icon on any vehicle in the showroom to save it here.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = favs.map(c => {
+        const img = (c.images && c.images[0]) ? c.images[0].image_url : '/static/logo_black_clean.png';
+        return `
+          <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden hover:border-brand-500/50 transition">
+            <div class="relative h-36">
+              <img src="${img}" class="w-full h-full object-cover">
+              <button onclick="toggleFavoriteCar('${c.id}', event)" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-900/80 text-rose-500 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-heart"></i>
+              </button>
+            </div>
+            <div class="p-3">
+              <h4 class="font-bold text-white text-xs truncate">${c.make} ${c.model}</h4>
+              <p class="text-[11px] text-slate-400">${c.year} • ${formatNumber(c.mileage)} km</p>
+              <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800">
+                <span class="text-amber-400 font-black text-xs">₹${formatNumber(c.price)}</span>
+                <button onclick="openCarModal('${c.id}')" class="text-brand-400 hover:text-brand-300 font-bold text-[11px]">View <i class="fa-solid fa-arrow-right"></i></button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      grid.innerHTML = '<div class="col-span-full text-center py-8 text-rose-400">Error loading saved cars</div>';
+    }
+  }
+
+  function loadUserRecentCars() {
+    const grid = document.getElementById('profileRecentCarsGrid');
+    const recentIds = JSON.parse(localStorage.getItem('valcars_recently_viewed') || '[]');
+    if (recentIds.length === 0) {
+      grid.innerHTML = `
+        <div class="col-span-full text-center py-10 text-slate-400 bg-slate-950/60 rounded-2xl border border-slate-800">
+          <i class="fa-solid fa-clock-rotate-left text-3xl mb-2 text-slate-500"></i>
+          <p class="font-bold text-white">No recently viewed cars</p>
+          <p class="text-xs text-slate-400 mt-1">Vehicles you inspect will automatically appear here.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const matched = allCars.filter(c => recentIds.includes(c.id));
+    grid.innerHTML = matched.map(c => {
+      const img = (c.images && c.images[0]) ? c.images[0].image_url : '/static/logo_black_clean.png';
+      return `
+        <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden hover:border-brand-500/50 transition">
+          <div class="relative h-36">
+            <img src="${img}" class="w-full h-full object-cover">
+          </div>
+          <div class="p-3">
+            <h4 class="font-bold text-white text-xs truncate">${c.make} ${c.model}</h4>
+            <p class="text-[11px] text-slate-400">${c.year} • ${formatNumber(c.mileage)} km</p>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800">
+              <span class="text-amber-400 font-black text-xs">₹${formatNumber(c.price)}</span>
+              <button onclick="openCarModal('${c.id}')" class="text-brand-400 hover:text-brand-300 font-bold text-[11px]">View <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function logoutUser() {
+    localStorage.removeItem('valcars_token');
+    localStorage.removeItem('valcars_user');
+    currentUser = null;
+    userFavorites.clear();
+    closeUserProfileModal();
+    renderNavAuth();
+    renderCars(allCars);
+    showToast('Signed out successfully.', 'info');
+  }
+
+  // Admin User Verification Tab Controller
+  async function loadUserRequestsSettings() {
+    const list = document.getElementById('settingsUserRequestsList');
+    list.innerHTML = '<div class="text-center py-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading user verification requests...</div>';
+
+    try {
+      const res = await fetch('/api/v1/auth/verification-requests');
+      const users = await res.json();
+      const countBadge = document.getElementById('settingsUserReqCount');
+      const pendingCount = users.filter(u => u.account_status === 'PENDING').length;
+      if (countBadge) countBadge.textContent = pendingCount;
+
+      if (!users || users.length === 0) {
+        list.innerHTML = '<div class="text-center py-6 text-slate-500 text-xs">No verification requests found.</div>';
+        return;
+      }
+
+      list.innerHTML = users.map(u => {
+        let statusBadge = '';
+        if (u.account_status === 'ACTIVE') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ACTIVE</span>';
+        } else if (u.account_status === 'APPROVED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">APPROVED</span>';
+        } else if (u.account_status === 'PENDING') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">PENDING</span>';
+        } else if (u.account_status === 'DISABLED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30">DISABLED</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">REJECTED</span>';
+        }
+
+        const reqDate = u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+
+        return `
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <strong class="text-white text-xs font-bold">${u.email}</strong>
+                ${statusBadge}
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5">Name: <span class="text-slate-200">${u.full_name}</span> • Requested: ${reqDate} • Role: ${u.role}</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              ${u.account_status === 'PENDING' ? `
+                <button onclick="adminExecuteUserAction('${u.id}', 'APPROVE')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-xl transition flex items-center">
+                  <i class="fa-solid fa-check mr-1"></i> Approve
+                </button>
+                <button onclick="adminExecuteUserAction('${u.id}', 'REJECT')" class="bg-rose-900/60 hover:bg-rose-800 text-rose-200 font-bold text-[11px] px-3 py-1.5 rounded-xl transition flex items-center">
+                  <i class="fa-solid fa-xmark mr-1"></i> Reject
+                </button>
+              ` : ''}
+              ${u.account_status === 'ACTIVE' ? `
+                <button onclick="adminExecuteUserAction('${u.id}', 'DISABLE')" class="bg-slate-800 hover:bg-rose-900/50 text-slate-300 hover:text-rose-300 font-bold text-[11px] px-2.5 py-1.5 rounded-xl border border-slate-700 transition">
+                  Disable
+                </button>
+              ` : ''}
+              ${u.account_status === 'DISABLED' ? `
+                <button onclick="adminExecuteUserAction('${u.id}', 'REACTIVATE')" class="bg-slate-800 hover:bg-emerald-900/50 text-emerald-300 font-bold text-[11px] px-2.5 py-1.5 rounded-xl border border-slate-700 transition">
+                  Reactivate
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      list.innerHTML = '<div class="text-center py-6 text-rose-400 text-xs">Error loading requests</div>';
+    }
+  }
+
+  async function adminExecuteUserAction(userId, action) {
+    if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+    try {
+      const res = await fetch('/api/v1/auth/admin-user-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, action: action })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Action failed');
+      showToast(data.message, 'success');
+      loadUserRequestsSettings();
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  async function loadAuditLogsSettings() {
+    const list = document.getElementById('settingsAuditLogsList');
+    list.innerHTML = '<div class="text-center py-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading audit logs...</div>';
+
+    try {
+      const res = await fetch('/api/v1/auth/audit-logs');
+      const logs = await res.json();
+
+      if (!logs || logs.length === 0) {
+        list.innerHTML = '<div class="text-center py-6 text-slate-500 text-xs">No audit logs recorded yet.</div>';
+        return;
+      }
+
+      list.innerHTML = logs.map(l => {
+        const dateStr = l.created_at ? new Date(l.created_at).toLocaleString('en-IN') : '-';
+        return `
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-start space-x-3">
+            <div class="w-2 h-2 rounded-full bg-brand-500 mt-1.5 flex-shrink-0"></div>
+            <div class="flex-1">
+              <div class="flex justify-between items-center">
+                <strong class="text-white font-bold text-xs">${l.action}</strong>
+                <span class="text-[10px] text-slate-500">${dateStr}</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5">${l.details || 'No additional details'}</p>
+              ${l.actor_email ? `<span class="text-[10px] text-sky-400">Actor: ${l.actor_email}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      list.innerHTML = '<div class="text-center py-6 text-rose-400 text-xs">Error loading audit logs</div>';
+    }
+  }
+
+  // Handle URL Query Action Tokens (Create Password & Reset Password links)
+  function checkUrlTokensOnLoad() {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    const token = params.get('token');
+
+    if (action === 'create-password' && token) {
+      document.getElementById('createPasswordToken').value = token;
+      const modal = document.getElementById('createPasswordModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    } else if (action === 'reset-password' && token) {
+      document.getElementById('resetPasswordToken').value = token;
+      const modal = document.getElementById('resetPasswordModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+  }
+
+  // Update switchSettingsTab to support new tabs
+  const originalSwitchSettingsTab = window.switchSettingsTab;
+
+</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -43,7 +734,698 @@
         }
       }
     }
-  </script>
+  
+  // ==========================================
+  // AUTHENTICATION & USER LIFECYCLE CONTROLLER
+  // ==========================================
+  let currentUser = null;
+  let userFavorites = new Set();
+
+  async function initAuthAndSession() {
+    const token = localStorage.getItem('valcars_token');
+    if (!token) {
+      currentUser = null;
+      renderNavAuth();
+      return;
+    }
+
+    try {
+      const resp = await fetch('/api/v1/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (resp.ok) {
+        currentUser = await resp.json();
+        localStorage.setItem('valcars_user', JSON.stringify(currentUser));
+        if (currentUser.role === 'ADMIN' && currentUser.email) {
+          localStorage.setItem('adminManagerEmail', currentUser.email);
+        }
+        await loadUserFavorites();
+      } else {
+        // Token expired
+        localStorage.removeItem('valcars_token');
+        localStorage.removeItem('valcars_user');
+        currentUser = null;
+      }
+    } catch (e) {
+      console.error('Session validation error:', e);
+    }
+    renderNavAuth();
+  }
+
+  function renderNavAuth() {
+    const container = document.getElementById('navAuthContainer');
+    if (!container) return;
+
+    if (!currentUser) {
+      container.innerHTML = `
+        <button onclick="openAuthModal()" class="inline-flex items-center px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition shadow-sm">
+          <i class="fa-solid fa-user mr-1.5 text-brand-500"></i> Sign In / Register
+        </button>
+      `;
+    } else {
+      const favCount = userFavorites.size;
+      const isAdmin = currentUser.role === 'ADMIN';
+      const badgeColor = isAdmin ? 'text-amber-400 border-amber-500/40' : 'text-emerald-400 border-emerald-500/40';
+      const icon = isAdmin ? 'fa-crown text-amber-400' : 'fa-user-check text-emerald-400';
+      const name = currentUser.full_name || 'My Account';
+
+      container.innerHTML = `
+        <button onclick="openUserProfileModal()" class="inline-flex items-center px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border ${badgeColor} rounded-xl transition shadow-sm">
+          <i class="fa-solid ${icon} mr-1.5"></i> <span>${name.split(' ')[0]}</span>
+          <span id="navFavBadge" class="ml-2 bg-brand-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">♥ ${favCount}</span>
+        </button>
+      `;
+    }
+  }
+
+  async function loadUserFavorites() {
+    if (!currentUser) {
+      userFavorites.clear();
+      return;
+    }
+    const token = localStorage.getItem('valcars_token');
+    try {
+      const res = await fetch('/api/v1/favorites', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const favs = await res.json();
+        userFavorites = new Set(favs.map(f => f.id));
+        const badge = document.getElementById('navFavBadge');
+        if (badge) badge.textContent = `♥ ${userFavorites.size}`;
+        const profCount = document.getElementById('profileSavedCount');
+        if (profCount) profCount.textContent = userFavorites.size;
+      }
+    } catch (e) {
+      console.error('Failed to load favorites:', e);
+    }
+  }
+
+  async function toggleFavoriteCar(carId, event) {
+    if (event) event.stopPropagation();
+    if (!currentUser) {
+      openAuthModal();
+      showToast('Please sign in or register to save favorite cars.', 'info');
+      return;
+    }
+    const token = localStorage.getItem('valcars_token');
+    try {
+      const res = await fetch(`/api/v1/favorites/${carId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.is_favorited) {
+          userFavorites.add(carId);
+          showToast('❤️ Car saved to your favorites!', 'success');
+        } else {
+          userFavorites.delete(carId);
+          showToast('Removed car from favorites.', 'info');
+        }
+        renderNavAuth();
+        renderCars(allCars);
+        if (document.getElementById('userProfileModal') && !document.getElementById('userProfileModal').classList.contains('hidden')) {
+          loadUserSavedCars();
+        }
+      }
+    } catch (e) {
+      showToast('Error saving favorite car', 'error');
+    }
+  }
+
+  function openAuthModal() {
+    resetAuthStepEmail();
+    const modal = document.getElementById('authModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  function resetAuthStepEmail() {
+    document.getElementById('authStepEmail').classList.remove('hidden');
+    document.getElementById('authStepPassword').classList.add('hidden');
+    document.getElementById('authStepPending').classList.add('hidden');
+    document.getElementById('authStepRequest').classList.add('hidden');
+  }
+
+  async function handleAuthCheckEmail(e) {
+    e.preventDefault();
+    const email = document.getElementById('authEmailInput').value.trim();
+    if (!email) return;
+
+    const btn = document.getElementById('authEmailContinueBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Checking...';
+
+    try {
+      const res = await fetch('/api/v1/auth/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      const data = await res.json();
+
+      document.getElementById('authStepEmail').classList.add('hidden');
+
+      if (data.status === 'ACTIVE') {
+        document.getElementById('authPasswordEmailDisplay').textContent = email;
+        document.getElementById('authPasswordInput').value = '';
+        document.getElementById('authStepPassword').classList.remove('hidden');
+        document.getElementById('authPasswordInput').focus();
+      } else if (data.status === 'PENDING') {
+        document.getElementById('authStepPending').classList.remove('hidden');
+      } else if (data.status === 'APPROVED_PENDING_PASSWORD') {
+        showToast('Your account is approved! Please check your email for the password setup link.', 'success');
+        document.getElementById('authStepEmail').classList.remove('hidden');
+      } else {
+        // NEW user
+        document.getElementById('authRequestEmailInput').value = email;
+        document.getElementById('authStepRequest').classList.remove('hidden');
+      }
+    } catch (err) {
+      showToast('Error checking email status: ' + err.message, 'error');
+      document.getElementById('authStepEmail').classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span>Continue</span> <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>';
+    }
+  }
+
+  async function handleAuthPasswordLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('authPasswordEmailDisplay').textContent.trim();
+    const password = document.getElementById('authPasswordInput').value;
+
+    const btn = document.getElementById('authLoginBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Signing In...';
+
+    try {
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Login failed');
+      }
+
+      const data = await res.json();
+      localStorage.setItem('valcars_token', data.access_token);
+      localStorage.setItem('valcars_user', JSON.stringify(data.user));
+      currentUser = data.user;
+      if (currentUser.role === 'ADMIN' && currentUser.email) {
+        localStorage.setItem('adminManagerEmail', currentUser.email);
+      }
+
+      closeAuthModal();
+      await loadUserFavorites();
+      renderNavAuth();
+      showToast(`Welcome back, ${currentUser.full_name}!`, 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-2"></i> Sign In';
+    }
+  }
+
+  async function handleAuthRequestVerification(e) {
+    e.preventDefault();
+    const email = document.getElementById('authRequestEmailInput').value.trim();
+    const fullName = document.getElementById('authRequestNameInput').value.trim();
+    const phone = document.getElementById('authRequestPhoneInput').value.trim();
+
+    const btn = document.getElementById('authSubmitRequestBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Submitting...';
+
+    try {
+      const res = await fetch('/api/v1/auth/request-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          full_name: fullName,
+          phone_number: phone || null,
+          city: 'Bangalore'
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to submit request');
+
+      document.getElementById('authStepRequest').classList.add('hidden');
+      document.getElementById('authStepPending').classList.remove('hidden');
+      showToast('Verification request submitted to our operations team!', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> Request Account Verification';
+    }
+  }
+
+  function openForgotPasswordModal() {
+    closeAuthModal();
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeForgotPasswordModal() {
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  async function handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgotEmailInput').value.trim();
+    const btn = document.getElementById('forgotSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Sending...';
+
+    try {
+      const res = await fetch('/api/v1/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      const data = await res.json();
+      closeForgotPasswordModal();
+      showToast(data.message, 'success');
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-envelope mr-2"></i> Send Reset Link';
+    }
+  }
+
+  async function handleCreatePassword(e) {
+    e.preventDefault();
+    const token = document.getElementById('createPasswordToken').value;
+    const password = document.getElementById('createPasswordInput').value;
+    const confirm = document.getElementById('createPasswordConfirmInput').value;
+
+    if (password !== confirm) {
+      showToast('Passwords do not match!', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('createPasswordSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Activating Account...';
+
+    try {
+      const res = await fetch('/api/v1/auth/create-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: token,
+          password: password,
+          confirm_password: confirm
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Password creation failed');
+      }
+
+      const data = await res.json();
+      localStorage.setItem('valcars_token', data.access_token);
+      localStorage.setItem('valcars_user', JSON.stringify(data.user));
+      currentUser = data.user;
+
+      document.getElementById('createPasswordModal').classList.add('hidden');
+      document.getElementById('createPasswordModal').classList.remove('flex');
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      await loadUserFavorites();
+      renderNavAuth();
+      showToast('Account activated! You are now signed in.', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-circle-check mr-2"></i> Activate Account & Sign In';
+    }
+  }
+
+  async function handleResetPassword(e) {
+    e.preventDefault();
+    const token = document.getElementById('resetPasswordToken').value;
+    const password = document.getElementById('resetPasswordInput').value;
+    const confirm = document.getElementById('resetPasswordConfirmInput').value;
+
+    if (password !== confirm) {
+      showToast('Passwords do not match!', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('resetPasswordSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Updating...';
+
+    try {
+      const res = await fetch('/api/v1/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: token,
+          new_password: password,
+          confirm_password: confirm
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Password reset failed');
+      }
+
+      document.getElementById('resetPasswordModal').classList.add('hidden');
+      document.getElementById('resetPasswordModal').classList.remove('flex');
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      showToast('Password updated successfully! Please sign in.', 'success');
+      openAuthModal();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-key mr-2"></i> Update Password & Continue';
+    }
+  }
+
+  function openUserProfileModal() {
+    if (!currentUser) {
+      openAuthModal();
+      return;
+    }
+
+    document.getElementById('profileUserFullName').textContent = currentUser.full_name;
+    document.getElementById('profileUserEmail').textContent = currentUser.email;
+    const badge = document.getElementById('profileUserRoleBadge');
+    if (currentUser.role === 'ADMIN') {
+      badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+      badge.textContent = 'Administrator';
+    } else {
+      badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      badge.textContent = 'Verified Customer';
+    }
+
+    switchProfileTab('savedCars');
+    const modal = document.getElementById('userProfileModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeUserProfileModal() {
+    const modal = document.getElementById('userProfileModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  function switchProfileTab(tab) {
+    const btnSaved = document.getElementById('tabBtnSavedCars');
+    const btnRecent = document.getElementById('tabBtnRecentlyViewed');
+    const tabSaved = document.getElementById('profileSavedCarsTab');
+    const tabRecent = document.getElementById('profileRecentlyViewedTab');
+
+    if (tab === 'savedCars') {
+      btnSaved.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white transition flex items-center';
+      btnRecent.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center';
+      tabSaved.classList.remove('hidden');
+      tabRecent.classList.add('hidden');
+      loadUserSavedCars();
+    } else {
+      btnRecent.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white transition flex items-center';
+      btnSaved.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center';
+      tabRecent.classList.remove('hidden');
+      tabSaved.classList.add('hidden');
+      loadUserRecentCars();
+    }
+  }
+
+  async function loadUserSavedCars() {
+    const grid = document.getElementById('profileSavedCarsGrid');
+    grid.innerHTML = '<div class="col-span-full text-center py-8 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-xl"></i> Loading saved cars...</div>';
+
+    const token = localStorage.getItem('valcars_token');
+    try {
+      const res = await fetch('/api/v1/favorites', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const favs = await res.json();
+      if (!favs || favs.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-10 text-slate-400 bg-slate-950/60 rounded-2xl border border-slate-800">
+            <i class="fa-regular fa-heart text-3xl mb-2 text-slate-500"></i>
+            <p class="font-bold text-white">No saved cars yet</p>
+            <p class="text-xs text-slate-400 mt-1">Tap the heart icon on any vehicle in the showroom to save it here.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = favs.map(c => {
+        const img = (c.images && c.images[0]) ? c.images[0].image_url : '/static/logo_black_clean.png';
+        return `
+          <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden hover:border-brand-500/50 transition">
+            <div class="relative h-36">
+              <img src="${img}" class="w-full h-full object-cover">
+              <button onclick="toggleFavoriteCar('${c.id}', event)" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-900/80 text-rose-500 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-heart"></i>
+              </button>
+            </div>
+            <div class="p-3">
+              <h4 class="font-bold text-white text-xs truncate">${c.make} ${c.model}</h4>
+              <p class="text-[11px] text-slate-400">${c.year} • ${formatNumber(c.mileage)} km</p>
+              <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800">
+                <span class="text-amber-400 font-black text-xs">₹${formatNumber(c.price)}</span>
+                <button onclick="openCarModal('${c.id}')" class="text-brand-400 hover:text-brand-300 font-bold text-[11px]">View <i class="fa-solid fa-arrow-right"></i></button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      grid.innerHTML = '<div class="col-span-full text-center py-8 text-rose-400">Error loading saved cars</div>';
+    }
+  }
+
+  function loadUserRecentCars() {
+    const grid = document.getElementById('profileRecentCarsGrid');
+    const recentIds = JSON.parse(localStorage.getItem('valcars_recently_viewed') || '[]');
+    if (recentIds.length === 0) {
+      grid.innerHTML = `
+        <div class="col-span-full text-center py-10 text-slate-400 bg-slate-950/60 rounded-2xl border border-slate-800">
+          <i class="fa-solid fa-clock-rotate-left text-3xl mb-2 text-slate-500"></i>
+          <p class="font-bold text-white">No recently viewed cars</p>
+          <p class="text-xs text-slate-400 mt-1">Vehicles you inspect will automatically appear here.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const matched = allCars.filter(c => recentIds.includes(c.id));
+    grid.innerHTML = matched.map(c => {
+      const img = (c.images && c.images[0]) ? c.images[0].image_url : '/static/logo_black_clean.png';
+      return `
+        <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden hover:border-brand-500/50 transition">
+          <div class="relative h-36">
+            <img src="${img}" class="w-full h-full object-cover">
+          </div>
+          <div class="p-3">
+            <h4 class="font-bold text-white text-xs truncate">${c.make} ${c.model}</h4>
+            <p class="text-[11px] text-slate-400">${c.year} • ${formatNumber(c.mileage)} km</p>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800">
+              <span class="text-amber-400 font-black text-xs">₹${formatNumber(c.price)}</span>
+              <button onclick="openCarModal('${c.id}')" class="text-brand-400 hover:text-brand-300 font-bold text-[11px]">View <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function logoutUser() {
+    localStorage.removeItem('valcars_token');
+    localStorage.removeItem('valcars_user');
+    currentUser = null;
+    userFavorites.clear();
+    closeUserProfileModal();
+    renderNavAuth();
+    renderCars(allCars);
+    showToast('Signed out successfully.', 'info');
+  }
+
+  // Admin User Verification Tab Controller
+  async function loadUserRequestsSettings() {
+    const list = document.getElementById('settingsUserRequestsList');
+    list.innerHTML = '<div class="text-center py-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading user verification requests...</div>';
+
+    try {
+      const res = await fetch('/api/v1/auth/verification-requests');
+      const users = await res.json();
+      const countBadge = document.getElementById('settingsUserReqCount');
+      const pendingCount = users.filter(u => u.account_status === 'PENDING').length;
+      if (countBadge) countBadge.textContent = pendingCount;
+
+      if (!users || users.length === 0) {
+        list.innerHTML = '<div class="text-center py-6 text-slate-500 text-xs">No verification requests found.</div>';
+        return;
+      }
+
+      list.innerHTML = users.map(u => {
+        let statusBadge = '';
+        if (u.account_status === 'ACTIVE') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ACTIVE</span>';
+        } else if (u.account_status === 'APPROVED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">APPROVED</span>';
+        } else if (u.account_status === 'PENDING') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">PENDING</span>';
+        } else if (u.account_status === 'DISABLED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30">DISABLED</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">REJECTED</span>';
+        }
+
+        const reqDate = u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+
+        return `
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <strong class="text-white text-xs font-bold">${u.email}</strong>
+                ${statusBadge}
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5">Name: <span class="text-slate-200">${u.full_name}</span> • Requested: ${reqDate} • Role: ${u.role}</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              ${u.account_status === 'PENDING' ? `
+                <button onclick="adminExecuteUserAction('${u.id}', 'APPROVE')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-xl transition flex items-center">
+                  <i class="fa-solid fa-check mr-1"></i> Approve
+                </button>
+                <button onclick="adminExecuteUserAction('${u.id}', 'REJECT')" class="bg-rose-900/60 hover:bg-rose-800 text-rose-200 font-bold text-[11px] px-3 py-1.5 rounded-xl transition flex items-center">
+                  <i class="fa-solid fa-xmark mr-1"></i> Reject
+                </button>
+              ` : ''}
+              ${u.account_status === 'ACTIVE' ? `
+                <button onclick="adminExecuteUserAction('${u.id}', 'DISABLE')" class="bg-slate-800 hover:bg-rose-900/50 text-slate-300 hover:text-rose-300 font-bold text-[11px] px-2.5 py-1.5 rounded-xl border border-slate-700 transition">
+                  Disable
+                </button>
+              ` : ''}
+              ${u.account_status === 'DISABLED' ? `
+                <button onclick="adminExecuteUserAction('${u.id}', 'REACTIVATE')" class="bg-slate-800 hover:bg-emerald-900/50 text-emerald-300 font-bold text-[11px] px-2.5 py-1.5 rounded-xl border border-slate-700 transition">
+                  Reactivate
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      list.innerHTML = '<div class="text-center py-6 text-rose-400 text-xs">Error loading requests</div>';
+    }
+  }
+
+  async function adminExecuteUserAction(userId, action) {
+    if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+    try {
+      const res = await fetch('/api/v1/auth/admin-user-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, action: action })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Action failed');
+      showToast(data.message, 'success');
+      loadUserRequestsSettings();
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  async function loadAuditLogsSettings() {
+    const list = document.getElementById('settingsAuditLogsList');
+    list.innerHTML = '<div class="text-center py-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading audit logs...</div>';
+
+    try {
+      const res = await fetch('/api/v1/auth/audit-logs');
+      const logs = await res.json();
+
+      if (!logs || logs.length === 0) {
+        list.innerHTML = '<div class="text-center py-6 text-slate-500 text-xs">No audit logs recorded yet.</div>';
+        return;
+      }
+
+      list.innerHTML = logs.map(l => {
+        const dateStr = l.created_at ? new Date(l.created_at).toLocaleString('en-IN') : '-';
+        return `
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-start space-x-3">
+            <div class="w-2 h-2 rounded-full bg-brand-500 mt-1.5 flex-shrink-0"></div>
+            <div class="flex-1">
+              <div class="flex justify-between items-center">
+                <strong class="text-white font-bold text-xs">${l.action}</strong>
+                <span class="text-[10px] text-slate-500">${dateStr}</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5">${l.details || 'No additional details'}</p>
+              ${l.actor_email ? `<span class="text-[10px] text-sky-400">Actor: ${l.actor_email}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      list.innerHTML = '<div class="text-center py-6 text-rose-400 text-xs">Error loading audit logs</div>';
+    }
+  }
+
+  // Handle URL Query Action Tokens (Create Password & Reset Password links)
+  function checkUrlTokensOnLoad() {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    const token = params.get('token');
+
+    if (action === 'create-password' && token) {
+      document.getElementById('createPasswordToken').value = token;
+      const modal = document.getElementById('createPasswordModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    } else if (action === 'reset-password' && token) {
+      document.getElementById('resetPasswordToken').value = token;
+      const modal = document.getElementById('resetPasswordModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+  }
+
+  // Update switchSettingsTab to support new tabs
+  const originalSwitchSettingsTab = window.switchSettingsTab;
+
+</script>
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0b0f19; color: #f1f5f9; }
     .badge-certified { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
@@ -161,6 +1543,12 @@
         <button onclick="openValuationModal()" class="hidden md:inline-flex items-center px-3.5 py-2 text-xs font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-xl transition">
           <i class="fa-solid fa-calculator mr-1.5"></i> Valuation Tool
         </button>
+
+        <div id="navAuthContainer" class="inline-flex items-center">
+          <button onclick="openAuthModal()" class="inline-flex items-center px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition shadow-sm">
+            <i class="fa-solid fa-user mr-1.5 text-brand-500"></i> Sign In / Register
+          </button>
+        </div>
 
         <!-- Settings Button for Admin & Approved Users -->
         <button onclick="openSettingsModal()" class="inline-flex items-center px-3.5 py-2 text-xs font-bold text-amber-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-amber-500/40 rounded-xl transition shadow-sm">
@@ -586,7 +1974,7 @@
             <div class="flex items-center"><i class="fa-solid fa-clock text-amber-400 mr-2.5 text-sm"></i> <strong>Working Hours:</strong> Open 7 Days • 9:30 AM – 8:30 PM</div>
             <div class="flex items-center"><i class="fa-solid fa-phone text-emerald-400 mr-2.5 text-sm"></i> <strong>Primary Call:</strong> +91 80509 66025</div>
             <div class="flex items-center"><i class="fa-solid fa-phone text-sky-400 mr-2.5 text-sm"></i> <strong>Secondary Call:</strong> +91 83101 66040</div>
-            <div class="flex items-center"><i class="fa-solid fa-envelope text-brand-400 mr-2.5 text-sm"></i> <strong>Admin Email:</strong> shankarmanoj654@gmail.com</div>
+            <div class="flex items-center"><i class="fa-solid fa-envelope text-brand-400 mr-2.5 text-sm"></i> <strong>Support Email:</strong> contact@valuecars.in </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -705,8 +2093,8 @@
             </div>
             <div>
               <span class="text-slate-500 text-[10px] uppercase font-bold block">Admin Email:</span>
-              <a href="mailto:shankarmanoj654@gmail.com" class="text-slate-300 hover:text-white transition font-medium">
-                shankarmanoj654@gmail.com
+              <a href="mailto:contact@valuecars.in" class="text-slate-300 hover:text-white transition font-medium">
+                
               </a>
             </div>
 
@@ -776,24 +2164,24 @@
         <div class="bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
           <label class="block text-xs font-bold text-slate-300 mb-1">Authorized Admin / Seller Email Address *</label>
           <div class="flex gap-2">
-            <input type="email" id="uploadEmail" required value="shankarmanoj654@gmail.com" onchange="verifyUploadEmail(this.value)" class="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold">
+            <input type="email" id="uploadEmail" required placeholder="Enter your approved email" onchange="verifyUploadEmail(this.value)" class="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold">
             <button type="button" onclick="verifyUploadEmail(document.getElementById('uploadEmail').value)" class="bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition">
               Verify
             </button>
           </div>
-          <div id="uploadEmailStatus" class="mt-2 text-xs font-bold text-emerald-400">
-            <i class="fa-solid fa-circle-check mr-1"></i> Authorized Superadmin Email! Vehicle will be published live immediately.
+          <div id="uploadEmailStatus" class="mt-2 text-xs font-medium text-slate-400">
+            <i class="fa-solid fa-info-circle mr-1"></i> Enter your registered/approved email to verify upload permissions.
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">Seller / Manager Name *</label>
-            <input type="text" id="uploadSellerName" required value="Manoj Shankar (Owner)" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold">
+            <input type="text" id="uploadSellerName" required placeholder="Your full name" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">Contact Phone (for WhatsApp & Calls) *</label>
-            <input type="tel" id="uploadSellerPhone" required value="8050966025" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold">
+            <input type="tel" id="uploadSellerPhone" required placeholder="10-digit mobile number" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold">
           </div>
         </div>
 
@@ -816,15 +2204,15 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">Manufacturing Year *</label>
-            <input type="number" id="uploadYear" required min="2005" max="2026" value="2023" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
+            <input type="number" id="uploadYear" required min="2005" max="2026" placeholder="e.g. 2023" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">Kilometers Driven *</label>
-            <input type="number" id="uploadKm" required placeholder="18000" value="18000" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
+            <input type="number" id="uploadKm" required placeholder="e.g. 25000" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-300 mb-1">Selling Price (₹) *</label>
-            <input type="number" id="uploadPrice" required placeholder="1550000" value="1550000" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-bold text-amber-400">
+            <input type="number" id="uploadPrice" required placeholder="e.g. 1450000" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-bold text-amber-400">
           </div>
         </div>
 
@@ -861,7 +2249,7 @@
 
         <div>
           <label class="block text-xs font-bold text-slate-300 mb-1">Vehicle Registration Number *</label>
-          <input type="text" id="uploadReg" required placeholder="KA-01-MJ-9999" value="KA-01-MJ-2024" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold uppercase">
+          <input type="text" id="uploadReg" required placeholder="e.g. KA-01-AB-1234" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-semibold uppercase">
         </div>
 
         <!-- Local Image Files & Image URLs -->
@@ -937,15 +2325,21 @@
       </div>
 
       <!-- Navigation Tabs -->
-      <div class="flex border-b border-slate-800 gap-4 mb-4 text-xs font-bold">
-        <button onclick="switchSettingsTab('inventory')" id="tabBtnInventory" class="pb-2.5 text-brand-400 border-b-2 border-brand-500 flex items-center">
-          <i class="fa-solid fa-car mr-1.5"></i> Inventory & Live Status
+      <div class="flex border-b border-slate-800 gap-3 sm:gap-4 mb-4 text-xs font-bold overflow-x-auto">
+        <button onclick="switchSettingsTab('inventory')" id="tabBtnInventory" class="pb-2.5 text-brand-400 border-b-2 border-brand-500 flex items-center whitespace-nowrap">
+          <i class="fa-solid fa-car mr-1.5"></i> Inventory & Status
         </button>
-        <button onclick="switchSettingsTab('emails')" id="tabBtnEmails" class="pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center">
+        <button onclick="switchSettingsTab('userRequests')" id="tabBtnUserRequests" class="pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center whitespace-nowrap">
+          <i class="fa-solid fa-user-check mr-1.5 text-emerald-400"></i> User Approvals (<span id="settingsUserReqCount">0</span>)
+        </button>
+        <button onclick="switchSettingsTab('emails')" id="tabBtnEmails" class="pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center whitespace-nowrap">
           <i class="fa-solid fa-user-shield mr-1.5"></i> Authorized Emails
         </button>
-        <button onclick="switchSettingsTab('identity')" id="tabBtnIdentity" class="pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center">
-          <i class="fa-solid fa-id-badge mr-1.5"></i> Manager Email Settings
+        <button onclick="switchSettingsTab('auditLogs')" id="tabBtnAuditLogs" class="pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center whitespace-nowrap">
+          <i class="fa-solid fa-clock-rotate-left mr-1.5 text-sky-400"></i> Audit Logs
+        </button>
+        <button onclick="switchSettingsTab('identity')" id="tabBtnIdentity" class="pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center whitespace-nowrap">
+          <i class="fa-solid fa-id-badge mr-1.5"></i> Manager Email
         </button>
       </div>
 
@@ -993,13 +2387,45 @@
         </div>
       </div>
 
-      <!-- Tab Content 3: Manager Email Identity -->
+      <!-- Tab Content 3: User Verification Requests -->
+      <div id="settingsTabUserRequests" class="hidden flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+        <div class="flex items-center justify-between bg-slate-950/80 p-3 rounded-2xl border border-slate-800">
+          <div>
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider">User Verification & Approval Requests</h4>
+            <p class="text-[11px] text-slate-400">Approve customer registrations or disable/reactivate accounts.</p>
+          </div>
+          <button onclick="loadUserRequestsSettings()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-700 transition">
+            <i class="fa-solid fa-rotate mr-1"></i> Refresh
+          </button>
+        </div>
+        <div id="settingsUserRequestsList" class="space-y-2.5">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Tab Content 4: Audit Logs -->
+      <div id="settingsTabAuditLogs" class="hidden flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+        <div class="flex items-center justify-between bg-slate-950/80 p-3 rounded-2xl border border-slate-800">
+          <div>
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Platform Security & Audit Logs</h4>
+            <p class="text-[11px] text-slate-400">Chronological history of administrative and user actions.</p>
+          </div>
+          <button onclick="loadAuditLogsSettings()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-700 transition">
+            <i class="fa-solid fa-rotate mr-1"></i> Refresh
+          </button>
+        </div>
+        <div id="settingsAuditLogsList" class="space-y-2 text-xs">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Tab Content 5: Manager Email Identity -->
       <div id="settingsTabIdentity" class="hidden flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
         <div class="bg-slate-950/80 p-5 rounded-2xl border border-slate-800 space-y-3">
           <h4 class="text-xs font-bold text-white uppercase tracking-wider">Active Manager Email</h4>
           <p class="text-xs text-slate-400">All modifications, deletions, and sold status actions will be authenticated with this email address.</p>
           <div class="flex gap-2">
-            <input type="email" id="activeManagerEmailInput" value="shankarmanoj654@gmail.com" class="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500 font-semibold">
+            <input type="email" id="activeManagerEmailInput" value="" placeholder="Enter your approved manager email" class="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500 font-semibold">
             <button onclick="saveActiveManagerEmail()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition">
               Save Email
             </button>
@@ -1349,6 +2775,11 @@
                     </span>
                   </div>
                   
+                  <!-- Favorite Heart Button -->
+                  <button onclick="toggleFavoriteCar('${car.id}', event)" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-950/85 backdrop-blur-md text-slate-300 hover:text-rose-400 flex items-center justify-center transition border border-slate-700/60 shadow-md z-10" title="Save Car">
+                    <i class="${userFavorites.has(car.id) ? 'fa-solid text-rose-500' : 'fa-regular'} fa-heart text-xs"></i>
+                  </button>
+
                   <!-- Hub Location Badge -->
                   <div class="absolute bottom-3 left-3 bg-slate-950/90 text-slate-200 text-[10px] font-bold px-2.5 py-1 rounded-md backdrop-blur-md flex items-center border border-slate-800">
                     <i class="fa-solid fa-location-dot text-brand-500 mr-1.5"></i> Bangalore Hub
@@ -1735,7 +3166,7 @@
         const authRes = await fetch(`${API_BASE}/cars/check-seller-email?email=${encodeURIComponent(email)}`);
         const authData = await authRes.json();
         if (!authData.is_approved) {
-          alert(`❌ Access Denied: "${email}" is not authorized by Superadmin.\nPlease use shankarmanoj654@gmail.com or authorize this email in the "Authorized Emails" panel.`);
+          alert(`❌ Access Denied: "${email}" is not authorized by Superadmin.\nPlease use  or authorize this email in the "Authorized Emails" panel.`);
           submitBtn.innerHTML = originalText;
           submitBtn.disabled = false;
           return;
@@ -1848,7 +3279,7 @@
 
     // Active Manager Email Management
     function getActiveManagerEmail() {
-      return localStorage.getItem('adminManagerEmail') || 'shankarmanoj654@gmail.com';
+      return localStorage.getItem('adminManagerEmail') || '';
     }
 
     function saveActiveManagerEmail() {
@@ -2535,6 +3966,941 @@ The car is now reserved for you at Bangalore Hub.`);
     document.addEventListener('DOMContentLoaded', () => {
       loadCars();
     });
-  </script>
+  
+  // ==========================================
+  // AUTHENTICATION & USER LIFECYCLE CONTROLLER
+  // ==========================================
+  let currentUser = null;
+  let userFavorites = new Set();
+
+  async function initAuthAndSession() {
+    const token = localStorage.getItem('valcars_token');
+    if (!token) {
+      currentUser = null;
+      renderNavAuth();
+      return;
+    }
+
+    try {
+      const resp = await fetch('/api/v1/auth/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (resp.ok) {
+        currentUser = await resp.json();
+        localStorage.setItem('valcars_user', JSON.stringify(currentUser));
+        if (currentUser.role === 'ADMIN' && currentUser.email) {
+          localStorage.setItem('adminManagerEmail', currentUser.email);
+        }
+        await loadUserFavorites();
+      } else {
+        // Token expired
+        localStorage.removeItem('valcars_token');
+        localStorage.removeItem('valcars_user');
+        currentUser = null;
+      }
+    } catch (e) {
+      console.error('Session validation error:', e);
+    }
+    renderNavAuth();
+  }
+
+  function renderNavAuth() {
+    const container = document.getElementById('navAuthContainer');
+    if (!container) return;
+
+    if (!currentUser) {
+      container.innerHTML = `
+        <button onclick="openAuthModal()" class="inline-flex items-center px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition shadow-sm">
+          <i class="fa-solid fa-user mr-1.5 text-brand-500"></i> Sign In / Register
+        </button>
+      `;
+    } else {
+      const favCount = userFavorites.size;
+      const isAdmin = currentUser.role === 'ADMIN';
+      const badgeColor = isAdmin ? 'text-amber-400 border-amber-500/40' : 'text-emerald-400 border-emerald-500/40';
+      const icon = isAdmin ? 'fa-crown text-amber-400' : 'fa-user-check text-emerald-400';
+      const name = currentUser.full_name || 'My Account';
+
+      container.innerHTML = `
+        <button onclick="openUserProfileModal()" class="inline-flex items-center px-3.5 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border ${badgeColor} rounded-xl transition shadow-sm">
+          <i class="fa-solid ${icon} mr-1.5"></i> <span>${name.split(' ')[0]}</span>
+          <span id="navFavBadge" class="ml-2 bg-brand-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">♥ ${favCount}</span>
+        </button>
+      `;
+    }
+  }
+
+  async function loadUserFavorites() {
+    if (!currentUser) {
+      userFavorites.clear();
+      return;
+    }
+    const token = localStorage.getItem('valcars_token');
+    try {
+      const res = await fetch('/api/v1/favorites', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const favs = await res.json();
+        userFavorites = new Set(favs.map(f => f.id));
+        const badge = document.getElementById('navFavBadge');
+        if (badge) badge.textContent = `♥ ${userFavorites.size}`;
+        const profCount = document.getElementById('profileSavedCount');
+        if (profCount) profCount.textContent = userFavorites.size;
+      }
+    } catch (e) {
+      console.error('Failed to load favorites:', e);
+    }
+  }
+
+  async function toggleFavoriteCar(carId, event) {
+    if (event) event.stopPropagation();
+    if (!currentUser) {
+      openAuthModal();
+      showToast('Please sign in or register to save favorite cars.', 'info');
+      return;
+    }
+    const token = localStorage.getItem('valcars_token');
+    try {
+      const res = await fetch(`/api/v1/favorites/${carId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.is_favorited) {
+          userFavorites.add(carId);
+          showToast('❤️ Car saved to your favorites!', 'success');
+        } else {
+          userFavorites.delete(carId);
+          showToast('Removed car from favorites.', 'info');
+        }
+        renderNavAuth();
+        renderCars(allCars);
+        if (document.getElementById('userProfileModal') && !document.getElementById('userProfileModal').classList.contains('hidden')) {
+          loadUserSavedCars();
+        }
+      }
+    } catch (e) {
+      showToast('Error saving favorite car', 'error');
+    }
+  }
+
+  function openAuthModal() {
+    resetAuthStepEmail();
+    const modal = document.getElementById('authModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  function resetAuthStepEmail() {
+    document.getElementById('authStepEmail').classList.remove('hidden');
+    document.getElementById('authStepPassword').classList.add('hidden');
+    document.getElementById('authStepPending').classList.add('hidden');
+    document.getElementById('authStepRequest').classList.add('hidden');
+  }
+
+  async function handleAuthCheckEmail(e) {
+    e.preventDefault();
+    const email = document.getElementById('authEmailInput').value.trim();
+    if (!email) return;
+
+    const btn = document.getElementById('authEmailContinueBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Checking...';
+
+    try {
+      const res = await fetch('/api/v1/auth/check-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      const data = await res.json();
+
+      document.getElementById('authStepEmail').classList.add('hidden');
+
+      if (data.status === 'ACTIVE') {
+        document.getElementById('authPasswordEmailDisplay').textContent = email;
+        document.getElementById('authPasswordInput').value = '';
+        document.getElementById('authStepPassword').classList.remove('hidden');
+        document.getElementById('authPasswordInput').focus();
+      } else if (data.status === 'PENDING') {
+        document.getElementById('authStepPending').classList.remove('hidden');
+      } else if (data.status === 'APPROVED_PENDING_PASSWORD') {
+        showToast('Your account is approved! Please check your email for the password setup link.', 'success');
+        document.getElementById('authStepEmail').classList.remove('hidden');
+      } else {
+        // NEW user
+        document.getElementById('authRequestEmailInput').value = email;
+        document.getElementById('authStepRequest').classList.remove('hidden');
+      }
+    } catch (err) {
+      showToast('Error checking email status: ' + err.message, 'error');
+      document.getElementById('authStepEmail').classList.remove('hidden');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span>Continue</span> <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>';
+    }
+  }
+
+  async function handleAuthPasswordLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('authPasswordEmailDisplay').textContent.trim();
+    const password = document.getElementById('authPasswordInput').value;
+
+    const btn = document.getElementById('authLoginBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Signing In...';
+
+    try {
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Login failed');
+      }
+
+      const data = await res.json();
+      localStorage.setItem('valcars_token', data.access_token);
+      localStorage.setItem('valcars_user', JSON.stringify(data.user));
+      currentUser = data.user;
+      if (currentUser.role === 'ADMIN' && currentUser.email) {
+        localStorage.setItem('adminManagerEmail', currentUser.email);
+      }
+
+      closeAuthModal();
+      await loadUserFavorites();
+      renderNavAuth();
+      showToast(`Welcome back, ${currentUser.full_name}!`, 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket mr-2"></i> Sign In';
+    }
+  }
+
+  async function handleAuthRequestVerification(e) {
+    e.preventDefault();
+    const email = document.getElementById('authRequestEmailInput').value.trim();
+    const fullName = document.getElementById('authRequestNameInput').value.trim();
+    const phone = document.getElementById('authRequestPhoneInput').value.trim();
+
+    const btn = document.getElementById('authSubmitRequestBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Submitting...';
+
+    try {
+      const res = await fetch('/api/v1/auth/request-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          full_name: fullName,
+          phone_number: phone || null,
+          city: 'Bangalore'
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to submit request');
+
+      document.getElementById('authStepRequest').classList.add('hidden');
+      document.getElementById('authStepPending').classList.remove('hidden');
+      showToast('Verification request submitted to our operations team!', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> Request Account Verification';
+    }
+  }
+
+  function openForgotPasswordModal() {
+    closeAuthModal();
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeForgotPasswordModal() {
+    const modal = document.getElementById('forgotPasswordModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  async function handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgotEmailInput').value.trim();
+    const btn = document.getElementById('forgotSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Sending...';
+
+    try {
+      const res = await fetch('/api/v1/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      });
+      const data = await res.json();
+      closeForgotPasswordModal();
+      showToast(data.message, 'success');
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-envelope mr-2"></i> Send Reset Link';
+    }
+  }
+
+  async function handleCreatePassword(e) {
+    e.preventDefault();
+    const token = document.getElementById('createPasswordToken').value;
+    const password = document.getElementById('createPasswordInput').value;
+    const confirm = document.getElementById('createPasswordConfirmInput').value;
+
+    if (password !== confirm) {
+      showToast('Passwords do not match!', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('createPasswordSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Activating Account...';
+
+    try {
+      const res = await fetch('/api/v1/auth/create-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: token,
+          password: password,
+          confirm_password: confirm
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Password creation failed');
+      }
+
+      const data = await res.json();
+      localStorage.setItem('valcars_token', data.access_token);
+      localStorage.setItem('valcars_user', JSON.stringify(data.user));
+      currentUser = data.user;
+
+      document.getElementById('createPasswordModal').classList.add('hidden');
+      document.getElementById('createPasswordModal').classList.remove('flex');
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      await loadUserFavorites();
+      renderNavAuth();
+      showToast('Account activated! You are now signed in.', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-circle-check mr-2"></i> Activate Account & Sign In';
+    }
+  }
+
+  async function handleResetPassword(e) {
+    e.preventDefault();
+    const token = document.getElementById('resetPasswordToken').value;
+    const password = document.getElementById('resetPasswordInput').value;
+    const confirm = document.getElementById('resetPasswordConfirmInput').value;
+
+    if (password !== confirm) {
+      showToast('Passwords do not match!', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('resetPasswordSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Updating...';
+
+    try {
+      const res = await fetch('/api/v1/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: token,
+          new_password: password,
+          confirm_password: confirm
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Password reset failed');
+      }
+
+      document.getElementById('resetPasswordModal').classList.add('hidden');
+      document.getElementById('resetPasswordModal').classList.remove('flex');
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      showToast('Password updated successfully! Please sign in.', 'success');
+      openAuthModal();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-key mr-2"></i> Update Password & Continue';
+    }
+  }
+
+  function openUserProfileModal() {
+    if (!currentUser) {
+      openAuthModal();
+      return;
+    }
+
+    document.getElementById('profileUserFullName').textContent = currentUser.full_name;
+    document.getElementById('profileUserEmail').textContent = currentUser.email;
+    const badge = document.getElementById('profileUserRoleBadge');
+    if (currentUser.role === 'ADMIN') {
+      badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+      badge.textContent = 'Administrator';
+    } else {
+      badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+      badge.textContent = 'Verified Customer';
+    }
+
+    switchProfileTab('savedCars');
+    const modal = document.getElementById('userProfileModal');
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+  }
+
+  function closeUserProfileModal() {
+    const modal = document.getElementById('userProfileModal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+
+  function switchProfileTab(tab) {
+    const btnSaved = document.getElementById('tabBtnSavedCars');
+    const btnRecent = document.getElementById('tabBtnRecentlyViewed');
+    const tabSaved = document.getElementById('profileSavedCarsTab');
+    const tabRecent = document.getElementById('profileRecentlyViewedTab');
+
+    if (tab === 'savedCars') {
+      btnSaved.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white transition flex items-center';
+      btnRecent.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center';
+      tabSaved.classList.remove('hidden');
+      tabRecent.classList.add('hidden');
+      loadUserSavedCars();
+    } else {
+      btnRecent.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white transition flex items-center';
+      btnSaved.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center';
+      tabRecent.classList.remove('hidden');
+      tabSaved.classList.add('hidden');
+      loadUserRecentCars();
+    }
+  }
+
+  async function loadUserSavedCars() {
+    const grid = document.getElementById('profileSavedCarsGrid');
+    grid.innerHTML = '<div class="col-span-full text-center py-8 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-xl"></i> Loading saved cars...</div>';
+
+    const token = localStorage.getItem('valcars_token');
+    try {
+      const res = await fetch('/api/v1/favorites', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const favs = await res.json();
+      if (!favs || favs.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-10 text-slate-400 bg-slate-950/60 rounded-2xl border border-slate-800">
+            <i class="fa-regular fa-heart text-3xl mb-2 text-slate-500"></i>
+            <p class="font-bold text-white">No saved cars yet</p>
+            <p class="text-xs text-slate-400 mt-1">Tap the heart icon on any vehicle in the showroom to save it here.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = favs.map(c => {
+        const img = (c.images && c.images[0]) ? c.images[0].image_url : '/static/logo_black_clean.png';
+        return `
+          <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden hover:border-brand-500/50 transition">
+            <div class="relative h-36">
+              <img src="${img}" class="w-full h-full object-cover">
+              <button onclick="toggleFavoriteCar('${c.id}', event)" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-900/80 text-rose-500 flex items-center justify-center font-bold">
+                <i class="fa-solid fa-heart"></i>
+              </button>
+            </div>
+            <div class="p-3">
+              <h4 class="font-bold text-white text-xs truncate">${c.make} ${c.model}</h4>
+              <p class="text-[11px] text-slate-400">${c.year} • ${formatNumber(c.mileage)} km</p>
+              <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800">
+                <span class="text-amber-400 font-black text-xs">₹${formatNumber(c.price)}</span>
+                <button onclick="openCarModal('${c.id}')" class="text-brand-400 hover:text-brand-300 font-bold text-[11px]">View <i class="fa-solid fa-arrow-right"></i></button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      grid.innerHTML = '<div class="col-span-full text-center py-8 text-rose-400">Error loading saved cars</div>';
+    }
+  }
+
+  function loadUserRecentCars() {
+    const grid = document.getElementById('profileRecentCarsGrid');
+    const recentIds = JSON.parse(localStorage.getItem('valcars_recently_viewed') || '[]');
+    if (recentIds.length === 0) {
+      grid.innerHTML = `
+        <div class="col-span-full text-center py-10 text-slate-400 bg-slate-950/60 rounded-2xl border border-slate-800">
+          <i class="fa-solid fa-clock-rotate-left text-3xl mb-2 text-slate-500"></i>
+          <p class="font-bold text-white">No recently viewed cars</p>
+          <p class="text-xs text-slate-400 mt-1">Vehicles you inspect will automatically appear here.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const matched = allCars.filter(c => recentIds.includes(c.id));
+    grid.innerHTML = matched.map(c => {
+      const img = (c.images && c.images[0]) ? c.images[0].image_url : '/static/logo_black_clean.png';
+      return `
+        <div class="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden hover:border-brand-500/50 transition">
+          <div class="relative h-36">
+            <img src="${img}" class="w-full h-full object-cover">
+          </div>
+          <div class="p-3">
+            <h4 class="font-bold text-white text-xs truncate">${c.make} ${c.model}</h4>
+            <p class="text-[11px] text-slate-400">${c.year} • ${formatNumber(c.mileage)} km</p>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-800">
+              <span class="text-amber-400 font-black text-xs">₹${formatNumber(c.price)}</span>
+              <button onclick="openCarModal('${c.id}')" class="text-brand-400 hover:text-brand-300 font-bold text-[11px]">View <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function logoutUser() {
+    localStorage.removeItem('valcars_token');
+    localStorage.removeItem('valcars_user');
+    currentUser = null;
+    userFavorites.clear();
+    closeUserProfileModal();
+    renderNavAuth();
+    renderCars(allCars);
+    showToast('Signed out successfully.', 'info');
+  }
+
+  // Admin User Verification Tab Controller
+  async function loadUserRequestsSettings() {
+    const list = document.getElementById('settingsUserRequestsList');
+    list.innerHTML = '<div class="text-center py-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading user verification requests...</div>';
+
+    try {
+      const res = await fetch('/api/v1/auth/verification-requests');
+      const users = await res.json();
+      const countBadge = document.getElementById('settingsUserReqCount');
+      const pendingCount = users.filter(u => u.account_status === 'PENDING').length;
+      if (countBadge) countBadge.textContent = pendingCount;
+
+      if (!users || users.length === 0) {
+        list.innerHTML = '<div class="text-center py-6 text-slate-500 text-xs">No verification requests found.</div>';
+        return;
+      }
+
+      list.innerHTML = users.map(u => {
+        let statusBadge = '';
+        if (u.account_status === 'ACTIVE') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">ACTIVE</span>';
+        } else if (u.account_status === 'APPROVED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">APPROVED</span>';
+        } else if (u.account_status === 'PENDING') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">PENDING</span>';
+        } else if (u.account_status === 'DISABLED') {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/20 text-slate-400 border border-slate-500/30">DISABLED</span>';
+        } else {
+          statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">REJECTED</span>';
+        }
+
+        const reqDate = u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+
+        return `
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center space-x-2">
+                <strong class="text-white text-xs font-bold">${u.email}</strong>
+                ${statusBadge}
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5">Name: <span class="text-slate-200">${u.full_name}</span> • Requested: ${reqDate} • Role: ${u.role}</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              ${u.account_status === 'PENDING' ? `
+                <button onclick="adminExecuteUserAction('${u.id}', 'APPROVE')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-xl transition flex items-center">
+                  <i class="fa-solid fa-check mr-1"></i> Approve
+                </button>
+                <button onclick="adminExecuteUserAction('${u.id}', 'REJECT')" class="bg-rose-900/60 hover:bg-rose-800 text-rose-200 font-bold text-[11px] px-3 py-1.5 rounded-xl transition flex items-center">
+                  <i class="fa-solid fa-xmark mr-1"></i> Reject
+                </button>
+              ` : ''}
+              ${u.account_status === 'ACTIVE' ? `
+                <button onclick="adminExecuteUserAction('${u.id}', 'DISABLE')" class="bg-slate-800 hover:bg-rose-900/50 text-slate-300 hover:text-rose-300 font-bold text-[11px] px-2.5 py-1.5 rounded-xl border border-slate-700 transition">
+                  Disable
+                </button>
+              ` : ''}
+              ${u.account_status === 'DISABLED' ? `
+                <button onclick="adminExecuteUserAction('${u.id}', 'REACTIVATE')" class="bg-slate-800 hover:bg-emerald-900/50 text-emerald-300 font-bold text-[11px] px-2.5 py-1.5 rounded-xl border border-slate-700 transition">
+                  Reactivate
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      list.innerHTML = '<div class="text-center py-6 text-rose-400 text-xs">Error loading requests</div>';
+    }
+  }
+
+  async function adminExecuteUserAction(userId, action) {
+    if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+    try {
+      const res = await fetch('/api/v1/auth/admin-user-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, action: action })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Action failed');
+      showToast(data.message, 'success');
+      loadUserRequestsSettings();
+    } catch (e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  async function loadAuditLogsSettings() {
+    const list = document.getElementById('settingsAuditLogsList');
+    list.innerHTML = '<div class="text-center py-6 text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading audit logs...</div>';
+
+    try {
+      const res = await fetch('/api/v1/auth/audit-logs');
+      const logs = await res.json();
+
+      if (!logs || logs.length === 0) {
+        list.innerHTML = '<div class="text-center py-6 text-slate-500 text-xs">No audit logs recorded yet.</div>';
+        return;
+      }
+
+      list.innerHTML = logs.map(l => {
+        const dateStr = l.created_at ? new Date(l.created_at).toLocaleString('en-IN') : '-';
+        return `
+          <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-start space-x-3">
+            <div class="w-2 h-2 rounded-full bg-brand-500 mt-1.5 flex-shrink-0"></div>
+            <div class="flex-1">
+              <div class="flex justify-between items-center">
+                <strong class="text-white font-bold text-xs">${l.action}</strong>
+                <span class="text-[10px] text-slate-500">${dateStr}</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5">${l.details || 'No additional details'}</p>
+              ${l.actor_email ? `<span class="text-[10px] text-sky-400">Actor: ${l.actor_email}</span>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (e) {
+      list.innerHTML = '<div class="text-center py-6 text-rose-400 text-xs">Error loading audit logs</div>';
+    }
+  }
+
+  // Handle URL Query Action Tokens (Create Password & Reset Password links)
+  function checkUrlTokensOnLoad() {
+    const params = new URLSearchParams(window.location.search);
+    const action = params.get('action');
+    const token = params.get('token');
+
+    if (action === 'create-password' && token) {
+      document.getElementById('createPasswordToken').value = token;
+      const modal = document.getElementById('createPasswordModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    } else if (action === 'reset-password' && token) {
+      document.getElementById('resetPasswordToken').value = token;
+      const modal = document.getElementById('resetPasswordModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+    }
+  }
+
+  // Update switchSettingsTab to support new tabs
+  const originalSwitchSettingsTab = window.switchSettingsTab;
+
+</script>
+
+  <!-- AUTHENTICATION MODAL (MULTI-STEP EMAIL VERIFICATION & PASSWORD SIGN-IN) -->
+  <div id="authModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-8 relative">
+      <button onclick="closeAuthModal()" class="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Step 1: Enter Email -->
+      <div id="authStepEmail" class="space-y-4">
+        <div class="text-center pb-2">
+          <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-500 flex items-center justify-center mx-auto mb-3 text-xl">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <h3 class="text-2xl font-black text-white font-heading">Sign In / Register</h3>
+          <p class="text-xs text-slate-400 mt-1">Enter your email address to continue</p>
+        </div>
+
+        <form onsubmit="handleAuthCheckEmail(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1.5">Email Address</label>
+            <input type="email" id="authEmailInput" required placeholder="name@example.com" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-medium">
+          </div>
+          <button type="submit" id="authEmailContinueBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center shadow-lg shadow-brand-600/20">
+            <span>Continue</span> <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
+          </button>
+        </form>
+      </div>
+
+      <!-- State A: Password Login -->
+      <div id="authStepPassword" class="space-y-4 hidden">
+        <div class="text-center pb-2">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-3 text-xl">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+          <h3 class="text-2xl font-black text-white font-heading">Welcome Back!</h3>
+          <p class="text-xs text-slate-400 mt-1"><span id="authPasswordEmailDisplay" class="text-slate-300 font-semibold"></span></p>
+        </div>
+
+        <form onsubmit="handleAuthPasswordLogin(event)" class="space-y-4">
+          <div>
+            <div class="flex justify-between items-center mb-1.5">
+              <label class="block text-xs font-bold text-slate-300">Password</label>
+              <button type="button" onclick="openForgotPasswordModal()" class="text-[11px] text-brand-400 hover:text-brand-300 font-semibold">Forgot password?</button>
+            </div>
+            <input type="password" id="authPasswordInput" required placeholder="Enter your password" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-medium">
+          </div>
+          <button type="submit" id="authLoginBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center shadow-lg shadow-brand-600/20">
+            <i class="fa-solid fa-right-to-bracket mr-2"></i> Sign In
+          </button>
+          <button type="button" onclick="resetAuthStepEmail()" class="w-full text-xs text-slate-400 hover:text-white font-medium py-1">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Use a different email
+          </button>
+        </form>
+      </div>
+
+      <!-- State B: Pending Approval Notice -->
+      <div id="authStepPending" class="space-y-4 hidden text-center">
+        <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-2 text-2xl">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+        </div>
+        <h3 class="text-2xl font-black text-white font-heading">Approval Pending</h3>
+        <div class="bg-amber-950/40 border border-amber-500/30 rounded-2xl p-4 text-xs text-amber-200 text-left space-y-2">
+          <p><strong>Status:</strong> Your email verification request is currently under review by our operations team.</p>
+          <p>Once approved, you will receive an email with a secure link to create your password and activate your account.</p>
+        </div>
+        <button type="button" onclick="closeAuthModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 rounded-xl text-sm transition">
+          Got it, Close
+        </button>
+      </div>
+
+      <!-- State C: Request Verification -->
+      <div id="authStepRequest" class="space-y-4 hidden">
+        <div class="text-center pb-2">
+          <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center mx-auto mb-3 text-xl">
+            <i class="fa-solid fa-envelope-circle-check"></i>
+          </div>
+          <h3 class="text-2xl font-black text-white font-heading">Verify Your Email</h3>
+          <p class="text-xs text-slate-400 mt-1">Submit your details to request account access</p>
+        </div>
+
+        <form onsubmit="handleAuthRequestVerification(event)" class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
+            <input type="email" id="authRequestEmailInput" required readonly class="w-full bg-slate-950 border border-slate-700 text-slate-300 rounded-xl p-2.5 text-xs outline-none cursor-not-allowed font-medium">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Full Name *</label>
+            <input type="text" id="authRequestNameInput" required placeholder="e.g. Rahul Sharma" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Phone Number (Optional)</label>
+            <input type="tel" id="authRequestPhoneInput" placeholder="10-digit mobile number" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500">
+          </div>
+          
+          <button type="submit" id="authSubmitRequestBtn" class="w-full bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-700 hover:to-rose-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center shadow-lg shadow-brand-600/20 mt-2">
+            <i class="fa-solid fa-paper-plane mr-2"></i> Request Account Verification
+          </button>
+          <button type="button" onclick="resetAuthStepEmail()" class="w-full text-xs text-slate-400 hover:text-white font-medium py-1">
+            <i class="fa-solid fa-arrow-left mr-1"></i> Back
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FORGOT PASSWORD MODAL -->
+  <div id="forgotPasswordModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-8 relative">
+      <button onclick="closeForgotPasswordModal()" class="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="text-center pb-2">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3 text-xl">
+          <i class="fa-solid fa-key"></i>
+        </div>
+        <h3 class="text-2xl font-black text-white font-heading">Reset Password</h3>
+        <p class="text-xs text-slate-400 mt-1">We'll send a single-use password reset link to your email</p>
+      </div>
+
+      <form onsubmit="handleForgotPassword(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1.5">Your Account Email</label>
+          <input type="email" id="forgotEmailInput" required placeholder="name@example.com" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500 font-medium">
+        </div>
+        <button type="submit" id="forgotSubmitBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center">
+          <i class="fa-solid fa-envelope mr-2"></i> Send Reset Link
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- CREATE PASSWORD MODAL (TRIGGERED VIA EMAIL LINK) -->
+  <div id="createPasswordModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-8 relative">
+      <div class="text-center pb-2">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-3 text-xl">
+          <i class="fa-solid fa-shield-check"></i>
+        </div>
+        <h3 class="text-2xl font-black text-white font-heading">Create Password</h3>
+        <p class="text-xs text-slate-400 mt-1">Your account is approved! Set your secure password.</p>
+      </div>
+
+      <form onsubmit="handleCreatePassword(event)" class="space-y-4">
+        <input type="hidden" id="createPasswordToken">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">New Password (min 8 chars, 1 uppercase, 1 lowercase, 1 number) *</label>
+          <input type="password" id="createPasswordInput" required minlength="8" placeholder="••••••••" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Confirm Password *</label>
+          <input type="password" id="createPasswordConfirmInput" required minlength="8" placeholder="••••••••" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
+        </div>
+        <button type="submit" id="createPasswordSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center shadow-lg shadow-emerald-600/20">
+          <i class="fa-solid fa-circle-check mr-2"></i> Activate Account & Sign In
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- RESET PASSWORD MODAL (TRIGGERED VIA RESET LINK) -->
+  <div id="resetPasswordModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-8 relative">
+      <div class="text-center pb-2">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3 text-xl">
+          <i class="fa-solid fa-lock-open"></i>
+        </div>
+        <h3 class="text-2xl font-black text-white font-heading">Set New Password</h3>
+        <p class="text-xs text-slate-400 mt-1">Enter your new secure password below</p>
+      </div>
+
+      <form onsubmit="handleResetPassword(event)" class="space-y-4">
+        <input type="hidden" id="resetPasswordToken">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">New Password (min 8 chars) *</label>
+          <input type="password" id="resetPasswordInput" required minlength="8" placeholder="••••••••" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Confirm New Password *</label>
+          <input type="password" id="resetPasswordConfirmInput" required minlength="8" placeholder="••••••••" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-3 text-sm outline-none focus:border-brand-500">
+        </div>
+        <button type="submit" id="resetPasswordSubmitBtn" class="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center shadow-lg shadow-brand-600/20">
+          <i class="fa-solid fa-key mr-2"></i> Update Password & Continue
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- USER PROFILE & SAVED CARS MODAL -->
+  <div id="userProfileModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-4xl w-full shadow-2xl p-5 sm:p-8 relative max-h-[90vh] flex flex-col">
+      <button onclick="closeUserProfileModal()" class="absolute top-5 right-5 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- User Header -->
+      <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-5 mb-5">
+        <div class="flex items-center space-x-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center text-xl font-bold">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div>
+            <h3 id="profileUserFullName" class="text-xl font-black text-white font-heading">User Account</h3>
+            <p id="profileUserEmail" class="text-xs text-slate-400 font-medium"></p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span id="profileUserRoleBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            Verified Customer
+          </span>
+          <button onclick="logoutUser()" class="bg-slate-800 hover:bg-rose-900/50 hover:text-rose-300 text-slate-300 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center">
+            <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- Profile Tabs -->
+      <div class="flex space-x-2 border-b border-slate-800 pb-3 mb-4 overflow-x-auto">
+        <button id="tabBtnSavedCars" onclick="switchProfileTab('savedCars')" class="px-4 py-2 rounded-xl text-xs font-bold bg-brand-600 text-white transition flex items-center">
+          <i class="fa-solid fa-heart mr-1.5 text-rose-300"></i> My Saved Cars (<span id="profileSavedCount">0</span>)
+        </button>
+        <button id="tabBtnRecentlyViewed" onclick="switchProfileTab('recentlyViewed')" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center">
+          <i class="fa-solid fa-clock-rotate-left mr-1.5 text-amber-400"></i> Recently Viewed
+        </button>
+      </div>
+
+      <!-- Tab 1: Saved Cars -->
+      <div id="profileSavedCarsTab" class="flex-1 overflow-y-auto custom-scrollbar pr-1">
+        <div id="profileSavedCarsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Tab 2: Recently Viewed -->
+      <div id="profileRecentlyViewedTab" class="flex-1 overflow-y-auto custom-scrollbar pr-1 hidden">
+        <div id="profileRecentCarsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

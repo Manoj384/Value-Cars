@@ -55,9 +55,78 @@ class NotificationService:
         cls._history.clear()
 
     @classmethod
+    async def _send_email(
+        cls,
+        to_email: str,
+        subject: str,
+        html_body: str,
+        template: str,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> NotificationRecord:
+        """Internal Email dispatcher with SMTP and log/mock support."""
+        clean_email = to_email.strip()
+        record_status = NotificationStatus.SENT
+        err_msg = None
+
+        if not settings.NOTIFICATIONS_ENABLED:
+            record = NotificationRecord(
+                channel=NotificationChannel.EMAIL,
+                recipient=clean_email,
+                message=f"[{subject}] {html_body[:100]}...",
+                template_name=template,
+                status=NotificationStatus.SKIPPED,
+                metadata=metadata or {},
+            )
+            cls._history.append(record)
+            return record
+
+        try:
+            if settings.SMTP_HOST and settings.SMTP_USER and settings.SMTP_PASSWORD:
+                import smtplib
+                from email.mime.multipart import MIMEMultipart
+                from email.mime.text import MIMEText
+
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = subject
+                msg["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
+                msg["To"] = clean_email
+
+                part = MIMEText(html_body, "html")
+                msg.attach(part)
+
+                # Send via SMTP in background executor so it doesn't block async loop
+                loop = asyncio.get_event_loop()
+                def _send_sync():
+                    with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+                        server.starttls()
+                        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                        server.sendmail(settings.SMTP_FROM_EMAIL, [clean_email], msg.as_string())
+                await loop.run_in_executor(None, _send_sync)
+            else:
+                # Mock / Log Provider
+                logger.info(f"📧 [EMAIL MOCK] To: {clean_email} | Subject: {subject} | Template: {template}")
+        except Exception as e:
+            record_status = NotificationStatus.FAILED
+            err_msg = str(e)
+            logger.error(f"Failed to send email to {clean_email}: {e}")
+
+        record = NotificationRecord(
+            channel=NotificationChannel.EMAIL,
+            recipient=clean_email,
+            message=f"[{subject}] {html_body[:120]}...",
+            template_name=template,
+            status=record_status,
+            error=err_msg,
+            metadata=metadata or {},
+        )
+        cls._history.append(record)
+        return record
+
+    @classmethod
     async def _send_sms(cls, phone: str, message: str, template: str, metadata: Optional[Dict[str, Any]] = None) -> NotificationRecord:
         """Internal SMS dispatcher with provider support."""
         if not settings.NOTIFICATIONS_ENABLED:
+
             record = NotificationRecord(
                 channel=NotificationChannel.SMS,
                 recipient=phone,
@@ -414,4 +483,92 @@ class NotificationService:
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
         return [r for r in results if isinstance(r, NotificationRecord)]
+
+    @classmethod
+    async def send_admin_user_verification_alert(
+        cls,
+        user_email: str,
+        full_name: str,
+        approve_url: str,
+        reject_url: str,
+        requested_at: Optional[datetime] = None,
+    ) -> NotificationRecord:
+        """Send admin notification with secure 1-click Approve and Reject links."""
+        admin_email = getattr(settings, "ADMIN_ALERT_EMAIL", "shankarmanoj654@gmail.com")
+        req_time = (requested_at or datetime.now(timezone.utc)).strftime("%d %B %Y, %I:%M %p UTC")
+        
+        subject = f"🔔 New User Email Verification Request: {user_email}"
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 28px; border-radius: 16px; border: 1px solid #334155;">
+            <h2 style="color: #f43f5e; margin-top: 0;">🚗 Value Cars — Verification Request</h2>
+            <p style="color: #cbd5e1; font-size: 15px;">A new customer has requested account approval to access Value Cars features.</p>
+            
+            <div style="background: #1e293b; padding: 18px; border-radius: 12px; margin: 20px 0; border: 1px solid #475569;">
+                <p style="margin: 6px 0;"><strong>Name:</strong> {full_name}</p>
+                <p style="margin: 6px 0;"><strong>Email:</strong> <span style="color: #38bdf8;">{user_email}</span></p>
+                <p style="margin: 6px 0;"><strong>Requested At:</strong> {req_time}</p>
+            </div>
+
+            <div style="margin: 28px 0; display: flex; gap: 14px;">
+                <a href="{approve_url}" style="background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-right: 12px;">✓ APPROVE USER</a>
+                <a href="{reject_url}" style="background: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">✗ REJECT USER</a>
+            </div>
+
+            <p style="font-size: 12px; color: #64748b; margin-top: 24px;">This is a secure, single-use, time-limited administrative link.</p>
+        </div>
+        """
+        meta = {"user_email": user_email, "full_name": full_name}
+        return await cls._send_email(admin_email, subject, html_body, "ADMIN_USER_VERIFICATION_REQUEST", meta)
+
+    @classmethod
+    async def send_user_account_approved_alert(
+        cls,
+        user_email: str,
+        create_password_url: str,
+        expires_in_hours: int = 48,
+    ) -> NotificationRecord:
+        """Send approved user an email with secure, expiring Create Password link."""
+        subject = "🎉 Your Value Cars Account Has Been Approved!"
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 28px; border-radius: 16px; border: 1px solid #334155;">
+            <h2 style="color: #10b981; margin-top: 0;">🚗 Welcome to Value Cars!</h2>
+            <p style="color: #cbd5e1; font-size: 15px;">Great news! Your account verification request has been approved by our team.</p>
+            <p style="color: #cbd5e1; font-size: 15px;">You can now set up your secure password to save favorite cars, submit enquiries, and book inspections.</p>
+            
+            <div style="margin: 28px 0;">
+                <a href="{create_password_url}" style="background: #e11d48; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; display: inline-block;">Create My Password</a>
+            </div>
+
+            <p style="font-size: 13px; color: #94a3b8;">Or copy this link to your browser:<br><span style="color: #38bdf8; word-break: break-all;">{create_password_url}</span></p>
+            <p style="font-size: 12px; color: #64748b; margin-top: 24px;">Note: This single-use link expires in {expires_in_hours} hours. If you did not request this, please ignore this email.</p>
+        </div>
+        """
+        meta = {"user_email": user_email}
+        return await cls._send_email(user_email, subject, html_body, "USER_ACCOUNT_APPROVED", meta)
+
+    @classmethod
+    async def send_user_password_reset_alert(
+        cls,
+        user_email: str,
+        reset_password_url: str,
+        expires_in_hours: int = 2,
+    ) -> NotificationRecord:
+        """Send password reset email with single-use secure link."""
+        subject = "🔒 Reset Your Value Cars Password"
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 28px; border-radius: 16px; border: 1px solid #334155;">
+            <h2 style="color: #f43f5e; margin-top: 0;">🔒 Value Cars — Password Reset</h2>
+            <p style="color: #cbd5e1; font-size: 15px;">We received a request to reset the password for your account.</p>
+            
+            <div style="margin: 28px 0;">
+                <a href="{reset_password_url}" style="background: #e11d48; color: white; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; display: inline-block;">Reset Password</a>
+            </div>
+
+            <p style="font-size: 13px; color: #94a3b8;">Or copy this link to your browser:<br><span style="color: #38bdf8; word-break: break-all;">{reset_password_url}</span></p>
+            <p style="font-size: 12px; color: #64748b; margin-top: 24px;">Note: This link expires in {expires_in_hours} hours and can only be used once.</p>
+        </div>
+        """
+        meta = {"user_email": user_email}
+        return await cls._send_email(user_email, subject, html_body, "USER_PASSWORD_RESET", meta)
+
 

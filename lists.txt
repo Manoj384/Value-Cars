@@ -1,0 +1,1331 @@
+# SECOND-HAND CAR MARKETPLACE — SPINNY-STYLE PRODUCT IMPROVEMENT PROMPT
+
+I have built a second-hand car marketplace application.
+
+I want to improve it into a **professional, trustworthy, smooth and user-friendly used-car platform inspired by the user experience of Spinny**, but I do NOT want unnecessary complexity.
+
+The application will NOT have:
+
+* Online payment
+* Payment gateway
+* OTP login
+* Multiple admin accounts
+
+There will be:
+
+* One primary admin account — me
+* Customer/user accounts
+* Email-based account verification
+* Password-based login after email approval
+* Admin approval workflow
+* Car inventory management
+* Customer enquiries
+* Favorites
+* Booking/inspection request functionality if implemented
+
+The goal is to make the application feel like a **real commercial used-car marketplace**, not a basic CRUD project.
+
+---
+
+# 1. CORE PRODUCT PHILOSOPHY
+
+The application should be:
+
+* Simple
+* Fast
+* Trustworthy
+* Mobile-friendly
+* Professional
+* Easy for first-time users
+* Easy for the admin to manage
+* Secure
+* Scalable
+* Reliable
+
+Do not copy Spinny's branding, logos, copyrighted assets or exact UI.
+
+Use Spinny only as inspiration for:
+
+* User journey
+* Information hierarchy
+* Search experience
+* Car discovery
+* Trust-building
+* Listing presentation
+* Simplicity
+
+---
+
+# 2. USER ACCESS MODEL
+
+Users should NOT be forced to create an account just to browse cars.
+
+A visitor should be able to:
+
+* Open website
+* Search cars
+* Filter cars
+* View car details
+* Compare basic information
+* View images
+* View specifications
+* View location
+* View pricing
+* Read description
+
+without login.
+
+Login should only be required when the user performs an account-related action.
+
+For example:
+
+* Save/Favorite a car
+* Send enquiry
+* Request inspection/test drive
+* View enquiry history
+* Manage profile
+* View saved cars
+
+---
+
+# 3. USER REGISTRATION / EMAIL VERIFICATION SYSTEM
+
+Implement the following workflow.
+
+## STEP 1 — USER REQUESTS ACCOUNT VERIFICATION
+
+User clicks:
+
+"Login / Sign Up"
+
+Ask for:
+
+Email Address
+
+Example:
+
+[user@example.com](mailto:user@example.com)
+
+User clicks:
+
+"Continue"
+
+---
+
+# 4. CHECK EMAIL STATUS
+
+Backend checks whether the email exists.
+
+There should be three main states.
+
+### STATE A — EMAIL ALREADY VERIFIED
+
+If the email is already approved and verified:
+
+Show:
+
+"Welcome back"
+
+Ask the user to enter their password.
+
+Example:
+
+Email:
+[user@example.com](mailto:user@example.com)
+
+Password:
+
+---
+
+[Login]
+
+---
+
+### STATE B — EMAIL EXISTS BUT IS WAITING FOR ADMIN APPROVAL
+
+Show:
+
+"Your email verification request is pending."
+
+Explain:
+
+"We've received your request. We'll notify you once your account is approved."
+
+Do not allow the user to create a password yet.
+
+---
+
+### STATE C — NEW EMAIL
+
+If the email does not exist:
+
+Show a confirmation screen:
+
+"Verify your email"
+
+"Your email verification request will be sent to our team for approval."
+
+[Request Verification]
+
+---
+
+# 5. EMAIL VERIFICATION REQUEST
+
+When the user requests verification:
+
+Create a database record.
+
+Example status:
+
+PENDING
+
+Store:
+
+* User ID
+* Email
+* Request date/time
+* Status
+* Approval date/time
+* Admin who approved it, if needed
+* Verification token if required
+
+Immediately send an email notification to the admin.
+
+Example:
+
+Subject:
+
+"New User Email Verification Request"
+
+Email body should contain:
+
+New user verification request
+
+Email:
+[user@example.com](mailto:user@example.com)
+
+Requested:
+12 September 2026, 12:30 PM
+
+[Approve User]
+
+[Reject User]
+
+---
+
+# 6. ADMIN EMAIL APPROVAL
+
+IMPORTANT:
+
+I want the admin to be able to approve the user directly from the email.
+
+The email should contain a secure approval link/button.
+
+Example:
+
+APPROVE USER
+
+When I click it:
+
+1. Authenticate/validate the approval request securely.
+2. Change the user's status from:
+
+PENDING
+
+to:
+
+APPROVED
+
+3. Send confirmation email to the user.
+4. Allow the user to create their password.
+
+Do NOT expose admin credentials in the email.
+
+Do NOT use a simple predictable URL such as:
+
+/approve?id=123
+
+Use a secure, expiring, single-use token.
+
+---
+
+# 7. APPROVAL EMAIL TO USER
+
+After I approve the request, automatically send an email to the user.
+
+Example:
+
+Subject:
+
+"Your account has been approved"
+
+Message:
+
+"Your email has been verified. You can now create your password and access your account."
+
+Include a secure link:
+
+"Create Password"
+
+The link should:
+
+* Be unique
+* Be time-limited
+* Be single-use
+* Expire after a reasonable period
+* Not contain the user's password
+* Not expose sensitive database information
+
+---
+
+# 8. CREATE PASSWORD
+
+When the user opens the password creation link:
+
+Show:
+
+Create your password
+
+Email:
+[user@example.com](mailto:user@example.com)
+
+New Password:
+
+---
+
+Confirm Password:
+
+---
+
+[Create Password]
+
+Password requirements should be clearly displayed.
+
+For example:
+
+* Minimum 8 characters
+* At least one uppercase letter
+* At least one lowercase letter
+* At least one number
+
+You may use a stronger password policy if appropriate.
+
+---
+
+# 9. PASSWORD STORAGE
+
+NEVER store passwords as plain text.
+
+Store only a secure password hash using a modern password hashing algorithm such as:
+
+Argon2id
+
+or
+
+bcrypt
+
+The database must NEVER contain:
+
+password = "MyPassword123"
+
+Instead store a secure password hash.
+
+---
+
+# 10. AFTER PASSWORD CREATION
+
+After successful password creation:
+
+Set:
+
+email_verified = true
+
+account_status = ACTIVE
+
+password_created = true
+
+Then redirect the user to:
+
+Dashboard
+
+or
+
+Home page
+
+Show:
+
+"Your account has been created successfully."
+
+---
+
+# 11. NORMAL LOGIN
+
+After the user has completed verification:
+
+Login should be:
+
+Email
++
+Password
+
+No OTP.
+
+No SMS.
+
+No unnecessary verification every time.
+
+Provide:
+
+[Login]
+
+[Forgot Password]
+
+---
+
+# 12. FORGOT PASSWORD
+
+Implement:
+
+Email → Reset Password Link → New Password
+
+The reset link must:
+
+* Be secure
+* Expire
+* Be single-use
+* Not reveal whether unnecessary account information exists
+* Not expose the old password
+
+After password reset, invalidate old reset tokens.
+
+---
+
+# 13. ADMIN ACCOUNT
+
+There should be ONLY ONE ADMIN ACCOUNT.
+
+The admin account is my account.
+
+Do not provide public admin registration.
+
+Do not allow users to select:
+
+"Admin"
+
+during signup.
+
+Admin privileges must come from the backend/database role.
+
+Example:
+
+role = ADMIN
+
+Normal users:
+
+role = USER
+
+---
+
+# 14. ADMIN SECURITY
+
+Admin pages must be protected server-side.
+
+A user must NOT be able to access:
+
+/admin
+
+/admin/users
+
+/admin/cars
+
+/admin/enquiries
+
+/admin/settings
+
+simply by typing the URL.
+
+Backend authorization must verify:
+
+authenticated user
+AND
+role = ADMIN
+
+Do not rely only on frontend route protection.
+
+---
+
+# 15. ADMIN DASHBOARD
+
+Create a professional admin dashboard.
+
+Show:
+
+## Overview
+
+* Total cars
+* Available cars
+* Sold cars
+* Reserved cars
+* Total users
+* Pending verification requests
+* New enquiries
+* Inspection requests
+* Recently added cars
+
+---
+
+# 16. USER APPROVAL MANAGEMENT
+
+Admin should have:
+
+"User Verification Requests"
+
+Show:
+
+| Email | Requested | Status | Action |
+| ----- | --------- | ------ | ------ |
+
+Actions:
+
+[Approve]
+
+[Reject]
+
+[View Details]
+
+Admin should be able to:
+
+* Approve
+* Reject
+* Disable account
+* Reactivate account
+
+Do not allow admin to see user passwords.
+
+---
+
+# 17. ADMIN CAR MANAGEMENT
+
+Admin should be able to add and manage cars.
+
+Car fields should include:
+
+## Basic
+
+* Brand
+* Model
+* Variant
+* Year
+* Registration year
+* Price
+* Kilometers
+* Fuel
+* Transmission
+* Body type
+* Color
+* Location
+
+## Ownership
+
+* Number of owners
+
+## Condition
+
+* Accident history
+* Service history
+* Insurance validity
+* RC status
+* Tyre condition
+* Battery condition
+
+## Features
+
+* ABS
+* Airbags
+* Sunroof
+* Cruise control
+* Parking camera
+* Android/Apple CarPlay
+* etc.
+
+## Images
+
+Allow multiple images.
+
+Admin should be able to:
+
+* Upload
+* Delete
+* Reorder
+* Set primary image
+
+---
+
+# 18. CAR LISTING EXPERIENCE
+
+Make every car card attractive and information-rich without becoming cluttered.
+
+Display:
+
+CAR IMAGE
+
+Brand + Model
+
+Variant
+
+Year
+
+Fuel
+
+Transmission
+
+Kilometers
+
+Location
+
+₹ Price
+
+Optional:
+
+EMI starting from ₹X/month
+
+[View Details]
+
+[♡]
+
+Avoid fake EMI/payment information if an actual calculator is not implemented.
+
+---
+
+# 19. CAR DETAILS PAGE
+
+This is one of the most important pages.
+
+Structure it professionally:
+
+### TOP
+
+Large image gallery
+
+Price
+
+Brand + Model
+
+Variant
+
+Year
+
+Kilometers
+
+Fuel
+
+Transmission
+
+Location
+
+CTA buttons:
+
+[Enquire Now]
+
+[Book Inspection]
+
+[♡ Save]
+
+---
+
+# 20. TRUST SECTION
+
+Add a strong trust section to each car.
+
+Only display claims that are actually supported by your business/process.
+
+Possible fields:
+
+* Vehicle inspection completed
+* Service history available
+* RC verified
+* Insurance verified
+* No major accident
+* Ownership verified
+
+Do NOT display these automatically.
+
+Admin should explicitly mark each verification item.
+
+---
+
+# 21. VEHICLE INSPECTION
+
+If the business supports inspection, create:
+
+"Request Inspection"
+
+User selects:
+
+* Preferred date
+* Preferred time
+* Phone/email
+* Message
+
+Admin receives the request.
+
+Admin can change status:
+
+PENDING
+
+CONFIRMED
+
+COMPLETED
+
+CANCELLED
+
+---
+
+# 22. ENQUIRY SYSTEM
+
+When user clicks:
+
+"Enquire Now"
+
+If not logged in:
+
+Show login/register screen.
+
+After authentication:
+
+Show enquiry form.
+
+Automatically associate:
+
+User
+
+*
+
+Car
+
+*
+
+Enquiry
+
+Store:
+
+* User ID
+* Car ID
+* Message
+* Date
+* Status
+
+Admin dashboard should show all enquiries.
+
+---
+
+# 23. FAVORITES
+
+Users should be able to save cars.
+
+Example:
+
+♡ Save
+
+After clicking:
+
+♥ Saved
+
+Create:
+
+"My Saved Cars"
+
+Users can:
+
+* View saved cars
+* Remove cars
+* Open details
+* See if a saved car is sold/unavailable
+
+---
+
+# 24. SEARCH EXPERIENCE
+
+Search should be one of the most polished features.
+
+Allow:
+
+Brand
+
+Model
+
+Location
+
+Price
+
+Fuel
+
+Transmission
+
+Body type
+
+Year
+
+Kilometers
+
+Use filter chips.
+
+Example:
+
+SUV
+Automatic
+Petrol
+Under ₹10 Lakh
+
+Provide:
+
+[Clear All]
+
+---
+
+# 25. SORTING
+
+Provide:
+
+* Recommended
+* Price: Low → High
+* Price: High → Low
+* Newest
+* Lowest Kilometers
+* Year: Newest
+
+---
+
+# 26. CAR COMPARISON
+
+Consider adding a comparison feature.
+
+Allow users to select 2–3 cars.
+
+Compare:
+
+* Price
+* Year
+* Kilometers
+* Fuel
+* Transmission
+* Engine
+* Mileage
+* Owners
+* Features
+
+Keep this optional if it adds significant complexity.
+
+---
+
+# 27. RECENTLY VIEWED
+
+Store recently viewed cars.
+
+Example:
+
+"Recently Viewed"
+
+Display on the home page/dashboard.
+
+Limit to a reasonable number.
+
+Do not create unnecessary database records for anonymous users if local browser storage is sufficient.
+
+---
+
+# 28. LOCATION EXPERIENCE
+
+Allow users to select their location.
+
+Example:
+
+Bengaluru
+
+Mysuru
+
+Chennai
+
+Hyderabad
+
+etc.
+
+Search results should update based on location.
+
+Do not request precise location unless actually necessary.
+
+---
+
+# 29. MOBILE-FIRST EXPERIENCE
+
+The application should feel excellent on mobile.
+
+Prioritize:
+
+* Large car images
+* Easy filters
+* Sticky enquiry button
+* Easy navigation
+* Thumb-friendly buttons
+* Simple forms
+
+On mobile, consider a bottom action bar:
+
+[♡ Save] [Enquire Now]
+
+---
+
+# 30. NO PAYMENT SYSTEM
+
+Do NOT implement:
+
+* Payment gateway
+* Checkout
+* Credit card
+* UPI payment
+* Online booking payment
+
+If a customer wants a car:
+
+They submit an enquiry or inspection request.
+
+Admin handles the transaction offline.
+
+---
+
+# 31. USER DASHBOARD
+
+Keep it simple.
+
+Show:
+
+### My Profile
+
+Name
+
+Email
+
+Phone
+
+Location
+
+### My Saved Cars
+
+### My Enquiries
+
+### My Inspection Requests
+
+### Recently Viewed
+
+### Account Settings
+
+---
+
+# 32. ADMIN EMAIL NOTIFICATIONS
+
+The admin should receive emails for important events.
+
+At minimum:
+
+### New User Verification Request
+
+### New Car Enquiry
+
+### New Inspection Request
+
+### User Account Issue
+
+Email should contain useful information and a direct action link where appropriate.
+
+---
+
+# 33. USER EMAIL NOTIFICATIONS
+
+Users should receive emails for:
+
+* Account approved
+* Password creation
+* Password reset
+* Enquiry received
+* Inspection request confirmation
+* Inspection status changed
+* Important car status changes where appropriate
+
+Avoid excessive email notifications.
+
+---
+
+# 34. SPINNY-LIKE UX IMPROVEMENTS
+
+Take inspiration from professional used-car marketplaces.
+
+Focus on:
+
+### 1. Excellent photography
+
+The car image should be the main focus.
+
+### 2. Clean information hierarchy
+
+Users should understand:
+
+WHAT CAR?
+
+HOW MUCH?
+
+HOW OLD?
+
+HOW MANY KM?
+
+WHERE?
+
+FUEL?
+
+TRANSMISSION?
+
+within seconds.
+
+### 3. Strong trust signals
+
+Use verified information instead of marketing claims.
+
+### 4. Simple CTAs
+
+Do not overwhelm users with 10 buttons.
+
+Primary:
+
+"Enquire Now"
+
+Secondary:
+
+"Save"
+
+### 5. Fast search
+
+Users should reach relevant cars quickly.
+
+### 6. Clear pricing
+
+Avoid hidden or confusing pricing.
+
+### 7. Excellent empty states
+
+"No cars found"
+
+should provide:
+
+"Try removing some filters."
+
+### 8. Excellent loading states
+
+Use skeleton loaders rather than blank pages.
+
+### 9. Error recovery
+
+Always provide:
+
+Retry
+
+when appropriate.
+
+### 10. Consistent design system
+
+Use the same:
+
+Typography
+
+Spacing
+
+Buttons
+
+Cards
+
+Icons
+
+Colors
+
+throughout the application.
+
+---
+
+# 35. ACCOUNT SECURITY
+
+Implement:
+
+* Secure password hashing
+* Secure sessions/tokens
+* HTTPS in production
+* Secure cookies where applicable
+* CSRF protection where applicable
+* Rate limiting
+* Login attempt protection
+* Secure password reset
+* Expiring verification tokens
+* Single-use approval tokens
+* Backend authorization
+* Input validation
+* Output sanitization
+
+Never store:
+
+* Plain passwords
+* Password reset passwords
+* Admin credentials in frontend code
+* Secret API keys in frontend code
+
+---
+
+# 36. EMAIL APPROVAL SECURITY
+
+This is particularly important.
+
+The admin approval email must NOT allow anyone who obtains the email to perform unlimited approvals.
+
+Use:
+
+* Cryptographically secure random token
+* Expiration
+* Single-use token
+* Server-side validation
+* Audit logging
+
+After approval:
+
+TOKEN → USED
+
+It cannot be reused.
+
+---
+
+# 37. AUDIT LOG
+
+Maintain an admin audit log.
+
+Record events such as:
+
+* User approved
+* User rejected
+* User disabled
+* Car created
+* Car updated
+* Car deleted
+* Car marked sold
+* Enquiry status changed
+
+Store:
+
+* Action
+* Date/time
+* Entity
+* Previous state where useful
+* New state where useful
+
+Do not store passwords or sensitive secrets.
+
+---
+
+# 38. APPLICATION STATES
+
+Every important feature should support:
+
+LOADING
+
+SUCCESS
+
+EMPTY
+
+ERROR
+
+UNAUTHORIZED
+
+FORBIDDEN
+
+NOT FOUND
+
+Example:
+
+Car deleted:
+
+"Sorry, this car is no longer available."
+
+User not authorized:
+
+"You don't have permission to access this page."
+
+---
+
+# 39. PRODUCTION QUALITY
+
+Before considering the feature complete:
+
+Test:
+
+NEW USER
+↓
+ENTER EMAIL
+↓
+REQUEST VERIFICATION
+↓
+ADMIN EMAIL RECEIVED
+↓
+ADMIN APPROVES
+↓
+USER RECEIVES APPROVAL EMAIL
+↓
+CREATE PASSWORD
+↓
+LOGIN
+↓
+SEARCH CAR
+↓
+VIEW CAR
+↓
+SAVE CAR
+↓
+ENQUIRE
+↓
+ADMIN RECEIVES ENQUIRY
+↓
+ADMIN UPDATES STATUS
+↓
+USER SEES STATUS
+
+This entire journey must work without breaking.
+
+---
+
+# 40. IMPORTANT BUSINESS RULES
+
+Implement these rules strictly:
+
+1. Browsing does not require login.
+
+2. New users cannot create a password until their email verification request is approved.
+
+3. Only the admin can approve verification requests.
+
+4. Users cannot approve themselves.
+
+5. Users cannot access admin APIs.
+
+6. Users cannot modify another user's data.
+
+7. Users cannot modify cars unless they are admin.
+
+8. Passwords must never be stored in plain text.
+
+9. Verification links must expire.
+
+10. Approval links must be single-use.
+
+11. Password reset links must expire.
+
+12. Payment functionality must NOT be added.
+
+13. OTP functionality must NOT be added.
+
+---
+
+# 41. FINAL TESTING
+
+After implementing all functionality, perform a full end-to-end test.
+
+Test:
+
+### Anonymous User
+
+Browse → Search → Filter → Details
+
+### New User
+
+Email → Verification Request → Approval → Password Creation → Login
+
+### Existing User
+
+Login → Favorites → Enquiry → Profile
+
+### Admin
+
+Login → Approve User → Add Car → Edit Car → Manage Enquiry → Mark Car Sold
+
+### Invalid User
+
+Wrong password → Error
+
+Unverified email → Appropriate message
+
+Expired link → Error
+
+Used verification link → Error
+
+Unauthorized admin URL → 403/redirect
+
+Invalid API request → Validation error
+
+---
+
+# 42. FINAL DELIVERABLE
+
+After implementation, provide:
+
+## A. Features implemented
+
+## B. Files changed
+
+## C. Database changes
+
+## D. APIs added/modified
+
+## E. Email workflow
+
+## F. Security measures
+
+## G. UX improvements
+
+## H. Bugs discovered
+
+## I. Bugs fixed
+
+## J. Remaining issues
+
+## K. Production deployment requirements
+
+## L. Environment variables required
+
+Do NOT expose actual secrets.
+
+---
+
+# FINAL INSTRUCTION
+
+Do not just tell me how to implement this.
+
+Inspect my existing application.
+
+Understand its architecture.
+
+Run it.
+
+Implement the required authentication and marketplace improvements.
+
+Test the complete workflow.
+
+Fix errors.
+
+Run regression tests.
+
+Do not unnecessarily rewrite working parts of the application.
+
+The final application should feel like a **professional used-car marketplace inspired by Spinny's simplicity and trust-focused experience**, while remaining lightweight and appropriate for a single-admin business.
+
+The priority order is:
+
+1. Stability
+2. Security
+3. User experience
+4. Search/discovery
+5. Trust
+6. Performance
+7. Visual polish
+8. Additional features

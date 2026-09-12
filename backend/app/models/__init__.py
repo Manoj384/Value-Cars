@@ -1,5 +1,5 @@
 from app.core.database import Base
-from app.models.user import User, UserRole, ApprovedSellerEmail
+from app.models.user import User, UserRole, AccountStatus, UserVerificationToken, AuditLog, Favorite, ApprovedSellerEmail
 from app.models.car import Car, CarImage, CarFeature, FuelType, TransmissionType, OwnershipType, BodyType, CarStatus
 from app.models.inspection import Inspection, InspectionItem, InspectionStatus, CheckpointCondition
 from app.models.lead import Lead, LeadType, LeadStatus
@@ -11,6 +11,10 @@ __all__ = [
     "Base",
     "User",
     "UserRole",
+    "AccountStatus",
+    "UserVerificationToken",
+    "AuditLog",
+    "Favorite",
     "ApprovedSellerEmail",
     "Car",
     "CarImage",
@@ -37,3 +41,4 @@ __all__ = [
     "PaymentStatus",
     "UploadedMedia",
 ]
+
