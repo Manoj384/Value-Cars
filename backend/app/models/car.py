@@ -1,7 +1,8 @@
+from datetime import datetime
 import enum
 import uuid
 from typing import List, Optional
-from sqlalchemy import Boolean, Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base, GUID
 
@@ -91,6 +92,11 @@ class Car(Base):
         Enum(CarStatus), default=CarStatus.PUBLISHED, index=True, nullable=False
     )
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Sale & Lifecycle Tracking
+    sold_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    auto_delete_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    dont_delete: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Relationships
     images = relationship("CarImage", back_populates="car", cascade="all, delete-orphan", order_by="CarImage.display_order")

@@ -104,9 +104,9 @@
         <a href="tel:+918310166040" class="text-slate-200 hover:text-brand-400 font-bold flex items-center transition hidden md:flex">
           <i class="fa-solid fa-phone text-xs mr-1 text-brand-500"></i> 8310166040
         </a>
-        <!-- Superadmin Whitelist Management -->
-        <button onclick="openManageApprovedEmailsModal()" class="text-amber-400 hover:text-amber-300 font-bold flex items-center pl-3 border-l border-slate-700">
-          <i class="fa-solid fa-user-shield text-xs mr-1.5"></i> Authorized Emails
+        <!-- Superadmin Whitelist Management & Settings -->
+        <button onclick="openSettingsModal()" class="text-amber-400 hover:text-amber-300 font-bold flex items-center pl-3 border-l border-slate-700">
+          <i class="fa-solid fa-gear text-xs mr-1.5 text-amber-400"></i> Settings & Control
         </button>
       </div>
     </div>
@@ -152,7 +152,7 @@
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-xs"></i>
       </div>
 
-      <!-- Actions: Hub Location, Valuation Tool & Upload Car -->
+      <!-- Actions: Hub Location, Valuation Tool & Settings & Upload Car -->
       <div class="flex items-center space-x-2 sm:space-x-3">
         <a href="#hub-location" class="hidden sm:inline-flex items-center px-3.5 py-2 text-xs font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition">
           <i class="fa-solid fa-map-location-dot mr-1.5 text-brand-500"></i> Showroom Map
@@ -160,6 +160,11 @@
 
         <button onclick="openValuationModal()" class="hidden md:inline-flex items-center px-3.5 py-2 text-xs font-bold text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-xl transition">
           <i class="fa-solid fa-calculator mr-1.5"></i> Valuation Tool
+        </button>
+
+        <!-- Settings Button for Admin & Approved Users -->
+        <button onclick="openSettingsModal()" class="inline-flex items-center px-3.5 py-2 text-xs font-bold text-amber-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-amber-500/40 rounded-xl transition shadow-sm">
+          <i class="fa-solid fa-gear mr-1.5 text-amber-400"></i> Settings
         </button>
 
         <!-- Direct Car Upload Button (Supports Local Image & Video Files + URLs) -->
@@ -910,6 +915,225 @@
     </div>
   </div>
 
+  <!-- ADMIN & APPROVED USERS SETTINGS & INVENTORY CONTROL MODAL -->
+  <div id="adminSettingsModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-4xl w-full shadow-2xl p-5 sm:p-8 relative max-h-[90vh] flex flex-col">
+      <button onclick="closeSettingsModal()" class="absolute top-5 right-5 w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Header -->
+      <div class="mb-4">
+        <div class="flex items-center space-x-2">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+            <i class="fa-solid fa-gear mr-1.5"></i> Admin & Manager Control Panel
+          </span>
+          <span id="managerAuthStatusBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <i class="fa-solid fa-circle-check mr-1"></i> Authorized
+          </span>
+        </div>
+        <h3 class="text-2xl sm:text-3xl font-black text-white font-heading mt-2">Settings & Vehicle Lifecycle</h3>
+        <p class="text-xs text-slate-400">Modify details, mark cars as SOLD (with 2-day auto-delete), remove inventory, and manage authorized emails.</p>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex border-b border-slate-800 gap-4 mb-4 text-xs font-bold">
+        <button onclick="switchSettingsTab('inventory')" id="tabBtnInventory" class="pb-2.5 text-brand-400 border-b-2 border-brand-500 flex items-center">
+          <i class="fa-solid fa-car mr-1.5"></i> Inventory & Live Status
+        </button>
+        <button onclick="switchSettingsTab('emails')" id="tabBtnEmails" class="pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center">
+          <i class="fa-solid fa-user-shield mr-1.5"></i> Authorized Emails
+        </button>
+        <button onclick="switchSettingsTab('identity')" id="tabBtnIdentity" class="pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center">
+          <i class="fa-solid fa-id-badge mr-1.5"></i> Manager Email Settings
+        </button>
+      </div>
+
+      <!-- Tab Content 1: Inventory Table -->
+      <div id="settingsTabInventory" class="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+        <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-950/80 p-3 rounded-2xl border border-slate-800">
+          <div class="flex items-center space-x-2">
+            <input type="text" id="settingsSearchInput" oninput="filterSettingsCars()" placeholder="Search vehicle by make/model/reg..." class="bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-1.5 text-xs outline-none focus:border-brand-500 w-48 sm:w-64">
+            <select id="settingsStatusFilter" onchange="filterSettingsCars()" class="bg-slate-800 border border-slate-700 text-white rounded-xl px-2.5 py-1.5 text-xs outline-none">
+              <option value="ALL">All Statuses</option>
+              <option value="PUBLISHED">Published Only</option>
+              <option value="SOLD">Sold Only</option>
+            </select>
+          </div>
+          <button onclick="triggerAutoDeleteCleanup()" class="bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 font-bold text-xs px-3 py-1.5 rounded-xl border border-slate-700 flex items-center transition">
+            <i class="fa-solid fa-broom mr-1.5"></i> Run 2-Day Auto-Delete Cleanup
+          </button>
+        </div>
+
+        <div id="settingsCarsList" class="space-y-2.5">
+          <!-- Injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Tab Content 2: Authorized Emails -->
+      <div id="settingsTabEmails" class="hidden flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+        <form onsubmit="handleWhitelistEmail(event)" class="space-y-3 bg-slate-950/80 p-4 rounded-2xl border border-slate-800">
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider">Grant Manager / Listing Rights</h4>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Email Address *</label>
+            <input type="email" id="settingsNewAdminEmail" required placeholder="manager@valuecars.com" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500 font-semibold">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Role / Notes</label>
+            <input type="text" id="settingsNewAdminNotes" placeholder="Bangalore Hub Operations Manager" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500">
+          </div>
+          <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md">
+            <i class="fa-solid fa-user-plus mr-1.5"></i> Authorize Email
+          </button>
+        </form>
+
+        <div>
+          <h4 class="text-xs font-extrabold uppercase text-slate-400 tracking-wider mb-2">Authorized Managers</h4>
+          <div id="settingsAuthorizedEmailsList" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar"></div>
+        </div>
+      </div>
+
+      <!-- Tab Content 3: Manager Email Identity -->
+      <div id="settingsTabIdentity" class="hidden flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-1">
+        <div class="bg-slate-950/80 p-5 rounded-2xl border border-slate-800 space-y-3">
+          <h4 class="text-xs font-bold text-white uppercase tracking-wider">Active Manager Email</h4>
+          <p class="text-xs text-slate-400">All modifications, deletions, and sold status actions will be authenticated with this email address.</p>
+          <div class="flex gap-2">
+            <input type="email" id="activeManagerEmailInput" value="shankarmanoj654@gmail.com" class="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500 font-semibold">
+            <button onclick="saveActiveManagerEmail()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition">
+              Save Email
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MARK AS SOLD MODAL -->
+  <div id="markSoldModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-md w-full shadow-2xl p-6 sm:p-7 relative">
+      <button onclick="closeMarkSoldModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="mb-5">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 mb-2">
+          <i class="fa-solid fa-tag mr-1.5"></i> Vehicle Sale Completion
+        </span>
+        <h3 class="text-xl font-black text-white font-heading" id="markSoldCarTitle">Mark Car as Sold</h3>
+        <p class="text-xs text-slate-400 mt-0.5" id="markSoldCarSub">Configure inventory retention after sale.</p>
+      </div>
+
+      <form onsubmit="submitMarkCarAsSold(event)" class="space-y-4">
+        <input type="hidden" id="markSoldCarId">
+
+        <div class="space-y-2.5">
+          <!-- Option 1: Auto-delete after 2 days -->
+          <label class="flex items-start p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800 hover:border-brand-500/80 cursor-pointer transition">
+            <input type="radio" name="soldDeleteOption" value="AUTO_2_DAYS" checked class="mt-1 text-brand-600 focus:ring-0">
+            <div class="ml-3 text-xs">
+              <strong class="text-white font-bold block text-sm flex items-center">
+                <i class="fa-solid fa-clock text-amber-400 mr-1.5"></i> Delete After 2 Days (Recommended)
+              </strong>
+              <span class="text-slate-400 block mt-0.5">Shows as SOLD for 2 days to let visitors know it's no longer available, then automatically removes it permanently.</span>
+            </div>
+          </label>
+
+          <!-- Option 2: Keep permanently as SOLD -->
+          <label class="flex items-start p-3.5 bg-slate-950/80 rounded-2xl border border-slate-800 hover:border-brand-500/80 cursor-pointer transition">
+            <input type="radio" name="soldDeleteOption" value="KEEP_SOLD" class="mt-1 text-brand-600 focus:ring-0">
+            <div class="ml-3 text-xs">
+              <strong class="text-white font-bold block text-sm flex items-center">
+                <i class="fa-solid fa-lock text-emerald-400 mr-1.5"></i> Don't Delete (Keep as SOLD)
+              </strong>
+              <span class="text-slate-400 block mt-0.5">Listing remains in the catalog marked with a permanent SOLD badge.</span>
+            </div>
+          </label>
+        </div>
+
+        <button type="submit" id="markSoldSubmitBtn" class="w-full bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 text-white font-black py-3 rounded-xl text-xs sm:text-sm transition shadow-lg flex items-center justify-center">
+          <i class="fa-solid fa-check mr-2"></i> Confirm & Mark Vehicle as SOLD
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- EDIT / MODIFY CAR MODAL -->
+  <div id="editCarModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-2xl w-full shadow-2xl p-6 sm:p-8 relative max-h-[92vh] flex flex-col">
+      <button onclick="closeEditCarModal()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center font-bold transition">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="mb-4">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30 mb-1.5">
+          <i class="fa-solid fa-pen-to-square mr-1.5"></i> Modify Vehicle Details
+        </span>
+        <h3 class="text-xl sm:text-2xl font-black text-white font-heading">Edit Listing Information</h3>
+      </div>
+
+      <form onsubmit="submitEditCar(event)" class="space-y-4 overflow-y-auto custom-scrollbar pr-1 flex-1">
+        <input type="hidden" id="editCarId">
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Vehicle Title *</label>
+          <input type="text" id="editCarTitle" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500 font-semibold">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Price (₹) *</label>
+            <input type="number" id="editCarPrice" required class="w-full bg-slate-800 border border-slate-700 text-amber-400 font-bold rounded-xl p-2.5 text-xs outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Kilometers Driven *</label>
+            <input type="number" id="editCarKm" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Year *</label>
+            <input type="number" id="editCarYear" required class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Fuel Type</label>
+            <select id="editCarFuel" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs font-bold outline-none">
+              <option value="DIESEL">Diesel</option>
+              <option value="PETROL">Petrol</option>
+              <option value="CNG">CNG</option>
+              <option value="ELECTRIC">Electric</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Transmission</label>
+            <select id="editCarTrans" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs font-bold outline-none">
+              <option value="AUTOMATIC">Automatic</option>
+              <option value="MANUAL">Manual</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Status</label>
+            <select id="editCarStatus" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs font-bold outline-none">
+              <option value="PUBLISHED">Published (Active)</option>
+              <option value="SOLD">Sold</option>
+              <option value="RESERVED">Reserved</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Description</label>
+          <textarea id="editCarDescription" rows="3" class="w-full bg-slate-800 border border-slate-700 text-white rounded-xl p-2.5 text-xs outline-none focus:border-brand-500"></textarea>
+        </div>
+
+        <button type="submit" id="editCarSubmitBtn" class="w-full bg-gradient-to-r from-brand-600 to-rose-600 hover:from-brand-700 hover:to-rose-700 text-white font-black py-3 rounded-xl text-xs sm:text-sm transition shadow-lg flex items-center justify-center">
+          <i class="fa-solid fa-floppy-disk mr-2"></i> Save Vehicle Modifications
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- MANAGE APPROVED ADMIN / SELLER EMAILS MODAL -->
   <div id="manageApprovedEmailsModal" class="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 overflow-y-auto">
     <div class="bg-slate-900 border border-slate-800 text-white rounded-3xl max-w-xl w-full shadow-2xl p-6 sm:p-8 relative">
@@ -1105,17 +1329,21 @@
           const hubLoc = 'Bangalore Hub • Mallathahalli';
           const sellerPhone = car.seller_phone || PRIMARY_PHONE;
           const waMessage = encodeURIComponent(`Hi Value Cars! I am interested in this verified car: ${car.title} (Reg: ${car.reg_number}) listed for ${formatLakhs(car.price)} at Bangalore Hub. Can I get more details?`);
+          const isSold = car.status === 'SOLD';
+          const soldBadge = isSold ? (car.dont_delete ? `<span class="bg-rose-600 text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md shadow flex items-center"><i class="fa-solid fa-tag mr-1"></i> SOLD</span>` : `<span class="bg-amber-600 text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md shadow flex items-center"><i class="fa-solid fa-clock mr-1"></i> SOLD (2-Day Delete)</span>`) : '';
 
           return `
-            <div onclick="viewCarDetail('${car.id}')" class="bg-slate-900 rounded-3xl border border-slate-800/90 shadow-xl hover:border-brand-500/60 transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer">
+            <div onclick="viewCarDetail('${car.id}')" class="bg-slate-900 rounded-3xl border ${isSold ? 'border-amber-500/40 opacity-90' : 'border-slate-800/90'} shadow-xl hover:border-brand-500/60 transition-all duration-300 overflow-hidden flex flex-col justify-between group cursor-pointer">
               <!-- Cover Image & Badges -->
               <div>
                 <div class="relative h-48 bg-slate-950 overflow-hidden">
-                  <img src="${coverImg}" alt="${car.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-                  <div class="absolute top-3 left-3 flex gap-1.5">
-                    <span class="badge-certified text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md shadow flex items-center">
-                      <i class="fa-solid fa-circle-check mr-1"></i> Certified
-                    </span>
+                  <img src="${coverImg}" alt="${car.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 ${isSold ? 'grayscale-[40%]' : ''}">
+                  <div class="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                    ${isSold ? soldBadge : `
+                      <span class="badge-certified text-white text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md shadow flex items-center">
+                        <i class="fa-solid fa-circle-check mr-1"></i> Certified
+                      </span>
+                    `}
                     <span class="bg-slate-950/80 backdrop-blur-md text-amber-400 text-[10px] font-extrabold px-2.5 py-1 rounded-md shadow flex items-center border border-amber-500/30">
                       <i class="fa-solid fa-star mr-1"></i> ${car.inspection_score.toFixed(1)}/10
                     </span>
@@ -1164,6 +1392,24 @@
                       View Details <i class="fa-solid fa-chevron-right ml-1 text-[10px]"></i>
                     </span>
                   </div>
+
+                  <!-- Quick Manager Control Bar on Card -->
+                  <div class="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs" onclick="event.stopPropagation()">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase flex items-center">
+                      <i class="fa-solid fa-sliders text-amber-400 mr-1"></i> Manage:
+                    </span>
+                    <div class="flex items-center space-x-1.5">
+                      <button onclick="openEditCarModalById('${car.id}')" class="bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold px-2 py-1 rounded-lg text-[10px] border border-slate-700 flex items-center transition" title="Modify Car Details">
+                        <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+                      </button>
+                      <button onclick="openMarkSoldModalForCar('${car.id}', '${car.title.replace(/'/g, "\\'")}')" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-2 py-1 rounded-lg text-[10px] border border-slate-700 flex items-center transition" title="Mark Vehicle as Sold">
+                        <i class="fa-solid fa-tag mr-1"></i> Sold
+                      </button>
+                      <button onclick="deleteCarQuick('${car.id}', '${car.title.replace(/'/g, "\\'")}')" class="bg-slate-800 hover:bg-rose-900/40 text-rose-400 font-bold px-2 py-1 rounded-lg text-[10px] border border-slate-700 flex items-center transition" title="Delete Vehicle">
+                        <i class="fa-solid fa-trash mr-1"></i> Delete
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -1207,6 +1453,7 @@
         const hubLoc = 'Near Bangalore University, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056';
         const sellerPhone = car.seller_phone || PRIMARY_PHONE;
         const waMessage = encodeURIComponent(`Hello Value Cars! I want to inquire about: ${car.title} (${car.reg_number}) at Bangalore Hub priced at ${formatLakhs(car.price)}.`);
+        const isSold = car.status === 'SOLD';
 
         // Find if any image URL is a video or if car has video
         const videoItem = car.images && car.images.find(img => img.tag === 'VIDEO' || img.image_url.endsWith('.mp4') || img.image_url.includes('youtube') || img.image_url.includes('/uploads/video_'));
@@ -1270,6 +1517,27 @@
                   </div>
                 </div>
               ` : ''}
+
+              <!-- Admin & Approved Manager Actions Panel in Modal -->
+              <div class="bg-slate-950 p-4 rounded-2xl border border-amber-500/30 space-y-2.5 mt-4">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-black text-amber-400 uppercase tracking-wider flex items-center">
+                    <i class="fa-solid fa-user-shield mr-1.5"></i> Admin & Manager Controls
+                  </span>
+                  ${isSold ? `<span class="text-[10px] bg-rose-600/30 text-rose-300 font-black px-2 py-0.5 rounded border border-rose-500/40">STATUS: SOLD</span>` : ''}
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                  <button onclick="openEditCarModalById('${car.id}'); closeCarModal();" class="bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold py-2 rounded-xl text-xs flex items-center justify-center border border-slate-700 transition">
+                    <i class="fa-solid fa-pen-to-square mr-1.5"></i> Edit
+                  </button>
+                  <button onclick="openMarkSoldModalForCar('${car.id}', '${car.title.replace(/'/g, "\\'")}'); closeCarModal();" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold py-2 rounded-xl text-xs flex items-center justify-center border border-slate-700 transition">
+                    <i class="fa-solid fa-tag mr-1.5"></i> Mark Sold
+                  </button>
+                  <button onclick="deleteCarQuick('${car.id}', '${car.title.replace(/'/g, "\\'")}'); closeCarModal();" class="bg-slate-800 hover:bg-rose-900/40 text-rose-400 font-bold py-2 rounded-xl text-xs flex items-center justify-center border border-slate-700 transition">
+                    <i class="fa-solid fa-trash mr-1.5"></i> Delete
+                  </button>
+                </div>
+              </div>
             </div>
 
             <!-- Right: Price, Scorecard, WhatsApp, Calls & Actions (5 cols) -->
@@ -1578,11 +1846,356 @@
       }
     }
 
+    // Active Manager Email Management
+    function getActiveManagerEmail() {
+      return localStorage.getItem('adminManagerEmail') || 'shankarmanoj654@gmail.com';
+    }
+
+    function saveActiveManagerEmail() {
+      const input = document.getElementById('activeManagerEmailInput');
+      if (input && input.value.trim()) {
+        const email = input.value.trim().toLowerCase();
+        localStorage.setItem('adminManagerEmail', email);
+        alert(`✅ Active Manager Email set to: ${email}`);
+        checkManagerAuthBadge();
+      }
+    }
+
+    async function checkManagerAuthBadge() {
+      const email = getActiveManagerEmail();
+      const badge = document.getElementById('managerAuthStatusBadge');
+      if (!badge) return;
+      try {
+        const res = await fetch(`${API_BASE}/cars/check-seller-email?email=${encodeURIComponent(email)}`);
+        const data = await res.json();
+        if (data.is_approved) {
+          badge.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Authorized (${email})`;
+          badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        } else {
+          badge.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> Unverified (${email})`;
+          badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        }
+      } catch (e) {
+        badge.innerText = email;
+      }
+    }
+
+    // Settings Modal Toggle & Tabs
+    let settingsCarsCache = [];
+
+    function openSettingsModal() {
+      const modal = document.getElementById('adminSettingsModal');
+      const emailInput = document.getElementById('activeManagerEmailInput');
+      if (emailInput) emailInput.value = getActiveManagerEmail();
+      checkManagerAuthBadge();
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      switchSettingsTab('inventory');
+      loadSettingsInventory();
+    }
+
+    function closeSettingsModal() {
+      const modal = document.getElementById('adminSettingsModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function switchSettingsTab(tabName) {
+      const tabInv = document.getElementById('settingsTabInventory');
+      const tabEmails = document.getElementById('settingsTabEmails');
+      const tabId = document.getElementById('settingsTabIdentity');
+      const btnInv = document.getElementById('tabBtnInventory');
+      const btnEmails = document.getElementById('tabBtnEmails');
+      const btnId = document.getElementById('tabBtnIdentity');
+
+      tabInv.classList.add('hidden');
+      tabEmails.classList.add('hidden');
+      tabId.classList.add('hidden');
+      btnInv.className = "pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center";
+      btnEmails.className = "pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center";
+      btnId.className = "pb-2.5 text-slate-400 hover:text-white border-b-2 border-transparent flex items-center";
+
+      if (tabName === 'inventory') {
+        tabInv.classList.remove('hidden');
+        btnInv.className = "pb-2.5 text-brand-400 border-b-2 border-brand-500 flex items-center";
+        loadSettingsInventory();
+      } else if (tabName === 'emails') {
+        tabEmails.classList.remove('hidden');
+        btnEmails.className = "pb-2.5 text-brand-400 border-b-2 border-brand-500 flex items-center";
+        loadAuthorizedEmailsSettings();
+      } else if (tabName === 'identity') {
+        tabId.classList.remove('hidden');
+        btnId.className = "pb-2.5 text-brand-400 border-b-2 border-brand-500 flex items-center";
+      }
+    }
+
+    async function loadSettingsInventory() {
+      const container = document.getElementById('settingsCarsList');
+      container.innerHTML = `<div class="py-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-xl text-brand-500 mb-2"></i><p class="text-xs">Loading all vehicles...</p></div>`;
+      try {
+        const res = await fetch(`${API_BASE}/cars?page_size=50`);
+        const data = await res.json();
+        settingsCarsCache = data.items || [];
+        renderSettingsCarsList(settingsCarsCache);
+      } catch (err) {
+        container.innerHTML = `<p class="text-xs text-rose-400 text-center py-4">Failed to load inventory.</p>`;
+      }
+    }
+
+    function renderSettingsCarsList(cars) {
+      const container = document.getElementById('settingsCarsList');
+      if (!cars || cars.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No cars found matching criteria.</p>`;
+        return;
+      }
+      container.innerHTML = cars.map(car => {
+        const isSold = car.status === 'SOLD';
+        const coverImg = car.images && car.images.length > 0 ? car.images[0].image_url : 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341';
+        let statusBadge = '';
+        if (isSold) {
+          statusBadge = car.dont_delete 
+            ? `<span class="bg-rose-600/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold px-2 py-0.5 rounded">SOLD (Permanent)</span>`
+            : `<span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded">SOLD (Deletes in 2 Days)</span>`;
+        } else {
+          statusBadge = `<span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded">PUBLISHED</span>`;
+        }
+
+        return `
+          <div class="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-700 transition">
+            <div class="flex items-center space-x-3">
+              <img src="${coverImg}" class="w-14 h-12 object-cover rounded-xl border border-slate-800 shrink-0">
+              <div>
+                <div class="flex items-center gap-2">
+                  <strong class="text-white font-black text-xs font-heading">${car.title}</strong>
+                  ${statusBadge}
+                </div>
+                <div class="text-[11px] text-slate-400 font-semibold mt-0.5 flex flex-wrap gap-2">
+                  <span>Reg: <strong class="text-slate-200 uppercase">${car.reg_number}</strong></span>
+                  <span>•</span>
+                  <span>${formatLakhs(car.price)}</span>
+                  <span>•</span>
+                  <span>${(car.kilometers_driven).toLocaleString('en-IN')} KM</span>
+                  <span>•</span>
+                  <span>${car.fuel_type}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Management Buttons -->
+            <div class="flex items-center space-x-1.5 self-end sm:self-center">
+              <button onclick="openEditCarModalById('${car.id}')" class="bg-slate-800 hover:bg-slate-700 text-sky-400 font-bold px-3 py-1.5 rounded-xl text-xs border border-slate-700 flex items-center transition">
+                <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
+              </button>
+              <button onclick="openMarkSoldModalForCar('${car.id}', '${car.title.replace(/'/g, "\\'")}')" class="bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold px-3 py-1.5 rounded-xl text-xs border border-slate-700 flex items-center transition">
+                <i class="fa-solid fa-tag mr-1"></i> Sold
+              </button>
+              <button onclick="deleteCarQuick('${car.id}', '${car.title.replace(/'/g, "\\'")}')" class="bg-slate-800 hover:bg-rose-900/50 text-rose-400 font-bold px-3 py-1.5 rounded-xl text-xs border border-slate-700 flex items-center transition">
+                <i class="fa-solid fa-trash mr-1"></i> Delete
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterSettingsCars() {
+      const q = (document.getElementById('settingsSearchInput')?.value || '').toLowerCase().trim();
+      const statusFilter = document.getElementById('settingsStatusFilter')?.value || 'ALL';
+
+      let filtered = settingsCarsCache.filter(car => {
+        const matchesQuery = !q || car.title.toLowerCase().includes(q) || car.make.toLowerCase().includes(q) || car.model.toLowerCase().includes(q) || car.reg_number.toLowerCase().includes(q);
+        const matchesStatus = statusFilter === 'ALL' || car.status === statusFilter;
+        return matchesQuery && matchesStatus;
+      });
+      renderSettingsCarsList(filtered);
+    }
+
+    async function triggerAutoDeleteCleanup() {
+      try {
+        const res = await fetch(`${API_BASE}/cars/manage/cleanup-expired`, { method: 'POST' });
+        const data = await res.json();
+        alert(`🧹 Auto-Delete Cleanup Complete!\n${data.message || `${data.deleted_count} expired car(s) removed.`}`);
+        loadSettingsInventory();
+        loadCars();
+      } catch (err) {
+        alert('Failed to run cleanup');
+      }
+    }
+
+    // Mark as Sold Modal Handlers
+    function openMarkSoldModalForCar(carId, carTitle) {
+      document.getElementById('markSoldCarId').value = carId;
+      document.getElementById('markSoldCarTitle').innerText = `Mark as Sold: ${carTitle}`;
+      document.getElementById('markSoldModal').classList.remove('hidden');
+      document.getElementById('markSoldModal').classList.add('flex');
+    }
+
+    function closeMarkSoldModal() {
+      document.getElementById('markSoldModal').classList.add('hidden');
+      document.getElementById('markSoldModal').classList.remove('flex');
+    }
+
+    async function submitMarkCarAsSold(e) {
+      e.preventDefault();
+      const carId = document.getElementById('markSoldCarId').value;
+      const option = document.querySelector('input[name="soldDeleteOption"]:checked')?.value;
+      const dontDelete = option === 'KEEP_SOLD';
+      const managerEmail = getActiveManagerEmail();
+      const submitBtn = document.getElementById('markSoldSubmitBtn');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Updating status...`;
+      submitBtn.disabled = true;
+
+      try {
+        const res = await fetch(`${API_BASE}/cars/manage/${carId}/mark-sold`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            manager_email: managerEmail,
+            auto_delete_after_days: dontDelete ? null : 2,
+            dont_delete: dontDelete,
+            notes: `Marked as sold by ${managerEmail}`
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Failed to update sold status');
+        }
+        alert(data.message || '🎉 Car marked as SOLD!');
+        closeMarkSoldModal();
+        loadSettingsInventory();
+        loadCars();
+      } catch (err) {
+        alert('❌ Error: ' + err.message);
+      } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Edit Car Modal Handlers
+    async function openEditCarModalById(carId) {
+      try {
+        const res = await fetch(`${API_BASE}/cars/${carId}`);
+        const car = await res.json();
+        document.getElementById('editCarId').value = car.id;
+        document.getElementById('editCarTitle').value = car.title;
+        document.getElementById('editCarPrice').value = car.price;
+        document.getElementById('editCarKm').value = car.kilometers_driven;
+        document.getElementById('editCarYear').value = car.year;
+        document.getElementById('editCarFuel').value = car.fuel_type;
+        document.getElementById('editCarTrans').value = car.transmission;
+        document.getElementById('editCarStatus').value = car.status;
+        document.getElementById('editCarDescription').value = car.description || '';
+
+        document.getElementById('editCarModal').classList.remove('hidden');
+        document.getElementById('editCarModal').classList.add('flex');
+      } catch (err) {
+        alert('Failed to fetch car details for editing');
+      }
+    }
+
+    function closeEditCarModal() {
+      document.getElementById('editCarModal').classList.add('hidden');
+      document.getElementById('editCarModal').classList.remove('flex');
+    }
+
+    async function submitEditCar(e) {
+      e.preventDefault();
+      const carId = document.getElementById('editCarId').value;
+      const managerEmail = getActiveManagerEmail();
+      const submitBtn = document.getElementById('editCarSubmitBtn');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Saving changes...`;
+      submitBtn.disabled = true;
+
+      const payload = {
+        manager_email: managerEmail,
+        title: document.getElementById('editCarTitle').value,
+        price: parseFloat(document.getElementById('editCarPrice').value),
+        kilometers_driven: parseInt(document.getElementById('editCarKm').value),
+        year: parseInt(document.getElementById('editCarYear').value),
+        fuel_type: document.getElementById('editCarFuel').value,
+        transmission: document.getElementById('editCarTrans').value,
+        status: document.getElementById('editCarStatus').value,
+        description: document.getElementById('editCarDescription').value
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/cars/manage/${carId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Failed to update vehicle');
+        }
+        alert(`✅ Vehicle "${data.title}" updated successfully!`);
+        closeEditCarModal();
+        loadSettingsInventory();
+        loadCars();
+      } catch (err) {
+        alert('❌ Update failed: ' + err.message);
+      } finally {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Delete Car Quick Handler
+    async function deleteCarQuick(carId, carTitle) {
+      const email = getActiveManagerEmail();
+      const confirmed = confirm(`⚠️ Are you sure you want to PERMANENTLY DELETE:\n"${carTitle}"?\n\nThis will remove the car and its images from the live server.`);
+      if (!confirmed) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/cars/manage/${carId}?manager_email=${encodeURIComponent(email)}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Failed to delete vehicle');
+        }
+        alert(`🗑️ ${data.message || 'Vehicle deleted successfully!'}`);
+        loadSettingsInventory();
+        loadCars();
+      } catch (err) {
+        alert('❌ Deletion failed: ' + err.message);
+      }
+    }
+
+    async function loadAuthorizedEmailsSettings() {
+      const container = document.getElementById('settingsAuthorizedEmailsList');
+      container.innerHTML = `<div class="py-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-sm"></i></div>`;
+      try {
+        const res = await fetch(`${API_BASE}/cars/admin/approved-seller-emails`);
+        const list = await res.json();
+        if (!list || list.length === 0) {
+          container.innerHTML = `<p class="text-xs text-slate-400">No authorized emails yet.</p>`;
+          return;
+        }
+        container.innerHTML = list.map(item => `
+          <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs flex justify-between items-center">
+            <div>
+              <strong class="text-white block font-bold">${item.email}</strong>
+              <span class="text-[10px] text-slate-400">${item.notes || 'Authorized Manager'}</span>
+            </div>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2 py-0.5 rounded-md border border-emerald-500/30">
+              <i class="fa-solid fa-check text-[9px] mr-1"></i> Authorized
+            </span>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = `<p class="text-xs text-red-400">Failed to load emails.</p>`;
+      }
+    }
+
     // Superadmin: Whitelist / Authorize an Email
     async function handleWhitelistEmail(e) {
       e.preventDefault();
-      const email = document.getElementById('newAdminEmail').value.trim();
-      const notes = document.getElementById('newAdminNotes').value.trim();
+      const email = (document.getElementById('newAdminEmail')?.value || document.getElementById('settingsNewAdminEmail')?.value || '').trim();
+      const notes = (document.getElementById('newAdminNotes')?.value || document.getElementById('settingsNewAdminNotes')?.value || '').trim();
 
       try {
         const res = await fetch(`${API_BASE}/cars/admin/approve-seller-email`, {
@@ -1591,11 +2204,13 @@
           body: JSON.stringify({ email: email, notes: notes || "Authorized Admin/Manager" })
         });
         if (res.ok) {
-          alert(`✅ Email "${email}" has been Approved & Whitelisted!
-They can now add cars and directly publish to the live server.`);
-          document.getElementById('newAdminEmail').value = '';
-          document.getElementById('newAdminNotes').value = '';
+          alert(`✅ Email "${email}" has been Approved & Whitelisted!\nThey can now modify, mark sold, delete, and add cars directly.`);
+          if (document.getElementById('newAdminEmail')) document.getElementById('newAdminEmail').value = '';
+          if (document.getElementById('newAdminNotes')) document.getElementById('newAdminNotes').value = '';
+          if (document.getElementById('settingsNewAdminEmail')) document.getElementById('settingsNewAdminEmail').value = '';
+          if (document.getElementById('settingsNewAdminNotes')) document.getElementById('settingsNewAdminNotes').value = '';
           loadAuthorizedEmails();
+          loadAuthorizedEmailsSettings();
         }
       } catch (err) {
         alert('Failed to authorize email');
@@ -1605,6 +2220,7 @@ They can now add cars and directly publish to the live server.`);
     // Load Authorized Emails List
     async function loadAuthorizedEmails() {
       const container = document.getElementById('authorizedEmailsList');
+      if (!container) return;
       container.innerHTML = `<div class="py-4 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-sm"></i></div>`;
       try {
         const res = await fetch(`${API_BASE}/cars/admin/approved-seller-emails`);

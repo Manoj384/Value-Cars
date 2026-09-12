@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import math
 import uuid
 from typing import Optional, Tuple, List
@@ -11,8 +12,28 @@ from app.schemas.car import CarCreate, CarUpdate, CarFilterParams
 
 class CarService:
     @staticmethod
+    async def cleanup_expired_sold_cars(db: AsyncSession) -> int:
+        """Automatically delete cars marked as SOLD whose 2-day auto-delete period has elapsed."""
+        now = datetime.now(timezone.utc)
+        stmt = select(Car).where(
+            Car.status == CarStatus.SOLD,
+            Car.dont_delete == False,
+            Car.auto_delete_at.is_not(None),
+            Car.auto_delete_at <= now,
+        )
+        result = await db.execute(stmt)
+        expired_cars = list(result.scalars().all())
+        deleted_count = len(expired_cars)
+        for car in expired_cars:
+            await db.delete(car)
+        if deleted_count > 0:
+            await db.commit()
+        return deleted_count
+
+    @staticmethod
     async def get_car_by_id(db: AsyncSession, car_id: uuid.UUID) -> Optional[Car]:
         """Fetch single car with loaded images and features."""
+        await CarService.cleanup_expired_sold_cars(db)
         query = (
             select(Car)
             .where(Car.id == car_id)
@@ -27,6 +48,8 @@ class CarService:
         filters: CarFilterParams,
     ) -> Tuple[List[Car], int, int]:
         """Query cars with dynamic multi-criteria filtering and pagination."""
+        await CarService.cleanup_expired_sold_cars(db)
+
         query = select(Car).options(
             selectinload(Car.images),
             selectinload(Car.features),
@@ -61,8 +84,12 @@ class CarService:
             query = query.where(Car.seller_email.ilike(f"%{filters.seller_email.strip()}%"))
 
         # Status filtering
-        target_status = filters.status or CarStatus.PUBLISHED
-        query = query.where(Car.status == target_status)
+        if filters.status:
+            query = query.where(Car.status == filters.status)
+            count_condition = Car.status == filters.status
+        else:
+            query = query.where(Car.status.in_([CarStatus.PUBLISHED, CarStatus.SOLD, CarStatus.RESERVED]))
+            count_condition = Car.status.in_([CarStatus.PUBLISHED, CarStatus.SOLD, CarStatus.RESERVED])
 
         # Sorting
         if filters.sort_by == "price_asc":
@@ -79,7 +106,7 @@ class CarService:
             query = query.order_by(desc(Car.created_at))
 
         # Total count query
-        count_query = select(func.count(Car.id)).where(Car.status == target_status)
+        count_query = select(func.count(Car.id)).where(count_condition)
         if filters.make:
             count_query = count_query.where(Car.make.ilike(f"%{filters.make.strip()}%"))
         if filters.city:

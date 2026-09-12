@@ -64,6 +64,11 @@ class CarBase(BaseModel):
     status: CarStatus = CarStatus.PUBLISHED
     description: Optional[str] = None
 
+    # Sale & Lifecycle Tracking
+    sold_at: Optional[datetime] = None
+    auto_delete_at: Optional[datetime] = None
+    dont_delete: bool = False
+
     # Seller & Approval Tracking
     seller_email: Optional[str] = None
     seller_phone: Optional[str] = None
@@ -85,6 +90,35 @@ class CarUpdate(BaseModel):
     description: Optional[str] = None
     hub_location: Optional[str] = None
     is_verified_seller: Optional[bool] = None
+    sold_at: Optional[datetime] = None
+    auto_delete_at: Optional[datetime] = None
+    dont_delete: Optional[bool] = None
+
+
+class CarModifyRequest(BaseModel):
+    manager_email: Optional[str] = None
+    title: Optional[str] = None
+    price: Optional[float] = None
+    kilometers_driven: Optional[int] = None
+    year: Optional[int] = None
+    fuel_type: Optional[FuelType] = None
+    transmission: Optional[TransmissionType] = None
+    body_type: Optional[BodyType] = None
+    color: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[CarStatus] = None
+    inspection_score: Optional[float] = None
+
+
+class MarkCarSoldRequest(BaseModel):
+    manager_email: Optional[str] = None
+    auto_delete_after_days: Optional[int] = 2
+    dont_delete: bool = False
+    notes: Optional[str] = None
+
+
+class CarDeleteRequest(BaseModel):
+    manager_email: Optional[str] = None
 
 
 class CarResponse(CarBase):
