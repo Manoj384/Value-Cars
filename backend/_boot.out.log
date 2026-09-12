@@ -423,3 +423,9 @@ INFO:     127.0.0.1:50071 - "GET /v1/models HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:50072 - "POST /v1/chat/completions HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:58458 - "GET /v1/models HTTP/1.1" 404 Not Found
 INFO:     127.0.0.1:58459 - "POST /v1/chat/completions HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53329 - "GET /v1/models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:53333 - "POST /v1/chat/completions HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58596 - "GET /v1/models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58597 - "POST /v1/chat/completions HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51551 - "GET /v1/models HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51552 - "POST /v1/chat/completions HTTP/1.1" 404 Not Found
