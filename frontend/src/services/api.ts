@@ -558,6 +558,83 @@ function mockGetCars(params: CarFilterOptions = {}): PaginatedCars {
   };
 }
 
+export interface CustomerProfile {
+  id: string;
+  email: string;
+  full_name: string;
+  phone_number?: string | null;
+  city?: string | null;
+  role: string;
+  account_status: string;
+  is_active: boolean;
+  is_verified: boolean;
+  password_created: boolean;
+  created_at: string;
+}
+
+export interface AuthTokenResponse {
+  access_token: string;
+  token_type: string;
+  user: CustomerProfile;
+}
+
+export interface CheckEmailResult {
+  status:
+    | 'NEW'
+    | 'PENDING'
+    | 'APPROVED_PENDING_PASSWORD'
+    | 'ACTIVE'
+    | 'DISABLED'
+    | 'REJECTED';
+  message: string;
+  email: string;
+}
+
+export interface RequestVerificationPayload {
+  email: string;
+  full_name?: string;
+  phone_number?: string;
+  city?: string;
+  notes?: string;
+}
+
+// --- Customer account session persisted in localStorage so it survives reloads ---
+const CUSTOMER_TOKEN_KEY = 'valuecars_customer_token';
+const CUSTOMER_USER_KEY = 'valuecars_customer_user';
+
+export function setCustomerToken(token: string): void {
+  if (typeof window !== 'undefined') localStorage.setItem(CUSTOMER_TOKEN_KEY, token);
+}
+
+export function getCustomerToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(CUSTOMER_TOKEN_KEY);
+}
+
+export function setCustomerUser(user: CustomerProfile): void {
+  if (typeof window !== 'undefined') localStorage.setItem(CUSTOMER_USER_KEY, JSON.stringify(user));
+}
+
+export function getCustomerUser(): CustomerProfile | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(CUSTOMER_USER_KEY);
+    return raw ? (JSON.parse(raw) as CustomerProfile) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearCustomerSession(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(CUSTOMER_TOKEN_KEY);
+  localStorage.removeItem(CUSTOMER_USER_KEY);
+}
+
+export function isCustomerAuthed(): boolean {
+  return !!getCustomerToken();
+}
+
 export const apiClient = {
   // Cars & Catalog
   async getCars(params: CarFilterOptions = {}): Promise<PaginatedCars> {
@@ -950,5 +1027,122 @@ export const apiClient = {
       const data = await res.json().catch(() => ({}));
       throw new Error(data?.detail || 'Unable to delete listing');
     }
+  },
+// --- Customer account (email-verification workflow) ---
+  customerHeaders(): Record<string, string> {
+    const token = getCustomerToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  },
+
+  async checkEmail(email: string): Promise<CheckEmailResult> {
+    const res = await fetch(`${API_BASE_URL}/auth/check-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Unable to check email');
+    return data as CheckEmailResult;
+  },
+
+  async requestVerification(payload: RequestVerificationPayload) {
+    const res = await fetch(`${API_BASE_URL}/auth/request-verification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Unable to request verification');
+    return data;
+  },
+
+  async customerLogin(email: string, password: string): Promise<AuthTokenResponse> {
+    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Login failed');
+    setCustomerToken(data.access_token);
+    setCustomerUser(data.user);
+    return data as AuthTokenResponse;
+  },
+
+  async getCustomerMe(token = getCustomerToken()): Promise<CustomerProfile> {
+    const res = await fetch(`${API_BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Unable to load profile');
+    return (await res.json()) as CustomerProfile;
+  },
+
+  async createPassword(token: string, password: string): Promise<AuthTokenResponse> {
+    const res = await fetch(`${API_BASE_URL}/auth/create-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password, confirm_password: password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Unable to set password');
+    setCustomerToken(data.access_token);
+    setCustomerUser(data.user);
+    return data as AuthTokenResponse;
+  },
+
+  async forgotPassword(email: string): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Unable to send reset link');
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<AuthTokenResponse> {
+    const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, new_password: newPassword, confirm_password: newPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Unable to reset password');
+    setCustomerToken(data.access_token);
+    setCustomerUser(data.user);
+    return data as AuthTokenResponse;
+  },
+
+  logoutCustomer(): void {
+    clearCustomerSession();
+  },
+
+  async toggleFavorite(carId: string): Promise<{ is_favorited: boolean }> {
+    const token = getCustomerToken();
+    if (!token) throw new Error('Please sign in to save cars');
+    const res = await fetch(`${API_BASE_URL}/favorites/${carId}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Unable to save car');
+    recordSuccess(res.ok);
+    return data;
+  },
+
+  async listFavorites(): Promise<Car[]> {
+    const token = getCustomerToken();
+    if (!token) return [];
+    const res = await fetch(`${API_BASE_URL}/favorites`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    recordSuccess(res.ok);
+    return (await res.json()) as Car[];
   },
 };

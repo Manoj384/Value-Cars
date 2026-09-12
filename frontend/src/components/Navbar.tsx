@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, RotateCcw, Truck, PlusCircle, LayoutDashboard, Search, MapPin, Phone, Menu, X, UserCircle2, MessageCircle } from 'lucide-react';
+import { ShieldCheck, RotateCcw, Truck, PlusCircle, LayoutDashboard, Search, MapPin, Phone, Menu, X, UserCircle2, MessageCircle, Heart, LogOut } from 'lucide-react';
+import { useAuth } from '../context/auth';
 
 interface NavbarProps {
   onCityChange?: (city: string) => void;
@@ -13,6 +14,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, selectedCity = '' }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, displayName, openAuth, logout } = useAuth();
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -20,6 +22,38 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
       onSearchChange(e.target.value);
     }
   };
+
+  const authControl = user ? (
+    <div className="flex items-center space-x-3">
+      <Link
+        href="/saved"
+        onClick={() => setMobileOpen(false)}
+        className="relative inline-flex items-center px-3 py-2 text-sm font-bold text-slate-700 hover:text-rose-600 transition"
+      >
+        <Heart className="w-4 h-4 mr-1.5 text-rose-500" /> Saved
+      </Link>
+      <button
+        onClick={logout}
+        className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-rose-600 transition"
+        title="Sign out"
+      >
+        <LogOut className="w-4 h-4" /> Sign out
+      </button>
+      <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-full pl-1 pr-3 py-1" title={user.email}>
+        <span className="w-7 h-7 rounded-full bg-rose-600 text-white text-xs font-black flex items-center justify-center">
+          {(displayName || 'U').slice(0, 1).toUpperCase()}
+        </span>
+        <span className="text-xs font-bold text-slate-700 max-w-[80px] truncate">{displayName}</span>
+      </div>
+    </div>
+  ) : (
+    <button
+      onClick={() => openAuth()}
+      className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 transition"
+    >
+      <UserCircle2 className="w-4 h-4 mr-2 text-amber-400" /> Login / Sign Up
+    </button>
+  );
 
   const navLinks = (
     <>
@@ -145,6 +179,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
         {/* Action Links (desktop) */}
         <div className="hidden md:flex items-center space-x-3">
           {navLinks}
+          {authControl}
           <Link
             href="/sell"
             className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 shadow-md transition transform active:scale-95"
@@ -179,23 +214,59 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
           </div>
           {navLinks}
-          <div className="pt-2 border-t border-slate-100 text-xs text-slate-600 space-y-2">
-            <div className="flex items-center justify-between">
-              <span>Hotline 1:</span>
-              <a href="tel:8050966025" className="font-bold text-slate-900">+91 80509 66025</a>
+          <div className="pt-2 border-t border-slate-100 space-y-3">
+            {user ? (
+              <div className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-rose-600 text-white text-sm font-black flex items-center justify-center">
+                    {(displayName || 'U').slice(0, 1).toUpperCase()}
+                  </span>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{displayName}</p>
+                    <Link
+                      href="/saved"
+                      onClick={() => setMobileOpen(false)}
+                      className="text-xs font-bold text-rose-600 flex items-center gap-1"
+                    >
+                      <Heart className="w-3 h-3" /> Saved cars
+                    </Link>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { logout(); setMobileOpen(false); }}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-rose-600"
+                >
+                  <LogOut className="w-4 h-4" /> Sign out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => { openAuth(); setMobileOpen(false); }}
+                className="w-full text-center px-4 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 transition"
+              >
+                Login / Sign Up
+              </button>
+            )}
+
+            <div className="text-xs text-slate-600 space-y-2">
+              <div className="flex items-center justify-between">
+                <span>Hotline 1:</span>
+                <a href="tel:8050966025" className="font-bold text-slate-900">+91 80509 66025</a>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Hotline 2:</span>
+                <a href="tel:8310166040" className="font-bold text-slate-900">+91 83101 66040</a>
+              </div>
             </div>
-            <div className="flex items-center justify-between">
-              <span>Hotline 2:</span>
-              <a href="tel:8310166040" className="font-bold text-slate-900">+91 83101 66040</a>
-            </div>
+
+            <Link
+              href="/sell"
+              onClick={() => setMobileOpen(false)}
+              className="block text-center px-4 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 transition"
+            >
+              + List Your Car
+            </Link>
           </div>
-          <Link
-            href="/sell"
-            onClick={() => setMobileOpen(false)}
-            className="block mt-2 text-center px-4 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 transition"
-          >
-            + List Your Car
-          </Link>
         </div>
       )}
     </header>

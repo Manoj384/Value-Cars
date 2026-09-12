@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { TestDriveModal } from './TestDriveModal';
 import { ReserveModal } from './ReserveModal';
@@ -9,7 +9,9 @@ import { Car, InspectionReport } from '../types/car';
 import { track } from '../lib/activity';
 import { reportError } from '../lib/errorReporting';
 import { addRecentCar } from '../lib/uiState';
-import { ShieldCheck, ArrowLeft, Award, Loader2, X, ChevronLeft, ChevronRight, Maximize2 } from 'lucide-react';
+import { useAuth } from '../context/auth';
+import { subscribe, getSnapshot, toggleFavorite } from '../services/favoritesStore';
+import { ShieldCheck, ArrowLeft, Award, Loader2, X, ChevronLeft, ChevronRight, Maximize2, Heart, Check } from 'lucide-react';
 
 interface CarDetailProps {
   carId: string;
@@ -24,6 +26,24 @@ export default function CarDetail({ carId }: CarDetailProps) {
 
   const [showTestDrive, setShowTestDrive] = useState(false);
   const [showReserve, setShowReserve] = useState(false);
+
+  const { openAuth } = useAuth();
+  const favoriteIds = useSyncExternalStore(subscribe, getSnapshot);
+  const isFav = favoriteIds.has(carId);
+
+  const [favBusy, setFavBusy] = useState(false);
+
+  const handleToggleFavorite = async () => {
+    if (favBusy) return;
+    setFavBusy(true);
+    try {
+      await toggleFavorite(carId);
+    } catch (err) {
+      openAuth();
+    } finally {
+      setFavBusy(false);
+    }
+  };
 
   const images = (car?.images ?? [])
     .slice()
@@ -323,6 +343,18 @@ export default function CarDetail({ carId }: CarDetailProps) {
 
             {/* CTA Action Buttons */}
             <div className="space-y-3 pt-2">
+              <button
+                onClick={handleToggleFavorite}
+                disabled={favBusy}
+                className={`w-full py-3 font-black text-sm rounded-xl transition flex items-center justify-center gap-2 border-2 ${
+                  isFav
+                    ? 'bg-rose-50 border-rose-600 text-rose-700 hover:bg-rose-100'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-rose-400 hover:text-rose-600'
+                }`}
+              >
+                {isFav ? <Check className="w-4 h-4" /> : <Heart className="w-4 h-4" />}
+                {isFav ? 'Saved to Favourites' : 'Save to Favourites'}
+              </button>
               <button
                 onClick={() => setShowTestDrive(true)}
                 className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-sm rounded-xl shadow-lg shadow-rose-600/30 transition transform active:scale-98 flex items-center justify-center gap-2"

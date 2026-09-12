@@ -19,6 +19,22 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7  # 7 days
 
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def secret_key_must_be_real(cls, v, info):
+        # The default is a well-known placeholder (forgeable JWTs). In production
+        # we hard-fail instead of silently shipping with a predictable signing key.
+        env = (info.data.get("ENVIRONMENT") or os.getenv("ENVIRONMENT") or "development").strip().lower()
+        if env == "production" and (
+            not v
+            or v in ("value-cars-super-secret-key-change-in-production-2026-secure", "your-super-secret-jwt-key-for-value-cars-2026-production")
+        ):
+            raise ValueError(
+                "SECRET_KEY must be a strong, unique value in production. "
+                "Set SECRET_KEY in your environment (see backend/.env.example)."
+            )
+        return v
+
     # Database
     DATABASE_URL: str = "sqlite+aiosqlite:///./value_cars.db"
 

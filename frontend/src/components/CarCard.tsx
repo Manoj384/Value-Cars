@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Gauge, Fuel, Cog, MapPin, Calendar } from 'lucide-react';
+import { ShieldCheck, Gauge, Fuel, Cog, MapPin, Calendar, Heart } from 'lucide-react';
 import { Car } from '../types/car';
+import { useAuth } from '../context/auth';
+import { subscribe, getSnapshot, toggleFavorite } from '../services/favoritesStore';
 
 interface CarCardProps {
   car: Car;
@@ -12,6 +14,21 @@ interface CarCardProps {
 }
 
 export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserve }) => {
+  const { openAuth } = useAuth();
+  const favoriteIds = useSyncExternalStore(subscribe, getSnapshot);
+  const isFav = favoriteIds.has(car.id);
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await toggleFavorite(car.id);
+    } catch (err) {
+      // Not authenticated -> prompt to sign in.
+      openAuth();
+    }
+  };
+
   const coverImage = car.images?.find((img) => img.is_cover)?.image_url ||
     car.images?.[0]?.image_url ||
     'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80';
@@ -51,6 +68,17 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserv
         <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center">
           <MapPin className="w-2.5 h-2.5 mr-1 text-rose-400" /> {car.city}
         </div>
+
+        {/* Favorite Heart */}
+        <button
+          onClick={handleToggleFavorite}
+          aria-label={isFav ? `Remove ${car.title} from saved` : `Save ${car.title}`}
+          className={`absolute bottom-3 right-3 w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center transition shadow-md active:scale-90 ${
+            isFav ? 'bg-rose-600 text-white' : 'bg-black/60 text-white hover:bg-rose-600'
+          }`}
+        >
+          <Heart className={`w-5 h-5 ${isFav ? 'fill-current' : ''}`} />
+        </button>
       </div>
 
       {/* Content */}

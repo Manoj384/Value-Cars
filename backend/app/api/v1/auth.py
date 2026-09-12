@@ -214,19 +214,20 @@ async def request_email_verification(
                 detail="This account has been disabled. Please contact support.",
             )
     else:
-        # Check if email is configured as superadmin
-        is_superadmin = email == settings.ADMIN_ALERT_EMAIL.lower()
+        # SECURITY: Self-service verification requests are ALWAYS CUSTOMER.
+        # No caller may self-register as ADMIN/SELLER through this public flow;
+        # admin roles are provisioned server-side only (seed_service / CLI).
         user = User(
             full_name=full_name,
             email=email,
             phone_number=payload.phone_number,
             city=payload.city or "Bangalore",
-            role=UserRole.ADMIN if is_superadmin else UserRole.CUSTOMER,
+            role=UserRole.CUSTOMER,
             account_status=AccountStatus.PENDING.value,
             is_active=True,
             is_verified=False,
             password_created=False,
-            is_approved_seller=is_superadmin,
+            is_approved_seller=False,
             verification_requested_at=datetime.now(timezone.utc),
         )
         db.add(user)
@@ -562,12 +563,9 @@ async def login(payload: UserLoginRequest, db: AsyncSession = Depends(get_db)):
             detail="Inactive account.",
         )
 
-    # Automatically grant superadmin role if email matches settings
-    if email == settings.ADMIN_ALERT_EMAIL.lower() and user.role != UserRole.ADMIN:
-        user.role = UserRole.ADMIN
-        user.is_approved_seller = True
-        await db.commit()
-        await db.refresh(user)
+    # NOTE: The previous "auto-promote email to ADMIN" block was removed. The
+    # admin role is provisioned server-side (seed_service / CLI) and must never
+    # be granted implicitly at login (would allow account takeover).
 
     access_token = create_access_token(subject=str(user.id), role=user.role.value)
     return Token(
@@ -832,19 +830,23 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
             detail="A user with this email already exists",
         )
 
-    is_admin = clean_email == settings.ADMIN_ALERT_EMAIL.lower()
+    # SECURITY: Self-service registration must NEVER grant elevated roles or
+    # auto-select admin by email. ADMIN/INSPECTOR/SALES are provisioned
+    # server-side only (seed_service / CLI). A caller supplying
+    # role="ADMIN" (privilege-escalation) is silently downgraded to CUSTOMER.
+    safe_role = user_in.role if user_in.role in (UserRole.CUSTOMER, UserRole.SELLER) else UserRole.CUSTOMER
     user = User(
         full_name=user_in.full_name,
         phone_number=user_in.phone_number,
         email=clean_email,
         hashed_password=get_password_hash(user_in.password) if user_in.password else None,
-        role=UserRole.ADMIN if is_admin else user_in.role,
-        account_status=AccountStatus.ACTIVE.value if is_admin else AccountStatus.APPROVED.value,
+        role=safe_role,
+        account_status=AccountStatus.APPROVED.value,
         city=user_in.city,
         is_active=True,
         is_verified=True,
         password_created=bool(user_in.password),
-        is_approved_seller=is_admin,
+        is_approved_seller=False,
     )
     db.add(user)
     await db.commit()

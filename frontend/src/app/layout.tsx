@@ -5,6 +5,8 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import { AppTelemetry } from '../components/AppTelemetry';
 import { FloatingWhatsApp } from '../components/FloatingWhatsApp';
 import { BackToTop } from '../components/BackToTop';
+import { AuthProvider } from '../context/auth';
+import AuthModal from '../components/AuthModal';
 
 // Self-hosted Google Font (bundled at build time) - no runtime CDN dependency,
 // so the site stays fast and robust even if external hosts are slow/unreachable.
@@ -29,12 +31,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={plusJakarta.variable}>
       <body className="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col font-sans">
-        <AppTelemetry />
-        <ErrorBoundary>
-          {children}
-          <FloatingWhatsApp />
-          <BackToTop />
-        </ErrorBoundary>
+        <AuthProvider>
+          <AppTelemetry />
+          <ErrorBoundary>
+            {children}
+            <AuthModal />
+            <FloatingWhatsApp />
+            <BackToTop />
+          </ErrorBoundary>
+        </AuthProvider>
       </body>
     </html>
   );
