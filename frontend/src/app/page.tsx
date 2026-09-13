@@ -191,18 +191,7 @@ export default function HomePage() {
       await apiClient.deleteCarManaged(car.id);
       fetchCars();
     } catch (err: any) {
-      const email = window.prompt(`Authorization required to delete "${car.title}". Enter Admin or Seller Email:`, 'shankarmanoj654@gmail.com');
-      if (email && email.trim()) {
-        try {
-          await apiClient.deleteCarManaged(car.id, email.trim());
-          fetchCars();
-          return;
-        } catch (retryErr: any) {
-          alert(retryErr?.message || 'Failed to delete vehicle');
-        }
-      } else {
-        alert(err?.message || 'Failed to delete vehicle');
-      }
+      alert(err?.message || 'Failed to delete vehicle. Make sure you are logged in as Admin.');
     }
   };
 

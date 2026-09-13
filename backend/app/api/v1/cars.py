@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta, timezone
+import os
 import uuid
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import desc, select
@@ -363,8 +364,8 @@ async def check_can_manage_car(
     db: Optional[AsyncSession] = None,
 ) -> bool:
     """Verify caller is an Admin, vehicle owner, or approved manager."""
-    # 1. Active Admin or Superadmin
-    if current_user and current_user.role in (UserRole.ADMIN, UserRole.SUPERADMIN):
+    # 1. Active Admin
+    if current_user and (current_user.role == UserRole.ADMIN or str(getattr(current_user, 'role', '')).endswith('ADMIN')):
         return True
 
     # 2. Seller owner of this specific car
@@ -562,7 +563,7 @@ async def delete_car_managed(
     from app.models.test_drive import TestDrive
     from app.models.order import Order
     from app.models.lead import Lead
-    from app.models.user import UserSavedCar
+    from app.models.user import Favorite
     from app.models.car import CarImage, CarFeature
     from sqlalchemy import delete
 
@@ -573,9 +574,7 @@ async def delete_car_managed(
         await db.execute(delete(TestDrive).where(TestDrive.car_id == car_id))
         await db.execute(delete(Order).where(Order.car_id == car_id))
         await db.execute(delete(Lead).where(Lead.car_id == car_id))
-        await db.execute(delete(UserSavedCar).where(UserSavedCar.car_id == car_id))
-        await db.execute(delete(CarImage).where(CarImage.car_id == car_id))
-        await db.execute(delete(CarFeature).where(CarFeature.car_id == car_id))
+        await db.execute(delete(Favorite).where(Favorite.car_id == car_id))
     except Exception:
         pass
 

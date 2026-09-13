@@ -96,23 +96,7 @@ export const EditCarModal: React.FC<EditCarModalProps> = ({ car, onClose, onSave
         onClose();
       }, 700);
     } catch (err: any) {
-      const email = window.prompt(`Authorization required to delete "${car.title}". Enter Admin or Seller Email:`, 'shankarmanoj654@gmail.com');
-      if (email && email.trim()) {
-        try {
-          await apiClient.deleteCarManaged(car.id, email.trim());
-          setSuccess('Vehicle deleted successfully.');
-          setTimeout(() => {
-            if (onDeleted) onDeleted();
-            else onSaved();
-            onClose();
-          }, 700);
-          return;
-        } catch (retryErr: any) {
-          setError(retryErr?.message || 'Failed to delete vehicle');
-        }
-      } else {
-        setError(err?.message || 'Failed to delete vehicle');
-      }
+      setError(err?.message || 'Failed to delete vehicle. Make sure you are logged in as Admin.');
     } finally {
       setDeleting(false);
     }
