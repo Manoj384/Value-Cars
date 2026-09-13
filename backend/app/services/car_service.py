@@ -104,10 +104,14 @@ class CarService:
             where_clauses.append(Car.seller_email.ilike(f"%{filters.seller_email.strip()}%"))
 
         # Status filtering
-        if filters.status:
-            where_clauses.append(Car.status == filters.status)
-        else:
-            where_clauses.append(Car.status.in_([CarStatus.PUBLISHED, CarStatus.SOLD, CarStatus.RESERVED]))
+        # show_all=True  → no status filter (admin "All Cars" view)
+        # filters.status → specific status (e.g. SOLD, RESERVED, PENDING_APPROVAL)
+        # default        → only PUBLISHED (public inventory)
+        if not filters.show_all:
+            if filters.status:
+                where_clauses.append(Car.status == filters.status)
+            else:
+                where_clauses.append(Car.status == CarStatus.PUBLISHED)
 
         query = select(Car).options(
             selectinload(Car.images),

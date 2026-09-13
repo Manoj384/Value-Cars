@@ -109,7 +109,8 @@ export default function HomePage() {
     try {
       const data = await apiClient.getCars({
         ...filters,
-        status: statusFilter === 'ALL' ? undefined : statusFilter,
+        // Send the status explicitly: ALL→all cars, SOLD→sold only, PUBLISHED→active inventory
+        status: statusFilter,
         make: selectedBrand || filters.make,
       });
       setCars(data.items);

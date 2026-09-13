@@ -46,12 +46,25 @@ async def get_cars(
     max_year: Optional[int] = None,
     max_km: Optional[int] = None,
     min_score: Optional[float] = None,
+    status: Optional[str] = Query(None, description="Filter by status: PUBLISHED | SOLD | ALL"),
     sort_by: Optional[str] = Query("created_at", description="price_asc | price_desc | km_asc | year_desc | score_desc"),
     page: int = Query(1, ge=1),
     page_size: int = Query(12, ge=1, le=50),
     db: AsyncSession = Depends(get_db),
 ):
-    """Retrieve catalog of published cars with dynamic filters, pagination, and sorting."""
+    """Retrieve catalog of cars with dynamic filters, pagination, and sorting.
+    By default returns only PUBLISHED (active inventory) cars.
+    Pass status=SOLD to get sold cars, status=ALL to get everything visible.
+    """
+    # Map frontend status string → CarStatus enum (or show_all flag)
+    status_filter: Optional[CarStatus] = None
+    show_all = False
+    if status and status.upper() == "SOLD":
+        status_filter = CarStatus.SOLD
+    elif status and status.upper() == "ALL":
+        show_all = True  # Skip status filter → return every car (admin "All" view)
+    # else: default → PUBLISHED only (handled by service)
+
     filters = CarFilterParams(
         make=make,
         model=model,
@@ -68,6 +81,8 @@ async def get_cars(
         sort_by=sort_by,
         page=page,
         page_size=page_size,
+        status=status_filter,
+        show_all=show_all,
     )
 
     cars, total, pages = await CarService.list_cars(db, filters)

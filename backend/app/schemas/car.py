@@ -156,6 +156,7 @@ class CarFilterParams(BaseModel):
     max_km: Optional[int] = None
     min_score: Optional[float] = None
     status: Optional[CarStatus] = None
+    show_all: bool = False  # When True, skip status filter entirely (Admin "All Cars" view)
     seller_email: Optional[str] = None
     sort_by: Optional[str] = "created_at"
     page: int = Field(default=1, ge=1)
