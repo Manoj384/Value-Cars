@@ -35,6 +35,7 @@ export interface Car {
   is_spinny_certified: boolean;
   warranty_months: number;
   status: string;
+  description?: string;
   seller_email?: string;
   seller_name?: string;
   is_verified_seller: boolean;

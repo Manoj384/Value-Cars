@@ -97,6 +97,7 @@ export interface CarFilterOptions {
   fuel_type?: string;
   transmission?: string;
   body_type?: string;
+  status?: string;
   min_price?: number;
   max_price?: number;
   min_year?: number;
@@ -543,7 +544,10 @@ export function clearAdminToken(): void {
 }
 
 export function isAdminAuthed(): boolean {
-  return !!getAdminToken();
+  if (typeof window === 'undefined') return false;
+  if (getAdminToken()) return true;
+  const user = getCustomerUser();
+  return user?.role === 'ADMIN' || user?.role === 'SUPERADMIN';
 }
 
 /**
@@ -573,6 +577,9 @@ function mockGetCars(params: CarFilterOptions = {}): PaginatedCars {
   }
   if (params.max_price) {
     filtered = filtered.filter((c) => c.price <= params.max_price!);
+  }
+  if (params.status) {
+    filtered = filtered.filter((c) => (c.status || 'PUBLISHED').toUpperCase() === params.status!.toUpperCase());
   }
   if (params.min_score) {
     filtered = filtered.filter((c) => c.inspection_score >= params.min_score!);
@@ -893,7 +900,7 @@ export const apiClient = {
 
   // Admin Portal & Operations
   adminHeaders(): Record<string, string> {
-    const token = getAdminToken();
+    const token = getAdminToken() || getCustomerToken();
     return {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -914,6 +921,38 @@ export const apiClient = {
 
   async adminLogout(): Promise<void> {
     clearAdminToken();
+  },
+
+  async markCarSold(carId: string, dontDelete = true, autoDeleteDays = 2) {
+    const res = await fetch(`${getApiBaseUrl()}/cars/manage/${carId}/mark-sold`, {
+      method: 'POST',
+      headers: this.adminHeaders(),
+      body: JSON.stringify({ dont_delete: dontDelete, auto_delete_after_days: autoDeleteDays }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Failed to mark car as sold');
+    return data;
+  },
+
+  async modifyCarDetails(carId: string, payload: Partial<Car>) {
+    const res = await fetch(`${getApiBaseUrl()}/cars/manage/${carId}`, {
+      method: 'PATCH',
+      headers: this.adminHeaders(),
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Failed to update car details');
+    return data;
+  },
+
+  async deleteCarManaged(carId: string) {
+    const res = await fetch(`${getApiBaseUrl()}/cars/manage/${carId}`, {
+      method: 'DELETE',
+      headers: this.adminHeaders(),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Failed to delete car');
+    return data;
   },
 
   async getAdminMetrics(): Promise<AdminMetrics> {

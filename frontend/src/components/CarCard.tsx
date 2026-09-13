@@ -10,14 +10,27 @@ import { resolveMediaUrl } from '../services/api';
 
 interface CarCardProps {
   car: Car;
+  isAdmin?: boolean;
   onBookTestDrive: (car: Car) => void;
   onReserve: (car: Car) => void;
+  onEditCar?: (car: Car) => void;
+  onMarkSold?: (car: Car) => void;
+  onDeleteCar?: (car: Car) => void;
 }
 
-export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserve }) => {
+export const CarCard: React.FC<CarCardProps> = ({
+  car,
+  isAdmin = false,
+  onBookTestDrive,
+  onReserve,
+  onEditCar,
+  onMarkSold,
+  onDeleteCar,
+}) => {
   const { openAuth } = useAuth();
   const favoriteIds = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const isFav = favoriteIds.has(car.id);
+  const isSold = car.status === 'SOLD';
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -25,7 +38,6 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserv
     try {
       await toggleFavorite(car.id);
     } catch (err) {
-      // Not authenticated -> prompt to sign in.
       openAuth();
     }
   };
@@ -41,7 +53,7 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserv
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group">
+    <div className={`bg-white rounded-2xl border ${isSold ? 'border-amber-300' : 'border-slate-200'} overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative`}>
       {/* Image Container */}
       <div className="relative h-52 overflow-hidden bg-slate-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -52,13 +64,28 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserv
           height={416}
           loading="lazy"
           fetchPriority="low"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isSold ? 'grayscale-[30%]' : ''}`}
         />
 
+        {/* Sold Overlay Banner */}
+        {isSold && (
+          <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
+            <span className="bg-rose-600 text-white font-black text-sm uppercase px-4 py-1.5 rounded-full shadow-xl tracking-widest border-2 border-white transform -rotate-6">
+              SOLD OUT
+            </span>
+          </div>
+        )}
+
         {/* Certified Badge */}
-        {car.is_spinny_certified && (
+        {car.is_spinny_certified && !isSold && (
           <div className="absolute top-3 left-3 bg-emerald-600 text-white text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-md flex items-center">
             <ShieldCheck className="w-3.5 h-3.5 mr-1" /> VALUE CERTIFIED
+          </div>
+        )}
+
+        {isSold && (
+          <div className="absolute top-3 left-3 bg-amber-500 text-slate-950 text-[11px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center">
+            ● SOLD SESSION
           </div>
         )}
 
@@ -118,6 +145,42 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserv
           </div>
         </div>
 
+        {/* Admin Action Bar if Admin */}
+        {isAdmin && (
+          <div className="mb-3 py-2 px-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-1 text-xs">
+            <span className="font-bold text-amber-900 text-[11px]">Admin:</span>
+            <div className="flex items-center gap-1.5">
+              {onEditCar && (
+                <button
+                  onClick={() => onEditCar(car)}
+                  className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] transition"
+                  title="Edit car details"
+                >
+                  Edit
+                </button>
+              )}
+              {!isSold && onMarkSold && (
+                <button
+                  onClick={() => onMarkSold(car)}
+                  className="px-2 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10px] transition"
+                  title="Mark as Sold"
+                >
+                  Sold
+                </button>
+              )}
+              {onDeleteCar && (
+                <button
+                  onClick={() => onDeleteCar(car)}
+                  className="px-2 py-1 rounded bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] transition"
+                  title="Delete car"
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Price and CTA */}
         <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
           <div>
@@ -128,18 +191,26 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserv
           </div>
 
           <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onBookTestDrive(car)}
-              className="px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition"
-            >
-              Test Drive
-            </button>
-            <button
-              onClick={() => onReserve(car)}
-              className="px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-rose-600 rounded-lg transition shadow-sm"
-            >
-              Reserve
-            </button>
+            {!isSold ? (
+              <>
+                <button
+                  onClick={() => onBookTestDrive(car)}
+                  className="px-3 py-1.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition"
+                >
+                  Test Drive
+                </button>
+                <button
+                  onClick={() => onReserve(car)}
+                  className="px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-rose-600 rounded-lg transition shadow-sm"
+                >
+                  Reserve
+                </button>
+              </>
+            ) : (
+              <span className="px-3 py-1.5 text-xs font-black text-rose-700 bg-rose-50 rounded-lg border border-rose-200">
+                SOLD OUT
+              </span>
+            )}
           </div>
         </div>
       </div>

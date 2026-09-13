@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { ShieldCheck, RotateCcw, Truck, PlusCircle, LayoutDashboard, Search, MapPin, Phone, Menu, X, UserCircle2, MessageCircle, Heart, LogOut } from 'lucide-react';
+import { ShieldCheck, RotateCcw, Truck, PlusCircle, LayoutDashboard, Search, MapPin, Phone, Menu, X, UserCircle2, MessageCircle, Heart, LogOut, SlidersHorizontal } from 'lucide-react';
 import { useAuth } from '../context/auth';
 
 interface NavbarProps {
@@ -11,12 +11,23 @@ interface NavbarProps {
   onSearchChange?: (term: string) => void;
   selectedCity?: string;
   initialSearch?: string;
+  onOpenFilters?: () => void;
+  onSelectSoldSection?: () => void;
+  activeStatus?: string;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, selectedCity = '', initialSearch = '' }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onCityChange,
+  onSearchChange,
+  selectedCity = '',
+  initialSearch = '',
+  onOpenFilters,
+  onSelectSoldSection,
+  activeStatus = '',
+}) => {
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, displayName, openAuth, logout } = useAuth();
+  const { user, displayName, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -37,41 +48,78 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
   };
 
   const authControl = user ? (
-    <div className="flex items-center space-x-3">
+    <div className="flex items-center space-x-2.5">
+      <Link
+        href="/admin"
+        className="inline-flex items-center justify-center px-3.5 py-1.5 rounded-full text-xs font-bold text-amber-400 bg-slate-900 hover:bg-rose-600 hover:text-white transition shrink-0 shadow-sm"
+      >
+        <LayoutDashboard className="w-3.5 h-3.5 mr-1" /> Admin Hub
+      </Link>
       <Link
         href="/saved"
         onClick={() => setMobileOpen(false)}
-        className="relative inline-flex items-center px-3 py-2 text-sm font-bold text-slate-700 hover:text-rose-600 transition"
+        className="relative inline-flex items-center px-2 py-1 text-xs font-bold text-slate-700 hover:text-rose-600 transition"
       >
-        <Heart className="w-4 h-4 mr-1.5 text-rose-500" /> Saved
+        <Heart className="w-3.5 h-3.5 mr-1 text-rose-500" /> Saved
       </Link>
       <button
         onClick={logout}
-        className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-500 hover:text-rose-600 transition"
+        className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 hover:text-rose-600 transition"
         title="Sign out"
       >
-        <LogOut className="w-4 h-4" /> Sign out
+        <LogOut className="w-3.5 h-3.5" />
       </button>
-      <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-full pl-1 pr-3 py-1" title={user.email}>
-        <span className="w-7 h-7 rounded-full bg-rose-600 text-white text-xs font-black flex items-center justify-center">
+      <div className="hidden lg:flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-full pl-1 pr-2.5 py-0.5" title={user.email}>
+        <span className="w-6 h-6 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center">
           {(displayName || 'U').slice(0, 1).toUpperCase()}
         </span>
-        <span className="text-xs font-bold text-slate-700 max-w-[80px] truncate">{displayName}</span>
+        <span className="text-[11px] font-bold text-slate-700 max-w-[70px] truncate">{displayName}</span>
       </div>
     </div>
   ) : (
-    <button
-      onClick={() => openAuth()}
+    <Link
+      href="/admin"
       className="inline-flex items-center justify-center px-4 py-2 rounded-full text-xs font-bold text-white bg-slate-900 hover:bg-rose-600 transition shrink-0 shadow-sm"
     >
-      <UserCircle2 className="w-3.5 h-3.5 mr-1.5 text-amber-400" /> Login / Sign Up
-    </button>
+      <LayoutDashboard className="w-3.5 h-3.5 mr-1.5 text-amber-400" /> Admin Hub
+    </Link>
   );
+
+  const handleSoldClick = (e: React.MouseEvent) => {
+    setMobileOpen(false);
+    if (onSelectSoldSection) {
+      e.preventDefault();
+      onSelectSoldSection();
+    }
+  };
 
   const navLinks = (
     <>
-      <Link href="/" onClick={() => setMobileOpen(false)} className="px-2.5 py-1 text-xs font-bold text-slate-700 hover:text-rose-600 transition flex items-center shrink-0">
+      <Link
+        href="/"
+        onClick={() => {
+          setMobileOpen(false);
+          if (onSearchChange && activeStatus === 'SOLD') {
+            if (onSelectSoldSection) onSelectSoldSection();
+          }
+        }}
+        className={`px-2.5 py-1 text-xs font-bold transition flex items-center shrink-0 ${
+          activeStatus !== 'SOLD' ? 'text-slate-900' : 'text-slate-600 hover:text-rose-600'
+        }`}
+      >
         Browse Cars
+      </Link>
+      <Link
+        href="/?status=SOLD"
+        onClick={handleSoldClick}
+        className={`px-2.5 py-1 text-xs font-bold transition flex items-center gap-1 shrink-0 ${
+          activeStatus === 'SOLD' ? 'text-rose-600' : 'text-slate-700 hover:text-rose-600'
+        }`}
+      >
+        <span>Sold Cars</span>
+        <span className="bg-rose-100 text-rose-700 text-[10px] font-black px-1.5 py-0.2 rounded-full">
+          Sold
+        </span>
       </Link>
       <Link href="/sell" onClick={() => setMobileOpen(false)} className="px-2.5 py-1 text-xs font-bold text-slate-700 hover:text-rose-600 transition flex items-center shrink-0">
         <PlusCircle className="w-3.5 h-3.5 mr-1 text-rose-600" /> Add / Sell
@@ -118,9 +166,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
               <MapPin className="w-3.5 h-3.5 text-sky-400" /> Mallathahalli
             </a>
           </div>
-          <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold flex items-center border-l border-slate-700 pl-2 sm:pl-3 shrink-0">
-            <LayoutDashboard className="w-3 h-3 mr-1" /> Admin
-          </Link>
         </div>
       </div>
 
@@ -242,7 +287,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
             )}
           </div>
           {navLinks}
-          <div className="pt-2 border-t border-slate-100 space-y-3">
+          {onOpenFilters && (
+            <button
+              onClick={() => {
+                setMobileOpen(false);
+                onOpenFilters();
+              }}
+              className="w-full flex items-center justify-between px-3 py-2 text-xs font-bold text-slate-800 bg-slate-100 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition mt-1"
+            >
+              <span className="flex items-center gap-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-rose-600" /> Filters (Price, Fuel, Year...)
+              </span>
+              <span className="text-[10px] bg-white px-2 py-0.5 rounded border border-slate-200">Open</span>
+            </button>
+          )}
+          <div className="pt-2 border-t border-slate-100 space-y-2">
             {user ? (
               <div className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3">
                 <div className="flex items-center gap-2">
@@ -268,15 +327,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
                 </button>
               </div>
             ) : (
-              <button
-                onClick={() => { openAuth(); setMobileOpen(false); }}
-                className="w-full text-center px-4 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 transition"
+              <Link
+                href="/admin"
+                onClick={() => setMobileOpen(false)}
+                className="w-full inline-flex items-center justify-center px-4 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 transition shadow-sm"
               >
-                Login / Sign Up
-              </button>
+                <LayoutDashboard className="w-4 h-4 mr-2 text-amber-400" /> Admin Hub
+              </Link>
             )}
 
-            <div className="text-xs text-slate-600 space-y-2">
+            <div className="text-xs text-slate-600 space-y-1.5 pt-1">
               <div className="flex items-center justify-between">
                 <span>Hotline 1:</span>
                 <a href="tel:8050966025" className="font-bold text-slate-900">+91 80509 66025</a>
@@ -290,7 +350,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
             <Link
               href="/sell"
               onClick={() => setMobileOpen(false)}
-              className="block text-center px-4 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 transition"
+              className="block text-center px-4 py-2.5 rounded-full text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 transition"
             >
               + List Your Car
             </Link>

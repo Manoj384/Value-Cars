@@ -10,20 +10,51 @@ import { FilterSidebar } from '../components/FilterSidebar';
 import { CarCard } from '../components/CarCard';
 import { TestDriveModal } from '../components/TestDriveModal';
 import { ReserveModal } from '../components/ReserveModal';
+import { EditCarModal } from '../components/EditCarModal';
 import { MobileFilterDrawer } from '../components/MobileFilterDrawer';
-import { apiClient, CarFilterOptions } from '../services/api';
+import { apiClient, CarFilterOptions, isAdminAuthed } from '../services/api';
 import { Car } from '../types/car';
+import { useAuth } from '../context/auth';
 import { track } from '../lib/activity';
 import { reportError } from '../lib/errorReporting';
 import { loadFilters, saveFilters, getRecentCars, RecentCar } from '../lib/uiState';
-import { ShieldCheck, Sparkles, Loader2, SlidersHorizontal } from 'lucide-react';
+import { ShieldCheck, Sparkles, Loader2, SlidersHorizontal, CheckCircle2, Tag, X } from 'lucide-react';
+import { BrandLogo } from '../components/BrandLogo';
+
+const BRAND_DISPLAY_MAP: Record<string, string> = {
+  maruti: 'Maruti Suzuki',
+  hyundai: 'Hyundai',
+  tata: 'Tata',
+  mahindra: 'Mahindra',
+  toyota: 'Toyota',
+  kia: 'Kia',
+  honda: 'Honda',
+  skoda: 'Skoda',
+  volkswagen: 'Volkswagen',
+  nissan: 'Nissan',
+  renault: 'Renault',
+  bmw: 'BMW',
+  mercedes: 'Mercedes-Benz',
+  audi: 'Audi',
+  mg: 'MG',
+};
+
+function getBrandDisplayName(brandKey: string): string {
+  if (!brandKey) return '';
+  return BRAND_DISPLAY_MAP[brandKey.toLowerCase()] || brandKey;
+}
 
 export default function HomePage() {
+  const { user } = useAuth();
+  const [isAdminState, setIsAdminState] = useState(false);
+
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'PUBLISHED' | 'SOLD'>('PUBLISHED');
   const [filters, setFilters] = useState<CarFilterOptions>(() => ({
     city: '',
     page: 1,
@@ -35,12 +66,35 @@ export default function HomePage() {
   const [selectedBrand, setSelectedBrand] = useState('');
   const [testDriveCar, setTestDriveCar] = useState<Car | null>(null);
   const [reserveCar, setReserveCar] = useState<Car | null>(null);
+  const [editingCar, setEditingCar] = useState<Car | null>(null);
+
+  // Sync admin state
+  useEffect(() => {
+    const isAuthedAdmin = !!(user && (user.role === 'ADMIN' || user.role === 'SUPERADMIN')) || isAdminAuthed();
+    setIsAdminState(isAuthedAdmin);
+  }, [user]);
+
+  // Check URL parameters for initial status or brand
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const statusParam = params.get('status');
+      if (statusParam === 'SOLD') {
+        setStatusFilter('SOLD');
+      }
+      const brandParam = params.get('brand') || params.get('make');
+      if (brandParam) {
+        setSelectedBrand(brandParam);
+      }
+    }
+  }, []);
 
   const fetchCars = useCallback(async () => {
     setLoading(true);
     try {
       const data = await apiClient.getCars({
         ...filters,
+        status: statusFilter === 'ALL' ? undefined : statusFilter,
         make: selectedBrand || filters.make,
       });
       setCars(data.items);
@@ -51,7 +105,7 @@ export default function HomePage() {
     } finally {
       setLoading(false);
     }
-  }, [filters, selectedBrand]);
+  }, [filters, selectedBrand, statusFilter]);
 
   useEffect(() => {
     fetchCars();
@@ -76,21 +130,66 @@ export default function HomePage() {
     track('home', 'brand_select', { brand: brand || 'all' });
     setSelectedBrand(brand);
     setFilters((prev) => ({ ...prev, make: brand || undefined, page: 1 }));
+    if (brand && typeof document !== 'undefined') {
+      setTimeout(() => {
+        const target = document.getElementById('cars-catalog');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
   };
 
   const handleResetFilters = () => {
     track('home', 'reset_filters');
     setSelectedBrand('');
+    setStatusFilter('PUBLISHED');
     setFilters({ city: '', page: 1, page_size: 12 });
   };
 
+  const handleSoldSectionSelect = () => {
+    setStatusFilter('SOLD');
+    setFilters((prev) => ({ ...prev, page: 1 }));
+    if (typeof document !== 'undefined') {
+      setTimeout(() => {
+        const target = document.getElementById('cars-catalog');
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
+  };
+
+  const handleMarkSoldCar = async (car: Car) => {
+    if (!window.confirm(`Mark ${car.title} as SOLD? It will move to the Sold Cars session.`)) return;
+    try {
+      await apiClient.markCarSold(car.id, true);
+      fetchCars();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to mark vehicle as sold');
+    }
+  };
+
+  const handleDeleteCar = async (car: Car) => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${car.title}"?`)) return;
+    try {
+      await apiClient.deleteCarManaged(car.id);
+      fetchCars();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to delete vehicle');
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-slate-50/50">
       <Navbar
         selectedCity={filters.city}
         initialSearch={filters.model || ''}
-        onCityChange={(city) => setFilters((prev) => ({ ...prev, city }))}
-        onSearchChange={(model) => setFilters((prev) => ({ ...prev, model }))}
+        onCityChange={(city) => setFilters((prev) => ({ ...prev, city, page: 1 }))}
+        onSearchChange={(model) => setFilters((prev) => ({ ...prev, model, page: 1 }))}
+        onOpenFilters={() => setMobileFiltersOpen(true)}
+        onSelectSoldSection={handleSoldSectionSelect}
+        activeStatus={statusFilter}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
@@ -109,11 +208,11 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="flex items-center space-x-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm text-xs font-bold text-slate-700">
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-            <span>Showing <strong className="text-rose-600">{totalCount}</strong> Verified Cars</span>
-          </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center space-x-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm text-xs font-bold text-slate-700">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>Showing <strong className="text-rose-600">{totalCount}</strong> Verified Cars</span>
+            </div>
             <button
               onClick={() => setMobileFiltersOpen(true)}
               className="lg:hidden flex items-center gap-1.5 bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:border-rose-500 transition"
@@ -141,7 +240,7 @@ export default function HomePage() {
         {/* 12-Brand Visual Selector */}
         <BrandGrid selectedBrand={selectedBrand} onSelectBrand={handleBrandSelect} />
 
-{/* Recently Viewed (persisted client-side) */}
+        {/* Recently Viewed (persisted client-side) */}
         {recentCars.length > 0 && (
           <section className="mb-8">
             <h2 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">
@@ -179,6 +278,92 @@ export default function HomePage() {
             </div>
           </section>
         )}
+
+        {/* Catalog Section with Dynamic Brand Heading & Status Tabs */}
+        <div id="cars-catalog" className="scroll-mt-28 mb-6 pt-2">
+          <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                {selectedBrand && (
+                  <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center p-1 shadow-sm">
+                    <BrandLogo brand={selectedBrand} className="w-6 h-6" />
+                  </div>
+                )}
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                    {selectedBrand
+                      ? `${getBrandDisplayName(selectedBrand)} Certified Cars`
+                      : statusFilter === 'SOLD'
+                      ? 'Sold Cars Session'
+                      : 'All Available Inventory'}
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {selectedBrand
+                      ? `Showing ${totalCount} inspected ${getBrandDisplayName(selectedBrand)} vehicles ready for immediate delivery`
+                      : statusFilter === 'SOLD'
+                      ? `Browsing ${totalCount} vehicles successfully delivered to happy owners`
+                      : `Showing ${totalCount} quality verified cars available right now`}
+                  </p>
+                </div>
+                {selectedBrand && (
+                  <button
+                    onClick={() => handleBrandSelect('')}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-full transition ml-1"
+                    title="View all brands"
+                  >
+                    All Brands <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Inventory Status Switcher (Available vs Sold vs All) */}
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl shrink-0 self-start md:self-auto">
+              <button
+                onClick={() => {
+                  setStatusFilter('PUBLISHED');
+                  setFilters((prev) => ({ ...prev, page: 1 }));
+                }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                  statusFilter === 'PUBLISHED'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <CheckCircle2 className={`w-3.5 h-3.5 ${statusFilter === 'PUBLISHED' ? 'text-emerald-500' : 'text-slate-400'}`} />
+                Available Cars
+              </button>
+              <button
+                onClick={() => {
+                  setStatusFilter('SOLD');
+                  setFilters((prev) => ({ ...prev, page: 1 }));
+                }}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                  statusFilter === 'SOLD'
+                    ? 'bg-white text-rose-600 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Tag className={`w-3.5 h-3.5 ${statusFilter === 'SOLD' ? 'text-rose-600' : 'text-slate-400'}`} />
+                Sold Cars Session
+              </button>
+              <button
+                onClick={() => {
+                  setStatusFilter('ALL');
+                  setFilters((prev) => ({ ...prev, page: 1 }));
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  statusFilter === 'ALL'
+                    ? 'bg-white text-slate-900 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                All
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Main Grid: Sidebar + Cars */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filter Sidebar */}
@@ -202,9 +387,13 @@ export default function HomePage() {
                 <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-black">
                   🚗
                 </div>
-                <h3 className="text-xl font-black text-slate-900">No cars found</h3>
+                <h3 className="text-xl font-black text-slate-900">
+                  {statusFilter === 'SOLD' ? 'No sold cars found' : 'No cars found'}
+                </h3>
                 <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
-                  Try adjusting your budget slider, fuel type, or clear the active brand filter.
+                  {selectedBrand
+                    ? `No matching ${getBrandDisplayName(selectedBrand)} cars with current filters. Try resetting filters.`
+                    : 'Try adjusting your budget slider, fuel type, or clear the active brand filter.'}
                 </p>
                 <button
                   onClick={handleResetFilters}
@@ -219,8 +408,12 @@ export default function HomePage() {
                   <CarCard
                     key={car.id}
                     car={car}
+                    isAdmin={isAdminState}
                     onBookTestDrive={(c) => setTestDriveCar(c)}
                     onReserve={(c) => setReserveCar(c)}
+                    onEditCar={(c) => setEditingCar(c)}
+                    onMarkSold={handleMarkSoldCar}
+                    onDeleteCar={handleDeleteCar}
                   />
                 ))}
               </div>
@@ -255,6 +448,14 @@ export default function HomePage() {
       {/* Modals & Drawers */}
       <TestDriveModal car={testDriveCar} onClose={() => setTestDriveCar(null)} />
       <ReserveModal car={reserveCar} onClose={() => setReserveCar(null)} />
+      {editingCar && (
+        <EditCarModal
+          car={editingCar}
+          onClose={() => setEditingCar(null)}
+          onSaved={fetchCars}
+          onDeleted={fetchCars}
+        />
+      )}
       <MobileFilterDrawer
         open={mobileFiltersOpen}
         onClose={() => setMobileFiltersOpen(false)}
