@@ -91,11 +91,26 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = ""
     SUPABASE_KEY: str = ""
 
+    # Admin bootstrap password used only during initial seeding.
+    # In production, leave this unset to prevent auto-creation of admin accounts
+    # with a shared default password.  In dev/test the seed service uses a
+    # clearly-marked fallback when this is empty.
+    ADMIN_BOOTSTRAP_PASSWORD: str = ""
+
+    # Dev-only OTP stub – defaults to OFF (safe). Enable by setting OTP_DEV_MODE=true
+    # in your dev environment only; keep it off in production so the send-otp /
+    # verify-otp debug endpoints are disabled.
+    OTP_DEV_MODE: bool = False
+
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"),
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), ".env"),
+            ".env",
+        ),
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",

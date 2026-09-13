@@ -1,11 +1,15 @@
+import logging
 import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.models.car import Car, CarImage, CarFeature, FuelType, TransmissionType, OwnershipType, BodyType, CarStatus
 from app.models.user import User, UserRole, ApprovedSellerEmail
 from app.models.inspection import Inspection, InspectionItem, InspectionStatus, CheckpointCondition
 from app.core.security import get_password_hash
+
+logger = logging.getLogger("valuecars")
 
 SAMPLE_CARS = [
     {
@@ -31,8 +35,8 @@ SAMPLE_CARS = [
         "is_spinny_certified": True,
         "warranty_months": 12,
         "status": CarStatus.PUBLISHED,
-        "seller_email": "shankarmanoj654@gmail.com",
-        "seller_name": "Manoj Shankar (Owner)",
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
         "seller_phone": "8050966025",
         "is_verified_seller": True,
         "description": "Pristine single owner Hyundai Creta SX(O) top model with Panoramic Sunroof, ventilated seats, Bose audio, and full service history at authorized Hyundai service center.",
@@ -72,8 +76,8 @@ SAMPLE_CARS = [
         "is_spinny_certified": True,
         "warranty_months": 12,
         "status": CarStatus.PUBLISHED,
-        "seller_email": "shankarmanoj654@gmail.com",
-        "seller_name": "Manoj Shankar (Owner)",
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
         "seller_phone": "8050966025",
         "is_verified_seller": True,
         "description": "5-Star Global NCAP safety rated Tata Nexon with electronic sunroof, 360-degree camera, and sequential LED DRLs. Zero insurance claims.",
@@ -111,8 +115,8 @@ SAMPLE_CARS = [
         "is_spinny_certified": True,
         "warranty_months": 12,
         "status": CarStatus.PUBLISHED,
-        "seller_email": "shankarmanoj654@gmail.com",
-        "seller_name": "Manoj Shankar (Owner)",
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
         "seller_phone": "8050966025",
         "is_verified_seller": True,
         "description": "Executive sedan perfection with Honda LaneWatch Camera, LED headlights, plush leather upholstery, and buttery smooth 1.5L i-VTEC engine.",
@@ -150,8 +154,8 @@ SAMPLE_CARS = [
         "is_spinny_certified": True,
         "warranty_months": 12,
         "status": CarStatus.PUBLISHED,
-        "seller_email": "shankarmanoj654@gmail.com",
-        "seller_name": "Manoj Shankar (Owner)",
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
         "seller_phone": "8050966025",
         "is_verified_seller": True,
         "description": "True 4x4 capability with shift-on-fly transfer case, factory hard top, all-terrain alloys, and immaculate mechanical health.",
@@ -187,8 +191,8 @@ SAMPLE_CARS = [
         "is_spinny_certified": True,
         "warranty_months": 12,
         "status": CarStatus.PUBLISHED,
-        "seller_email": "shankarmanoj654@gmail.com",
-        "seller_name": "Manoj Shankar (Owner)",
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
         "seller_phone": "8050966025",
         "is_verified_seller": True,
         "description": "Super fuel-efficient city hatchback delivering 23+ kmpl with SmartPlay Pro touchscreen, cruise control, and precision AMT transmission.",
@@ -201,6 +205,117 @@ SAMPLE_CARS = [
             {"category": "SAFETY", "name": "Reverse Parking Camera with Sensors"},
         ],
     },
+    {
+        "title": "2022 Kia Seltos GTX Plus 1.4 Turbo Petrol DCT",
+        "reg_number": "KA-03-SE-1001",
+        "make": "Kia",
+        "model": "Seltos",
+        "variant": "GTX Plus 1.4 DCT",
+        "year": 2022,
+        "kilometers_driven": 23000,
+        "fuel_type": FuelType.PETROL,
+        "transmission": TransmissionType.AUTOMATIC,
+        "ownership": OwnershipType.FIRST,
+        "body_type": BodyType.SUV,
+        "color": "Gravity Grey",
+        "city": "Bangalore",
+        "hub_location": "Value Cars Hub, Near Bangalore University, Kengunte, Mallathahalli, Bengaluru 560056",
+        "price": 1540000.0,
+        "original_price": 1890000.0,
+        "estimated_market_min": 1500000.0,
+        "estimated_market_max": 1580000.0,
+        "inspection_score": 9.3,
+        "is_spinny_certified": True,
+        "warranty_months": 12,
+        "status": CarStatus.PUBLISHED,
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
+        "seller_phone": "8050966025",
+        "is_verified_seller": True,
+        "description": "Feature-packed sporty SUV with Bose 8-speaker audio, heads-up display, front ventilated seats, and snappy 7-speed DCT gearbox.",
+        "images": [
+            {"image_url": "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80", "tag": "EXTERIOR", "display_order": 1, "is_cover": True},
+        ],
+        "features": [
+            {"category": "COMFORT", "name": "Bose 8-Speaker Audio System"},
+            {"category": "COMFORT", "name": "Ventilated Front Seats"},
+            {"category": "SAFETY", "name": "Heads-Up Display (HUD)"},
+        ],
+    },
+    {
+        "title": "2023 Toyota Urban Cruiser Hyryder V Hybrid",
+        "reg_number": "KA-05-TH-9900",
+        "make": "Toyota",
+        "model": "Hyryder",
+        "variant": "V Strong Hybrid e-CVT",
+        "year": 2023,
+        "kilometers_driven": 16500,
+        "fuel_type": FuelType.PETROL,
+        "transmission": TransmissionType.AUTOMATIC,
+        "ownership": OwnershipType.FIRST,
+        "body_type": BodyType.SUV,
+        "color": "Cafe White",
+        "city": "Bangalore",
+        "hub_location": "Value Cars Hub, Near Bangalore University, Kengunte, Mallathahalli, Bengaluru 560056",
+        "price": 1820000.0,
+        "original_price": 2150000.0,
+        "estimated_market_min": 1780000.0,
+        "estimated_market_max": 1860000.0,
+        "inspection_score": 9.7,
+        "is_spinny_certified": True,
+        "warranty_months": 12,
+        "status": CarStatus.PUBLISHED,
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
+        "seller_phone": "8050966025",
+        "is_verified_seller": True,
+        "description": "Self-charging strong hybrid SUV delivering 27.97 kmpl. Outstanding reliability, quiet EV drive mode, and panoramic sunroof.",
+        "images": [
+            {"image_url": "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1200&q=80", "tag": "EXTERIOR", "display_order": 1, "is_cover": True},
+        ],
+        "features": [
+            {"category": "PERFORMANCE", "name": "Self-Charging Strong Hybrid Engine"},
+            {"category": "COMFORT", "name": "Panoramic Sunroof"},
+            {"category": "SAFETY", "name": "360-Degree Camera"},
+        ],
+    },
+    {
+        "title": "2021 Volkswagen Taigun GT Plus 1.5 TSI DSG",
+        "reg_number": "KA-02-VW-1234",
+        "make": "Volkswagen",
+        "model": "Taigun",
+        "variant": "GT Plus 1.5 TSI DSG",
+        "year": 2021,
+        "kilometers_driven": 27000,
+        "fuel_type": FuelType.PETROL,
+        "transmission": TransmissionType.AUTOMATIC,
+        "ownership": OwnershipType.FIRST,
+        "body_type": BodyType.SUV,
+        "color": "Wild Cherry Red",
+        "city": "Bangalore",
+        "hub_location": "Value Cars Hub, Near Bangalore University, Kengunte, Mallathahalli, Bengaluru 560056",
+        "price": 1380000.0,
+        "original_price": 1780000.0,
+        "estimated_market_min": 1340000.0,
+        "estimated_market_max": 1420000.0,
+        "inspection_score": 9.4,
+        "is_spinny_certified": True,
+        "warranty_months": 12,
+        "status": CarStatus.PUBLISHED,
+        "seller_email": "admin@valuecars.com",
+        "seller_name": "Value Cars Direct",
+        "seller_phone": "8050966025",
+        "is_verified_seller": True,
+        "description": "High performance 150 PS turbo TSI engine with cylinder deactivation technology, 5-Star Global NCAP safety, and razor sharp handling.",
+        "images": [
+            {"image_url": "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80", "tag": "EXTERIOR", "display_order": 1, "is_cover": True},
+        ],
+        "features": [
+            {"category": "PERFORMANCE", "name": "1.5L TSI EVO 150 PS Engine with DSG"},
+            {"category": "SAFETY", "name": "5-Star Global NCAP Safety Rating"},
+            {"category": "INFOTAINMENT", "name": "10-inch VW Play Touchscreen"},
+        ],
+    },
 ]
 
 
@@ -210,17 +325,34 @@ async def seed_database(db: AsyncSession) -> None:
     # NOTE: `users.phone_number` and `users.email` are both UNIQUE columns, so it is
     # impossible for two admin rows to share the same phone/email. Each account below
     # therefore gets its own unique phone number while remaining reachable via email login.
+    #
+    # SECURITY: Seeded admins must never use a hardcoded shared password. We read the
+    # bootstrap password from settings.ADMIN_BOOTSTRAP_PASSWORD (env var). In production,
+    # if it is left unset we simply do NOT create new admin accounts rather than seeding
+    # an account protected by a predictable password.
+    bootstrap_pwd = (settings.ADMIN_BOOTSTRAP_PASSWORD or "").strip()
+    is_production = settings.ENVIRONMENT.strip().lower() == "production"
+    if not bootstrap_pwd:
+        if is_production:
+            logger.warning(
+                "ADMIN_BOOTSTRAP_PASSWORD is not set in production — skipping creation of new admin accounts. "
+                "Set ADMIN_BOOTSTRAP_PASSWORD to seed an admin, or provision admins manually."
+            )
+        else:
+            # Non-production fallback that is still unique to this environment and marked clearly.
+            bootstrap_pwd = "ValueCars-DevOnly-ChangeMeInProduction-2026"
+
     admin_accounts = [
-        ("Manoj Shankar (Superadmin)", "8050966025", "shankarmanoj654@gmail.com", "Admin@ValueCars2026"),
-        ("Value Cars Admin", "8310166040", "admin@valuecars.com", "Admin@ValueCars2026"),
-        ("Value Cars Admin 2", "8310166041", "admin2@valuecars.com", "Admin@ValueCars2026"),
-        ("Value Cars Operations Admin", "8050966026", "admin.private@valuecars.com", "Admin@ValueCars2026"),
+        ("Manoj Shankar (Superadmin)", "8050966025", "shankarmanoj654@gmail.com"),
+        ("Value Cars Admin", "8310166040", "admin@valuecars.com"),
+        ("Value Cars Admin 2", "8310166041", "admin2@valuecars.com"),
+        ("Value Cars Operations Admin", "8050966026", "admin.private@valuecars.com"),
     ]
 
     seen_phones: set[str] = set()
     seen_emails: set[str] = set()
 
-    for name, phone, email, pwd in admin_accounts:
+    for name, phone, email in admin_accounts:
         email = (email or "").strip().lower() or None
 
         # Reuse an existing account that already matches this phone OR email.
@@ -247,11 +379,16 @@ async def seed_database(db: AsyncSession) -> None:
         if phone in seen_phones or (email and email in seen_emails):
             continue
 
+        # In production with no ADMIN_BOOTSTRAP_PASSWORD configured, do not create
+        # a new admin account (no predictable default password may be used).
+        if not bootstrap_pwd:
+            continue
+
         admin = User(
             full_name=name,
             phone_number=phone,
             email=email,
-            hashed_password=get_password_hash(pwd),
+            hashed_password=get_password_hash(bootstrap_pwd),
             role=UserRole.ADMIN,
             is_active=True,
             is_verified=True,
@@ -304,60 +441,63 @@ async def seed_database(db: AsyncSession) -> None:
 
     await db.flush()
 
-    # 4. Seed Cars if table is empty
-    cars_count_query = select(Car)
-    existing_cars = await db.execute(cars_count_query)
-    if not existing_cars.first():
-        for car_data in SAMPLE_CARS:
-            images = car_data.pop("images", [])
-            features = car_data.pop("features", [])
+    # 4. Seed all missing sample cars
+    for raw_car in SAMPLE_CARS:
+        car_data = dict(raw_car)
+        reg_num = car_data.get("reg_number")
+        existing_car = await db.execute(select(Car).where(Car.reg_number == reg_num))
+        if existing_car.scalar_one_or_none():
+            continue
 
-            car = Car(**car_data)
-            db.add(car)
-            await db.flush()
+        images = car_data.pop("images", [])
+        features = car_data.pop("features", [])
 
-            for img in images:
-                db.add(CarImage(car_id=car.id, **img))
+        car = Car(**car_data)
+        db.add(car)
+        await db.flush()
 
-            for feat in features:
-                db.add(CarFeature(car_id=car.id, **feat))
+        for img in images:
+            db.add(CarImage(car_id=car.id, **img))
 
-            # Create an inspection record for the car
-            inspection = Inspection(
-                car_id=car.id,
-                inspector_id=inspector.id if inspector else None,
-                overall_score=car.inspection_score,
-                status=InspectionStatus.APPROVED,
-                engine_score=9.4,
-                exterior_score=9.1,
-                interior_score=9.3,
-                transmission_score=9.5,
-                suspension_score=9.0,
-                electrical_score=9.6,
-                tyre_score=8.8,
-                ac_score=9.5,
-                summary_notes="Vehicle is in superb mechanical and cosmetic condition. No structural damage detected.",
-            )
-            db.add(inspection)
-            await db.flush()
+        for feat in features:
+            db.add(CarFeature(car_id=car.id, **feat))
 
-            # Add sample checkpoints
-            checkpoints = [
-                ("ENGINE", "Engine Oil Condition", CheckpointCondition.PERFECT, "Clean engine oil at optimal level"),
-                ("ENGINE", "Coolant & Radiator", CheckpointCondition.GOOD, "No coolant leaks detected"),
-                ("EXTERIOR", "Front Bumper & Grille", CheckpointCondition.GOOD, "Minor superficial stone chip"),
-                ("INTERIOR", "Dashboard & Upholstery", CheckpointCondition.PERFECT, "No tears or dashboard fading"),
-                ("TYRES", "Tyre Tread Depth", CheckpointCondition.GOOD, "Approx 75% tread life remaining"),
-            ]
-            for cat, name, cond, notes in checkpoints:
-                db.add(
-                    InspectionItem(
-                        inspection_id=inspection.id,
-                        category=cat,
-                        checkpoint_name=name,
-                        condition=cond,
-                        notes=notes,
-                    )
+        # Create an inspection record for the car
+        inspection = Inspection(
+            car_id=car.id,
+            inspector_id=inspector.id if inspector else None,
+            overall_score=car.inspection_score,
+            status=InspectionStatus.APPROVED,
+            engine_score=9.4,
+            exterior_score=9.1,
+            interior_score=9.3,
+            transmission_score=9.5,
+            suspension_score=9.0,
+            electrical_score=9.6,
+            tyre_score=8.8,
+            ac_score=9.5,
+            summary_notes="Vehicle is in superb mechanical and cosmetic condition. No structural damage detected.",
+        )
+        db.add(inspection)
+        await db.flush()
+
+        # Add sample checkpoints
+        checkpoints = [
+            ("ENGINE", "Engine Oil Condition", CheckpointCondition.PERFECT, "Clean engine oil at optimal level"),
+            ("ENGINE", "Coolant & Radiator", CheckpointCondition.GOOD, "No coolant leaks detected"),
+            ("EXTERIOR", "Front Bumper & Grille", CheckpointCondition.GOOD, "Minor superficial stone chip"),
+            ("INTERIOR", "Dashboard & Upholstery", CheckpointCondition.PERFECT, "No tears or dashboard fading"),
+            ("TYRES", "Tyre Tread Depth", CheckpointCondition.GOOD, "Approx 75% tread life remaining"),
+        ]
+        for cat, name, cond, notes in checkpoints:
+            db.add(
+                InspectionItem(
+                    inspection_id=inspection.id,
+                    category=cat,
+                    checkpoint_name=name,
+                    condition=cond,
+                    notes=notes,
                 )
+            )
 
-        await db.commit()
+    await db.commit()

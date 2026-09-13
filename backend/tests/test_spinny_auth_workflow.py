@@ -4,7 +4,7 @@ from sqlalchemy import select
 from app.models.user import User, UserVerificationToken, AccountStatus
 
 @pytest.mark.asyncio
-async def test_spinny_auth_full_journey(client: AsyncClient, db_session):
+async def test_spinny_auth_full_journey(client: AsyncClient, db_session, admin_headers: dict):
     test_email = "spinny_buyer@example.com"
 
     # 1. Step 1: Check Email -> Should be NEW
@@ -118,7 +118,8 @@ async def test_spinny_auth_full_journey(client: AsyncClient, db_session):
     # 11. Admin User Action: Disable & Reactivate
     action_res = await client.post(
         "/api/v1/auth/admin-user-action",
-        json={"user_id": str(user.id), "action": "DISABLE"}
+        json={"user_id": str(user.id), "action": "DISABLE"},
+        headers=admin_headers,
     )
     assert action_res.status_code == 200
     assert action_res.json()["status"] == "DISABLED"
@@ -133,7 +134,8 @@ async def test_spinny_auth_full_journey(client: AsyncClient, db_session):
     # Reactivate
     react_res = await client.post(
         "/api/v1/auth/admin-user-action",
-        json={"user_id": str(user.id), "action": "REACTIVATE"}
+        json={"user_id": str(user.id), "action": "REACTIVATE"},
+        headers=admin_headers,
     )
     assert react_res.status_code == 200
     assert react_res.json()["status"] == "ACTIVE"

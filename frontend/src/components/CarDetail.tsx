@@ -5,12 +5,13 @@ import Link from 'next/link';
 import { TestDriveModal } from './TestDriveModal';
 import { ReserveModal } from './ReserveModal';
 import { apiClient } from '../services/api';
+import { resolveMediaUrl } from '../services/api';
 import { Car, InspectionReport } from '../types/car';
 import { track } from '../lib/activity';
 import { reportError } from '../lib/errorReporting';
 import { addRecentCar } from '../lib/uiState';
 import { useAuth } from '../context/auth';
-import { subscribe, getSnapshot, toggleFavorite } from '../services/favoritesStore';
+import { subscribe, getSnapshot, getServerSnapshot, toggleFavorite } from '../services/favoritesStore';
 import { ShieldCheck, ArrowLeft, Award, Loader2, X, ChevronLeft, ChevronRight, Maximize2, Heart, Check } from 'lucide-react';
 
 interface CarDetailProps {
@@ -28,7 +29,7 @@ export default function CarDetail({ carId }: CarDetailProps) {
   const [showReserve, setShowReserve] = useState(false);
 
   const { openAuth } = useAuth();
-  const favoriteIds = useSyncExternalStore(subscribe, getSnapshot);
+  const favoriteIds = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const isFav = favoriteIds.has(carId);
 
   const [favBusy, setFavBusy] = useState(false);
@@ -77,7 +78,7 @@ export default function CarDetail({ carId }: CarDetailProps) {
           title: carData.title,
           price: carData.price,
           image:
-            (carData.images?.find((img) => img.is_cover) || carData.images?.[0])?.image_url || '',
+            resolveMediaUrl((carData.images?.find((img) => img.is_cover) || carData.images?.[0])?.image_url || ''),
         });
         if (carData.images && carData.images.length > 0) {
           const sorted = [...carData.images].sort((a, b) => a.display_order - b.display_order);
@@ -154,7 +155,7 @@ export default function CarDetail({ carId }: CarDetailProps) {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={active?.image_url || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80'}
+                  src={resolveMediaUrl(active?.image_url || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80')}
                   alt={car.title}
                   width={1200}
                   height={800}
@@ -234,7 +235,7 @@ export default function CarDetail({ carId }: CarDetailProps) {
                       </span>
                     )}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img.image_url} alt="thumbnail" className="w-full h-full object-cover" />
+                    <img src={resolveMediaUrl(img.image_url)} alt="thumbnail" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -443,7 +444,7 @@ export default function CarDetail({ carId }: CarDetailProps) {
           <div className="max-w-[92vw] max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={active?.image_url || images[0].image_url}
+              src={resolveMediaUrl(active?.image_url || images[0].image_url)}
               alt={car.title}
               className="max-w-[92vw] max-h-[78vh] rounded-xl object-contain shadow-2xl"
             />

@@ -48,6 +48,10 @@ from app.services.notification_service import NotificationService
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 
+# In-memory OTP store used ONLY by the dev-mode send-otp / verify-otp endpoints.
+# Maps phone_number -> OTP string.  Never enables a fixed backdoor code.
+_dev_otp_store: dict[str, str] = {}
+
 
 # Helper for logging audit actions
 async def log_audit_event(
@@ -724,6 +728,7 @@ async def get_my_profile(current_user: User = Depends(get_current_user)):
 async def list_verification_requests(
     db: AsyncSession = Depends(get_db),
     admin_email: Optional[str] = Query(None),
+    _admin: User = Depends(get_current_admin),
 ):
     """Admin views all user verification requests."""
     # Verify manager or superadmin
@@ -736,6 +741,7 @@ async def list_verification_requests(
 async def admin_user_action(
     payload: AdminUserActionRequest,
     db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
 ):
     """Admin updates user status (APPROVE, REJECT, DISABLE, REACTIVATE)."""
     user = None
@@ -755,7 +761,7 @@ async def admin_user_action(
     if act == "APPROVE":
         user.account_status = AccountStatus.APPROVED.value
         user.approved_at = now
-        user.approved_by = "Admin Dashboard"
+        user.approved_by = _admin.email or "Admin Dashboard"
         user.is_active = True
 
         # Generate single-use create password token
@@ -811,6 +817,7 @@ async def admin_user_action(
 async def list_audit_logs(
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
 ):
     """Admin views recent security and operational audit logs."""
     query = select(AuditLog).order_by(desc(AuditLog.created_at)).limit(limit)
@@ -856,22 +863,32 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.post("/send-otp")
 async def send_otp(request: OTPRequest):
-    """Dev OTP endpoint."""
+    """Dev-only OTP endpoint. Disabled in production; generates a random OTP per request."""
+    if not settings.OTP_DEV_MODE:
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail="OTP endpoints are disabled in production")
+
+    otp = f"{secrets.randbelow(1_000_000):06d}"
+    _dev_otp_store[request.phone_number] = otp
     return {
         "success": True,
         "message": f"OTP sent to {request.phone_number}",
-        "dev_otp": "1234",
+        "dev_otp": otp,
     }
 
 
 @router.post("/verify-otp", response_model=Token)
 async def verify_otp(request: OTPVerify, db: AsyncSession = Depends(get_db)):
-    """Dev OTP verification endpoint."""
-    if request.otp not in ["1234", "9999"]:
+    """Dev-only OTP verification. Disabled in production; validates against the OTP issued by send-otp."""
+    if not settings.OTP_DEV_MODE:
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail="OTP endpoints are disabled in production")
+
+    expected_otp = _dev_otp_store.get(request.phone_number)
+    if not expected_otp or request.otp != expected_otp:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid OTP",
         )
+    _dev_otp_store.pop(request.phone_number, None)
 
     dummy_email = f"user_{request.phone_number.replace('+', '')}@valuecars.in"
     res = await db.execute(select(User).where(User.phone_number == request.phone_number))

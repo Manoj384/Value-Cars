@@ -17,3 +17,11 @@ services:
         generateValue: true
       - key: ALLOWED_ORIGINS
         value: "*"
+      # Audit Fix B — keep the dev-only OTP stub disabled in production
+      # (send-otp / verify-otp return 410 when false). Do not enable.
+      - key: OTP_DEV_MODE
+        value: "false"
+      # Audit Fix F — set ONCE in the Render dashboard to seed the first admin,
+      # then clear it so production never auto-recreates admin accounts.
+      - key: ADMIN_BOOTSTRAP_PASSWORD
+        sync: false

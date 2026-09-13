@@ -1,0 +1,1059 @@
+# FULL-SCALE APPLICATION AUDIT, TESTING & IMPROVEMENT PROMPT
+
+You are acting as a **Senior Full-Stack Developer, QA Engineer, UX/UI Designer, Security Engineer, Performance Engineer, and Product Manager**.
+
+I have built a second-hand car marketplace application similar in concept to platforms such as Spinny.
+
+Your job is NOT simply to review the source code.
+
+You must **run the complete application, use it like a real customer and admin, identify problems, reproduce them, fix them, and verify that the fixes work**.
+
+Do not make unnecessary architectural changes. First understand the existing application and preserve functionality that already works correctly.
+
+---
+
+# 1. FIRST UNDERSTAND THE APPLICATION
+
+Before modifying anything:
+
+1. Inspect the entire project structure.
+2. Identify:
+
+   * Frontend framework
+   * Backend framework
+   * Database
+   * Authentication system
+   * APIs
+   * Admin panel
+   * Image/file storage
+   * Payment integration, if any
+   * Search system
+   * Filtering system
+   * Hosting/deployment configuration
+3. Understand how the frontend communicates with the backend.
+4. Understand database relationships.
+5. Identify all major user roles.
+6. Identify existing features.
+7. Identify unfinished or placeholder functionality.
+8. Identify TODOs, console errors, warnings and broken imports.
+9. Check environment/configuration files.
+10. Do NOT expose or print secrets, API keys, passwords or credentials.
+
+Create a short internal map of the application's architecture before beginning the audit.
+
+---
+
+# 2. RUN THE APPLICATION
+
+Actually start and run the application.
+
+Do not rely only on static code inspection.
+
+Test the application in the browser as an actual user.
+
+Verify:
+
+* Application starts successfully
+* No startup errors
+* No broken routes
+* No blank pages
+* No infinite loading
+* No unexpected redirects
+* No console errors
+* No failed API requests
+* No database errors
+* No broken images
+* No missing assets
+* No layout crashes
+
+If something prevents the application from running:
+
+1. Identify the root cause.
+2. Fix it.
+3. Restart the application.
+4. Test again.
+
+Continue until the application can be used normally.
+
+---
+
+# 3. TEST THE COMPLETE CUSTOMER JOURNEY
+
+Use the application as a real second-hand car customer.
+
+Test the complete journey:
+
+HOME → SEARCH → FILTER → CAR LISTING → CAR DETAILS → CONTACT/ENQUIRY → LOGIN/SIGNUP → PROFILE → FAVORITES → BOOKING/INSPECTION → CONFIRMATION
+
+Test every possible path.
+
+---
+
+# 4. HOME PAGE TEST
+
+Check:
+
+* Page loads quickly
+* Hero section works
+* Search works
+* Location selection works
+* Brand selection works
+* Budget selection works
+* Body type selection works
+* Featured cars load correctly
+* Recommended cars work
+* Buttons actually work
+* Navigation works
+* Images load
+* Mobile layout works
+* Empty states are handled
+* Loading states are present
+* Error states are user-friendly
+
+Check for:
+
+* Excessive empty space
+* Misaligned elements
+* Inconsistent spacing
+* Tiny text
+* Poor contrast
+* Confusing buttons
+* Unnecessary popups
+* Broken animations
+* Slow components
+
+---
+
+# 5. CAR SEARCH TESTING
+
+Test realistic searches such as:
+
+* Hyundai cars
+* Maruti cars
+* Tata cars
+* BMW cars
+* SUV
+* Automatic
+* Diesel
+* Petrol
+* Electric
+* Cars under ₹5 lakh
+* Cars between ₹5–10 lakh
+* Cars above ₹20 lakh
+* Cars in different locations
+
+Test combinations:
+
+Brand + Model + Price
+
+Brand + Fuel + Transmission
+
+Location + Price
+
+Body Type + Budget
+
+Year + Kilometers
+
+Multiple filters together.
+
+Verify that:
+
+* Results are correct
+* Result count is correct
+* Filters actually affect results
+* Removing a filter works
+* Reset filters works
+* URL/query state remains consistent
+* Pagination works
+* Sorting works
+* No duplicate results appear
+* No irrelevant cars appear
+
+---
+
+# 6. EDGE CASE TESTING
+
+This is extremely important.
+
+Test:
+
+* No cars available
+* One car available
+* Very large number of cars
+* Invalid search
+* Empty search
+* Very long search text
+* Special characters
+* Spaces
+* Different capitalization
+* Invalid price
+* Minimum price greater than maximum price
+* Minimum year greater than maximum year
+* Invalid location
+* Missing car images
+* Missing price
+* Missing mileage
+* Missing fuel type
+* Missing transmission
+* Missing owner information
+* Deleted vehicle
+* Sold vehicle
+* Inactive vehicle
+
+The application must never crash.
+
+Every empty/error situation should display a useful message.
+
+---
+
+# 7. CAR DETAILS PAGE
+
+Test every vehicle details page.
+
+Verify:
+
+* Images load
+* Image gallery works
+* Image zoom works if implemented
+* Next/previous image works
+* Vehicle information is accurate
+* Price is displayed correctly
+* EMI calculator works if available
+* Mileage is displayed correctly
+* Fuel type
+* Transmission
+* Registration year
+* Manufacturing year
+* Kilometers
+* Ownership
+* Location
+* Features
+* Specifications
+* Description
+* Seller information
+* Contact button
+* WhatsApp/call button if available
+* Favorite button
+* Share button
+
+Check whether users can understand the vehicle information quickly.
+
+Improve information hierarchy if necessary.
+
+---
+
+# 8. AUTHENTICATION TESTING
+
+Test:
+
+* Signup
+* Login
+* Logout
+* Forgot password
+* Password reset
+* Invalid credentials
+* Duplicate email
+* Duplicate phone number
+* Empty fields
+* Invalid email
+* Weak password
+* Session expiration
+* Refresh while logged in
+* Refresh while logged out
+
+Verify protected pages cannot be accessed without authentication.
+
+Verify users cannot access another user's private information.
+
+---
+
+# 9. USER PROFILE
+
+Test:
+
+* Profile creation
+* Profile editing
+* Phone number
+* Email
+* Location
+* Profile picture if available
+* Saved cars
+* Enquiries
+* Bookings
+* Recently viewed cars
+* Logout
+
+Verify changes persist after refresh.
+
+---
+
+# 10. FAVORITES / WISHLIST
+
+Test:
+
+* Add car
+* Remove car
+* Add multiple cars
+* Duplicate favorite
+* Favorite while logged out
+* Login after favoriting
+* Refresh page
+* Delete vehicle that was favorited
+
+The UI must clearly show whether a car is favorited.
+
+---
+
+# 11. ENQUIRY / CONTACT FLOW
+
+Test:
+
+Customer → Car → Contact Seller
+
+Verify:
+
+* Form validation
+* Phone validation
+* Email validation
+* Message validation
+* Duplicate enquiry handling
+* Success message
+* Error message
+* Database record creation
+* Seller/admin receives enquiry if implemented
+* Customer can see enquiry status if implemented
+
+Do not allow malformed data to reach the backend.
+
+---
+
+# 12. ADMIN PANEL
+
+If an admin panel exists, test it extensively.
+
+Test:
+
+* Admin login
+* Dashboard
+* Add car
+* Edit car
+* Delete car
+* Activate/deactivate car
+* Mark car as sold
+* Upload images
+* Delete images
+* Manage users
+* Manage enquiries
+* Manage bookings
+* Manage locations
+* Manage brands/models
+* Search
+* Filters
+* Pagination
+* Sorting
+* Reports/statistics
+
+Verify admin-only routes are actually protected.
+
+A normal user must NOT be able to access admin functionality.
+
+---
+
+# 13. DATABASE TESTING
+
+Inspect database behavior.
+
+Look for:
+
+* Duplicate records
+* Missing relationships
+* Orphan records
+* Incorrect foreign keys
+* Null handling
+* Incorrect data types
+* Race conditions
+* Missing indexes
+* Inefficient queries
+* N+1 queries
+* Unnecessary database requests
+
+Check whether important queries are optimized.
+
+Do not destroy existing data.
+
+If migrations are required, create them safely.
+
+---
+
+# 14. API TESTING
+
+Test every important API.
+
+For each API check:
+
+* Correct HTTP method
+* Authentication
+* Authorization
+* Input validation
+* Output validation
+* Error handling
+* HTTP status codes
+* Response consistency
+* Invalid IDs
+* Missing parameters
+* Malicious input
+* Large input
+* Duplicate requests
+
+Test:
+
+GET
+
+POST
+
+PUT/PATCH
+
+DELETE
+
+where applicable.
+
+The API should never expose unnecessary sensitive information.
+
+---
+
+# 15. SECURITY AUDIT
+
+Perform a basic application security audit.
+
+Check for:
+
+* Broken authentication
+* Broken authorization
+* IDOR vulnerabilities
+* Exposed user information
+* Exposed admin APIs
+* SQL injection
+* NoSQL injection where applicable
+* XSS
+* CSRF where applicable
+* Unsafe file uploads
+* Malicious filenames
+* Path traversal
+* Insecure API endpoints
+* Missing rate limiting
+* Weak password handling
+* Sensitive information in frontend code
+* API keys accidentally committed
+* Secrets in source code
+* Excessive error information
+
+Do NOT perform destructive attacks.
+
+Only test the local/development application.
+
+---
+
+# 16. UI/UX AUDIT
+
+Evaluate the application as a professional automotive marketplace.
+
+Check:
+
+### Navigation
+
+* Is navigation obvious?
+* Can users reach important pages easily?
+* Is the back button behavior correct?
+
+### Consistency
+
+* Buttons
+* Fonts
+* Colors
+* Cards
+* Borders
+* Shadows
+* Icons
+* Spacing
+* Form fields
+
+must follow a consistent design system.
+
+### Usability
+
+A new user should understand:
+
+1. What the application does
+2. How to search cars
+3. How to filter cars
+4. How to inspect a car
+5. How to contact/enquire
+6. How to save a car
+
+without needing instructions.
+
+---
+
+# 17. MOBILE RESPONSIVENESS
+
+Test at minimum:
+
+* Desktop
+* Laptop
+* Tablet
+* Mobile
+
+Check common widths:
+
+320px
+
+375px
+
+390px
+
+414px
+
+768px
+
+1024px
+
+1366px
+
+1920px
+
+Look for:
+
+* Horizontal scrolling
+* Overflow
+* Cut-off buttons
+* Broken cards
+* Text overflow
+* Images overflowing
+* Navigation problems
+* Modal problems
+* Form problems
+* Sticky elements covering content
+* Bottom navigation problems
+
+Fix responsive issues.
+
+---
+
+# 18. CROSS-BROWSER COMPATIBILITY
+
+Where possible, verify:
+
+* Chrome
+* Edge
+* Firefox
+* Safari-compatible behavior
+
+Focus on standards-compliant implementation rather than browser-specific hacks.
+
+---
+
+# 19. PERFORMANCE TESTING
+
+Check:
+
+* Initial page load
+* Time to interactive
+* API response time
+* Database query performance
+* Image loading
+* Large image handling
+* JavaScript bundle size
+* Unnecessary re-renders
+* Memory usage
+* Network requests
+
+Look for unnecessary:
+
+* API calls
+* Database calls
+* Component renders
+* Image downloads
+* Large dependencies
+
+Optimize where appropriate.
+
+Do not sacrifice functionality for small performance gains.
+
+---
+
+# 20. IMAGE OPTIMIZATION
+
+Because this is a car marketplace, images are extremely important.
+
+Check:
+
+* Image dimensions
+* Image file size
+* Compression
+* Lazy loading
+* Responsive images
+* Thumbnail generation
+* Gallery performance
+* Broken images
+* Missing images
+
+Use appropriate placeholders when images are unavailable.
+
+---
+
+# 21. ERROR HANDLING
+
+Every important operation must handle:
+
+LOADING
+
+SUCCESS
+
+EMPTY
+
+ERROR
+
+states.
+
+Never leave the user staring at:
+
+"Loading..."
+
+forever.
+
+Instead provide useful messages such as:
+
+"Unable to load cars. Please try again."
+
+"Sorry, no cars match your filters."
+
+"Something went wrong. Please try again."
+
+---
+
+# 22. CHAIN-BREAK / USER-FLOW TESTING
+
+This is one of the highest-priority tests.
+
+Identify every point where a user journey can break.
+
+For example:
+
+HOME
+↓
+SEARCH
+↓
+FILTER
+↓
+CAR LIST
+↓
+CAR DETAILS
+↓
+LOGIN
+↓
+CONTACT
+↓
+SUBMIT
+↓
+SUCCESS
+
+Test every transition.
+
+Also test:
+
+BACK
+
+FORWARD
+
+REFRESH
+
+DIRECT URL
+
+NEW TAB
+
+LOGOUT
+
+SESSION EXPIRATION
+
+NETWORK FAILURE
+
+API FAILURE
+
+DATABASE FAILURE
+
+IMAGE FAILURE
+
+INVALID DATA
+
+The application must recover gracefully.
+
+---
+
+# 23. NETWORK FAILURE TESTING
+
+Simulate:
+
+* Slow network
+* API timeout
+* Backend unavailable
+* Database unavailable
+* Image unavailable
+* Intermittent network
+
+Verify that the UI does not freeze or crash.
+
+Provide retry functionality where appropriate.
+
+---
+
+# 24. FORM TESTING
+
+Every form must be tested with:
+
+* Valid input
+* Empty input
+* Invalid input
+* Minimum values
+* Maximum values
+* Very long values
+* Special characters
+* Spaces
+* Numbers where text is expected
+* Text where numbers are expected
+
+Validation should exist on BOTH:
+
+Frontend
+
+AND
+
+Backend
+
+Never trust frontend validation alone.
+
+---
+
+# 25. ACCESSIBILITY
+
+Check:
+
+* Keyboard navigation
+* Focus states
+* Labels
+* Button names
+* Alt text
+* Color contrast
+* Form accessibility
+* Screen-reader-friendly structure
+* Semantic HTML
+
+Users should be able to navigate important functionality without a mouse.
+
+---
+
+# 26. SEO / PUBLIC PAGES
+
+For public marketplace pages, check:
+
+* Page titles
+* Meta descriptions
+* Heading structure
+* Canonical URLs
+* SEO-friendly URLs
+* Image alt text
+* Open Graph metadata
+* Structured data where appropriate
+* Car detail page indexing strategy
+
+Avoid duplicate/poor URLs.
+
+---
+
+# 27. DATA VALIDATION
+
+Vehicle information should be validated.
+
+Examples:
+
+Price cannot be negative.
+
+Kilometers cannot be negative.
+
+Year cannot be in an impossible range.
+
+Mileage cannot be negative.
+
+Phone number must follow expected format.
+
+Email must be valid.
+
+Required vehicle fields cannot be empty.
+
+---
+
+# 28. LOGGING & DEBUGGING
+
+Check the application logs.
+
+Remove unnecessary:
+
+* console.log
+* debug statements
+* stack traces shown to users
+* development-only messages
+
+Keep useful production logging.
+
+Errors should contain enough information for developers to diagnose problems without exposing sensitive information.
+
+---
+
+# 29. CODE QUALITY
+
+Review:
+
+* Duplicate code
+* Dead code
+* Unused imports
+* Unused variables
+* Huge components
+* Huge functions
+* Poor naming
+* Hardcoded values
+* Repeated API logic
+* Repeated UI logic
+* Missing error handling
+* Missing types
+* Inconsistent architecture
+
+Refactor only where it improves maintainability or reliability.
+
+Do not rewrite the entire project unnecessarily.
+
+---
+
+# 30. TEST AUTOMATION
+
+Where practical, add automated tests for critical functionality.
+
+Prioritize:
+
+1. Authentication
+2. Search
+3. Filters
+4. Car details
+5. Favorites
+6. Enquiries
+7. Admin CRUD
+8. API validation
+9. Authorization
+10. Important database operations
+
+Add end-to-end tests for the most important customer journeys.
+
+---
+
+# 31. REALISTIC TEST DATA
+
+Use realistic vehicle data for testing.
+
+Include:
+
+* Multiple brands
+* Multiple models
+* Different prices
+* Different years
+* Different fuel types
+* Different transmissions
+* Different locations
+* Different mileage
+* Different vehicle conditions
+
+Include enough records to expose pagination, filtering and performance problems.
+
+Do not modify or delete production data.
+
+---
+
+# 32. PRIORITIZE PROBLEMS
+
+For every issue discovered, classify it:
+
+### P0 — CRITICAL
+
+Application cannot run or major functionality is unusable.
+
+### P1 — HIGH
+
+Important customer journey is broken.
+
+### P2 — MEDIUM
+
+Feature works but has significant usability/performance/reliability issues.
+
+### P3 — LOW
+
+Minor UI, code-quality or polish issue.
+
+Focus on P0/P1 first.
+
+---
+
+# 33. FIX → TEST → VERIFY
+
+Do NOT simply identify problems.
+
+For every issue:
+
+1. Reproduce the issue.
+2. Determine root cause.
+3. Implement the smallest reliable fix.
+4. Run the application again.
+5. Reproduce the original scenario.
+6. Confirm the problem is fixed.
+7. Check that the fix did not break another feature.
+
+Follow:
+
+DISCOVER → REPRODUCE → FIX → TEST → REGRESSION TEST
+
+---
+
+# 34. DO NOT MAKE THESE MISTAKES
+
+Do NOT:
+
+* Rewrite working functionality unnecessarily
+* Change the database without reason
+* Remove features because they are difficult to test
+* Replace the framework
+* Change the overall design without justification
+* Introduce unnecessary dependencies
+* Hardcode fake functionality
+* Hide errors instead of fixing them
+* Disable validation
+* Ignore console errors
+* Ignore API errors
+* Assume something works because the code looks correct
+
+Actually run and verify the functionality.
+
+---
+
+# 35. FINAL REGRESSION TEST
+
+After making all improvements:
+
+Run the complete application again.
+
+Perform a complete regression test:
+
+HOME
+→ SEARCH
+→ FILTER
+→ LISTING
+→ DETAILS
+→ LOGIN
+→ FAVORITE
+→ ENQUIRY
+→ PROFILE
+→ ADMIN
+→ CRUD
+→ LOGOUT
+
+Also test:
+
+Desktop
+Mobile
+Slow network
+Empty results
+Invalid input
+Refresh
+Back button
+Direct URLs
+
+Ensure there are no new regressions.
+
+---
+
+# 36. FINAL REPORT
+
+At the end, provide a structured report containing:
+
+## Application Health
+
+* Overall stability: /10
+* UX: /10
+* Performance: /10
+* Security: /10
+* Mobile responsiveness: /10
+* Code quality: /10
+* Production readiness: /10
+
+## Issues Found
+
+Create a table:
+
+| Priority | Issue | Location | Root Cause | Fix Applied | Status |
+| -------- | ----- | -------- | ---------- | ----------- | ------ |
+
+## Improvements Made
+
+List every important change.
+
+## Remaining Issues
+
+Clearly identify anything that could not be fixed.
+
+## Recommended Future Improvements
+
+Separate these into:
+
+### Must Have
+
+### Should Have
+
+### Nice to Have
+
+## Final Recommendation
+
+Answer:
+
+"Is this application stable enough for real users?"
+
+If NO, explain exactly what must be fixed first.
+
+If YES, explain what was tested and why it is considered stable.
+
+---
+
+# MOST IMPORTANT INSTRUCTION
+
+Do not give me a theoretical code review.
+
+I want you to behave like a combination of:
+
+* Real customer
+* QA engineer
+* Senior developer
+* UX tester
+* Security tester
+* Performance engineer
+
+**RUN THE APPLICATION.**
+
+**USE THE APPLICATION.**
+
+**BREAK THE APPLICATION.**
+
+**FIND THE PROBLEMS.**
+
+**FIX THE PROBLEMS.**
+
+**RUN IT AGAIN.**
+
+**VERIFY THE FIXES.**
+
+Continue until the application is as stable, user-friendly and production-ready as reasonably possible.
+
+Preserve existing working functionality and design unless a change is necessary to fix a problem or significantly improve usability/reliability.

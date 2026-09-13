@@ -3,6 +3,29 @@ import { cacheGet, cacheGetStale, cacheSet, cacheKeyHash } from '../lib/cache';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
+const API_BASE_ORIGIN = (() => {
+  try {
+    return new URL(API_BASE_URL).origin;
+  } catch {
+    return '';
+  }
+})();
+
+/**
+ * Resolve a possibly root-relative media URL (e.g. `/uploads/general/abc.webp`
+ * returned by the upload API, or `/static/...`) to an absolute URL on the backend
+ * host. The Next.js front-end runs on a different origin (localhost:3000) than the
+ * FastAPI backend (localhost:8000), so relative paths otherwise point at the wrong
+ * host and car images silently break. Absolute http(s) URLs (e.g. Unsplash seed
+ * images) pass through unchanged.
+ */
+export function resolveMediaUrl(url?: string | null): string {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('/')) return `${API_BASE_ORIGIN}${url}`;
+  return url;
+}
+
 // Tracks whether the live backend is reachable, so the UI can surface a
 // "Demo data" vs "Live" indicator instead of silently showing stale data.
 let backendReachable = false;
@@ -438,6 +461,7 @@ const MOCK_CARS: Car[] = [
 ];
 
 const APPROVED_SELLER_EMAILS = [
+  'shankarmanoj654@gmail.com',
   'admin@valuecars.com',
   'seller@dealer.com',
   'superadmin@valuecars.com',
@@ -820,23 +844,25 @@ export const apiClient = {
   },
 
   async submitSellerCar(data: SellerCarSubmission) {
+    let res: Response;
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/submit`, {
+      res = await fetch(`${API_BASE_URL}/cars/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
-      recordSuccess(res.ok);
-      if (res.ok) return res.json();
     } catch {
-      // Fallback
+      throw new Error('Could not reach the server to add your vehicle. Please try again.');
     }
-    const isApproved = APPROVED_SELLER_EMAILS.some((e) => e.toLowerCase() === data.seller_email.toLowerCase());
-    return {
-      id: `car-${Date.now()}`,
-      status: isApproved ? 'PUBLISHED' : 'PENDING_APPROVAL',
-      ...data,
-    };
+    recordSuccess(res.ok);
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      // Surface the real backend error (e.g. duplicate registration, validation)
+      // so the UI never pretends a vehicle was added when it wasn't.
+      const detail = (payload && (payload as { detail?: string }).detail) || `Failed to add vehicle (${res.status})`;
+      throw new Error(detail);
+    }
+    return payload;
   },
 
   // Image Uploads
@@ -855,7 +881,9 @@ export const apiClient = {
       throw new Error(message || `Upload failed (${res.status})`);
     }
     const data = (await res.json()) as { url: string }[];
-    return data.map((item) => item.url);
+    // Uploads return root-relative paths (`/uploads/...`). Resolve them to the
+    // absolute backend URL so the images render correctly on the Next.js host.
+    return data.map((item) => resolveMediaUrl(item.url));
   },
 
   // Admin Portal & Operations

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Clock, ExternalLink } from 'lucide-react';
 import { Car } from '../types/car';
+import { resolveMediaUrl } from '../services/api';
 
 const STORAGE_KEY = 'valuecars:recent';
 const MAX_ITEMS = 6;
@@ -62,10 +63,11 @@ export const RecentCars: React.FC<RecentCarsProps> = ({ cars }) => {
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         {recent.map((car) => {
-          const cover =
+          const cover = resolveMediaUrl(
             car.images?.find((img) => img.is_cover)?.image_url ||
             car.images?.[0]?.image_url ||
-            'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=70';
+            'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=70'
+          );
           return (
             <Link
               key={car.id}

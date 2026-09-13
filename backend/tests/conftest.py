@@ -4,9 +4,16 @@ import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.core.config import settings
 from app.core.database import Base, get_db
 from app.main import app
 from app.services.seed_service import seed_database
+
+# Deterministic, non-production settings for the test environment:
+#  - enable the dev-only OTP endpoints so the OTP tests can run
+#  - provide an explicit admin bootstrap password used when seeding admins
+settings.OTP_DEV_MODE = True
+settings.ADMIN_BOOTSTRAP_PASSWORD = "Admin@ValueCars2026"
 
 # In-memory async SQLite for fast, isolated test runs
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"

@@ -1,7 +1,7 @@
 import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,6 +19,7 @@ async def get_car_inspection(car_id: uuid.UUID, db: AsyncSession = Depends(get_d
     query = (
         select(Inspection)
         .where(Inspection.car_id == car_id)
+        .order_by(desc(Inspection.created_at))
         .options(selectinload(Inspection.items))
     )
     result = await db.execute(query)

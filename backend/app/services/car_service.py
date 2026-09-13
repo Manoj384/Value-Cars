@@ -50,46 +50,46 @@ class CarService:
         """Query cars with dynamic multi-criteria filtering and pagination."""
         await CarService.cleanup_expired_sold_cars(db)
 
-        query = select(Car).options(
-            selectinload(Car.images),
-            selectinload(Car.features),
-        )
-
-        # Filters
+        # Filters — build the shared predicate list so the count and the page
+        # always see exactly the same filtering (previously the count omitted several).
+        where_clauses = []
         if filters.make:
-            query = query.where(Car.make.ilike(f"%{filters.make.strip()}%"))
+            where_clauses.append(Car.make.ilike(f"%{filters.make.strip()}%"))
         if filters.model:
-            query = query.where(Car.model.ilike(f"%{filters.model.strip()}%"))
+            where_clauses.append(Car.model.ilike(f"%{filters.model.strip()}%"))
         if filters.city:
-            query = query.where(Car.city.ilike(f"%{filters.city.strip()}%"))
+            where_clauses.append(Car.city.ilike(f"%{filters.city.strip()}%"))
         if filters.fuel_type:
-            query = query.where(Car.fuel_type == filters.fuel_type)
+            where_clauses.append(Car.fuel_type == filters.fuel_type)
         if filters.transmission:
-            query = query.where(Car.transmission == filters.transmission)
+            where_clauses.append(Car.transmission == filters.transmission)
         if filters.body_type:
-            query = query.where(Car.body_type == filters.body_type)
+            where_clauses.append(Car.body_type == filters.body_type)
         if filters.min_price is not None:
-            query = query.where(Car.price >= filters.min_price)
+            where_clauses.append(Car.price >= filters.min_price)
         if filters.max_price is not None:
-            query = query.where(Car.price <= filters.max_price)
+            where_clauses.append(Car.price <= filters.max_price)
         if filters.min_year is not None:
-            query = query.where(Car.year >= filters.min_year)
+            where_clauses.append(Car.year >= filters.min_year)
         if filters.max_year is not None:
-            query = query.where(Car.year <= filters.max_year)
+            where_clauses.append(Car.year <= filters.max_year)
         if filters.max_km is not None:
-            query = query.where(Car.kilometers_driven <= filters.max_km)
+            where_clauses.append(Car.kilometers_driven <= filters.max_km)
         if filters.min_score is not None:
-            query = query.where(Car.inspection_score >= filters.min_score)
+            where_clauses.append(Car.inspection_score >= filters.min_score)
         if filters.seller_email:
-            query = query.where(Car.seller_email.ilike(f"%{filters.seller_email.strip()}%"))
+            where_clauses.append(Car.seller_email.ilike(f"%{filters.seller_email.strip()}%"))
 
         # Status filtering
         if filters.status:
-            query = query.where(Car.status == filters.status)
-            count_condition = Car.status == filters.status
+            where_clauses.append(Car.status == filters.status)
         else:
-            query = query.where(Car.status.in_([CarStatus.PUBLISHED, CarStatus.SOLD, CarStatus.RESERVED]))
-            count_condition = Car.status.in_([CarStatus.PUBLISHED, CarStatus.SOLD, CarStatus.RESERVED])
+            where_clauses.append(Car.status.in_([CarStatus.PUBLISHED, CarStatus.SOLD, CarStatus.RESERVED]))
+
+        query = select(Car).options(
+            selectinload(Car.images),
+            selectinload(Car.features),
+        ).where(*where_clauses)
 
         # Sorting
         if filters.sort_by == "price_asc":
@@ -105,14 +105,8 @@ class CarService:
         else:
             query = query.order_by(desc(Car.created_at))
 
-        # Total count query
-        count_query = select(func.count(Car.id)).where(count_condition)
-        if filters.make:
-            count_query = count_query.where(Car.make.ilike(f"%{filters.make.strip()}%"))
-        if filters.city:
-            count_query = count_query.where(Car.city.ilike(f"%{filters.city.strip()}%"))
-        if filters.seller_email:
-            count_query = count_query.where(Car.seller_email.ilike(f"%{filters.seller_email.strip()}%"))
+        # Total count query — reuse the exact same predicate list as the page query.
+        count_query = select(func.count(Car.id)).where(*where_clauses)
 
         count_result = await db.execute(count_query)
         total_count = count_result.scalar_one()

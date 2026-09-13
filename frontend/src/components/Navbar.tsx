@@ -49,25 +49,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
   ) : (
     <button
       onClick={() => openAuth()}
-      className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 transition"
+      className="inline-flex items-center justify-center px-4 py-2 rounded-full text-xs font-bold text-white bg-slate-900 hover:bg-rose-600 transition shrink-0 shadow-sm"
     >
-      <UserCircle2 className="w-4 h-4 mr-2 text-amber-400" /> Login / Sign Up
+      <UserCircle2 className="w-3.5 h-3.5 mr-1.5 text-amber-400" /> Login / Sign Up
     </button>
   );
 
   const navLinks = (
     <>
-      <Link href="/" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-rose-600 transition flex items-center">
+      <Link href="/" onClick={() => setMobileOpen(false)} className="px-2.5 py-1 text-xs font-bold text-slate-700 hover:text-rose-600 transition flex items-center shrink-0">
         Browse Cars
       </Link>
-      <Link href="/sell" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-rose-600 transition flex items-center">
-        <PlusCircle className="w-4 h-4 mr-1.5 text-rose-600" /> Add / Sell Car
+      <Link href="/sell" onClick={() => setMobileOpen(false)} className="px-2.5 py-1 text-xs font-bold text-slate-700 hover:text-rose-600 transition flex items-center shrink-0">
+        <PlusCircle className="w-3.5 h-3.5 mr-1 text-rose-600" /> Add / Sell
       </Link>
-      <Link href="/sell/my-listings" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-rose-600 transition flex items-center">
-        <UserCircle2 className="w-4 h-4 mr-1.5 text-slate-600" /> My Listings
-      </Link>
-      <Link href="/admin" onClick={() => setMobileOpen(false)} className="px-3 py-2 text-sm font-bold text-slate-700 hover:text-amber-600 transition flex items-center">
-        <LayoutDashboard className="w-4 h-4 mr-1.5 text-amber-500" /> Admin Hub
+      <Link href="/sell/my-listings" onClick={() => setMobileOpen(false)} className="px-2.5 py-1 text-xs font-bold text-slate-700 hover:text-rose-600 transition flex items-center shrink-0">
+        <UserCircle2 className="w-3.5 h-3.5 mr-1 text-slate-500" /> My Listings
       </Link>
     </>
   );
@@ -115,17 +112,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
       </div>
 
       {/* Main Nav with Logo */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        <div className="flex items-center space-x-5">
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="h-12 w-12 rounded-2xl bg-black border border-amber-500/20 overflow-hidden flex items-center justify-center p-0.5 shadow-md shadow-slate-900/10 shrink-0">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center space-x-3 shrink-0">
+          <Link href="/" className="flex items-center space-x-2.5">
+            <div className="h-11 w-11 rounded-2xl bg-black border border-amber-500/30 overflow-hidden flex items-center justify-center p-0.5 shadow-md shadow-slate-900/10 shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="./logo-dark.jpeg"
-                alt="Value Cars"
+                src="/logo_black_clean.png"
+                alt="Value Cars Logo"
                 className="w-full h-full object-contain rounded-xl"
                 onError={(e) => {
-                  (e.target as HTMLImageElement).src = './logo-light.jpeg';
+                  (e.target as HTMLImageElement).src = '/logo-dark.jpeg';
                 }}
               />
             </div>
@@ -139,53 +136,45 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
             </div>
           </Link>
 
-          {/* City Selector */}
-          <div className="hidden md:flex items-center bg-slate-100 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-700">
-            <MapPin className="w-4 h-4 text-rose-600 mr-1.5" />
-            <select
-              value={selectedCity}
-              onChange={(e) => onCityChange && onCityChange(e.target.value)}
-              aria-label="Filter cars by city"
-              className="bg-transparent border-none outline-none cursor-pointer text-sm font-bold text-slate-800"
-            >
-              <option value="">All Cities (India)</option>
-              <option value="Bangalore">Bangalore</option>
-              <option value="Mumbai">Mumbai</option>
-              <option value="Delhi NCR">Delhi NCR</option>
-              <option value="Hyderabad">Hyderabad</option>
-              <option value="Chennai">Chennai</option>
-              <option value="Pune">Pune</option>
-              <option value="Kolkata">Kolkata</option>
-              <option value="Ahmedabad">Ahmedabad</option>
-              <option value="Jaipur">Jaipur</option>
-              <option value="Chandigarh">Chandigarh</option>
-              <option value="Kochi">Kochi</option>
-            </select>
+        </div>
+
+        {/* Large Prominent Global Search Bar */}
+        <div className="hidden md:flex flex-1 max-w-2xl mx-2 lg:mx-4">
+          <div className="relative w-full">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={handleSearch}
+              placeholder="Search make, model, variant (e.g. Creta, Thar, Swift, Nexon, City)..."
+              className="w-full bg-slate-100/90 hover:bg-slate-50 border border-slate-300 focus:border-rose-500 focus:bg-white focus:ring-4 focus:ring-rose-500/15 pl-11 pr-10 py-3 rounded-full text-sm outline-none transition-all duration-200 font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-medium shadow-inner"
+            />
+            <Search className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('');
+                  if (onSearchChange) onSearchChange('');
+                }}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 rounded-full hover:bg-slate-200 transition"
+                title="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Global Search Bar */}
-        <div className="hidden lg:flex flex-1 max-w-md mx-6 relative">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearch}
-            placeholder="Search make, model (e.g. Creta, Thar, Swift)..."
-            className="w-full bg-slate-100 border border-transparent focus:border-rose-500 focus:bg-white pl-10 pr-4 py-2.5 rounded-full text-sm outline-none transition"
-          />
-          <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
-        </div>
-
-        {/* Action Links (desktop) */}
-        <div className="hidden md:flex items-center space-x-3">
+        {/* Compact Action Links & Buttons (desktop) */}
+        <div className="hidden md:flex items-center space-x-2 shrink-0">
           {navLinks}
           {authControl}
           <Link
             href="/sell"
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-bold text-white bg-slate-900 hover:bg-rose-600 shadow-md transition transform active:scale-95"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-full text-xs font-bold text-white bg-slate-900 hover:bg-rose-600 shadow-sm transition transform active:scale-95 shrink-0"
           >
-            <PlusCircle className="w-4 h-4 mr-2 text-amber-400" />
-            + List Your Car
+            <PlusCircle className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
+            + List Car
           </Link>
         </div>
 
@@ -203,15 +192,28 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
       {/* Mobile dropdown */}
       {mobileOpen && (
         <div className="md:hidden border-t border-slate-200 bg-white px-4 py-3 space-y-1 shadow-lg">
-          <div className="relative mb-2 lg:hidden">
+          <div className="relative w-full mb-3 md:hidden">
             <input
               type="text"
               value={searchTerm}
               onChange={handleSearch}
-              placeholder="Search cars..."
-              className="w-full bg-slate-100 border border-transparent focus:border-rose-500 focus:bg-white pl-10 pr-4 py-2.5 rounded-full text-sm outline-none transition"
+              placeholder="Search cars (Creta, Thar, Swift)..."
+              className="w-full bg-slate-100 border border-slate-200 focus:border-rose-500 focus:bg-white pl-10 pr-9 py-2.5 rounded-full text-sm outline-none transition font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-normal"
             />
-            <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('');
+                  if (onSearchChange) onSearchChange('');
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
           {navLinks}
           <div className="pt-2 border-t border-slate-100 space-y-3">

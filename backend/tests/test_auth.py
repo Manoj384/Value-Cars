@@ -8,17 +8,25 @@ async def test_send_and_verify_otp(client: AsyncClient):
     send_res = await client.post("/api/v1/auth/send-otp", json={"phone_number": "9876543299"})
     assert send_res.status_code == 200
     assert send_res.json()["success"] is True
+    dev_otp = send_res.json()["dev_otp"]
 
-    # 2. Verify OTP
+    # 2. Verify OTP using the per-request code (no hardcoded backdoor)
     verify_res = await client.post(
         "/api/v1/auth/verify-otp",
-        json={"phone_number": "9876543299", "otp": "1234", "full_name": "Test Customer"},
+        json={"phone_number": "9876543299", "otp": dev_otp, "full_name": "Test Customer"},
     )
     assert verify_res.status_code == 200
     data = verify_res.json()
     assert "access_token" in data
     assert data["token_type"] == "bearer"
     assert data["user"]["phone_number"] == "9876543299"
+
+    # 3. A forged/wrong OTP must be rejected
+    bad_res = await client.post(
+        "/api/v1/auth/verify-otp",
+        json={"phone_number": "9876543299", "otp": "1234", "full_name": "Intruder"},
+    )
+    assert bad_res.status_code == 400
 
 
 from sqlalchemy import select

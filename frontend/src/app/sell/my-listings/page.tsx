@@ -12,6 +12,7 @@ import {
   getSellerToken,
 } from '../../../services/api';
 import { Car } from '../../../types/car';
+import { resolveMediaUrl } from '../../../services/api';
 import {
   UserCircle2,
   LogOut,
@@ -195,7 +196,7 @@ function ListingCard({
   onError: (msg: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
-  const cover = car.images?.find((i) => i.is_cover)?.image_url || car.images?.[0]?.image_url;
+  const cover = resolveMediaUrl(car.images?.find((i) => i.is_cover)?.image_url || car.images?.[0]?.image_url);
   const statusBadge = STATUS_BADGES[car.status] || 'bg-slate-100 text-slate-700 border-slate-200';
 
   const setStatus = async (status: string) => {

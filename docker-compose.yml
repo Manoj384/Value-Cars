@@ -50,6 +50,11 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=super-secret-jwt-key-for-development-mode-value-cars-2026
       - ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+      # Dev-only OTP stub; keep OFF. send-otp / verify-otp return 410 when false.
+      - OTP_DEV_MODE=false
+      # Local seed admin password (development). Set to a real value only for the
+      # first local seed; leave unset in production to skip auto admin creation.
+      - ADMIN_BOOTSTRAP_PASSWORD=ValueCars-Docker-Dev-Admin-2026
     ports:
       - "8000:8000"
     volumes:

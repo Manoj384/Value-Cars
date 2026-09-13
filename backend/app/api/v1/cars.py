@@ -355,40 +355,19 @@ async def get_car_details(car_id: uuid.UUID, db: AsyncSession = Depends(get_db))
     return CarResponse.model_validate(car)
 
 
-async def check_manager_permission(email: Optional[str], db: AsyncSession) -> bool:
-    """Verifies whether the email belongs to Superadmin or an Approved Seller/Manager."""
-    if not email:
-        return False
-    clean_email = email.strip().lower()
-    if clean_email in {"shankarmanoj654@gmail.com", "admin@valuecars.com"}:
-        return True
-    query = select(ApprovedSellerEmail).where(
-        ApprovedSellerEmail.email == clean_email,
-        ApprovedSellerEmail.is_active == True,
-    )
-    res = await db.execute(query)
-    return res.scalar_one_or_none() is not None
-
-
 @router.post("/manage/{car_id}/mark-sold", summary="Manager/Admin: Mark Car as Sold (Optionally Auto-delete after 2 days)")
 async def mark_car_as_sold(
     car_id: uuid.UUID,
     payload: MarkCarSoldRequest,
     db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
 ):
-    """Marks a car as SOLD.
+    """Marks a car as SOLD (Admin/JWT required).
 
     Options:
     - auto_delete_after_days (default 2): Automatically deletes car from database after 2 days.
     - dont_delete (bool): Keep car listing permanently with SOLD badge.
     """
-    is_auth = await check_manager_permission(payload.manager_email, db)
-    if not is_auth:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Unauthorized: Only Admin and Approved Seller Emails can mark cars as sold.",
-        )
-
     car = await CarService.get_car_by_id(db, car_id)
     if not car:
         raise HTTPException(
@@ -429,15 +408,9 @@ async def modify_car_details(
     car_id: uuid.UUID,
     payload: CarModifyRequest,
     db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
 ):
-    """Modify details of any car (price, km, year, title, description, status, fuel, etc.)."""
-    is_auth = await check_manager_permission(payload.manager_email, db)
-    if not is_auth:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Unauthorized: Only Admin and Approved Seller Emails can modify car details.",
-        )
-
+    """Modify details of any car (price, km, year, title, description, status, fuel, etc.) — Admin/JWT required."""
     car = await CarService.get_car_by_id(db, car_id)
     if not car:
         raise HTTPException(
@@ -476,17 +449,10 @@ async def modify_car_details(
 @router.delete("/manage/{car_id}", summary="Manager/Admin: Delete Any Car")
 async def delete_car_managed(
     car_id: uuid.UUID,
-    manager_email: Optional[str] = Query(None, description="Approved manager email"),
     db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
 ):
-    """Delete a car permanently from inventory."""
-    is_auth = await check_manager_permission(manager_email, db)
-    if not is_auth:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Unauthorized: Only Admin and Approved Seller Emails can delete cars.",
-        )
-
+    """Delete a car permanently from inventory (Admin/JWT required)."""
     car = await CarService.get_car_by_id(db, car_id)
     if not car:
         raise HTTPException(
@@ -500,8 +466,11 @@ async def delete_car_managed(
 
 
 @router.post("/manage/cleanup-expired", summary="Manager/Admin: Run Expired Sold Cars Cleanup")
-async def cleanup_expired_sold_cars_now(db: AsyncSession = Depends(get_db)):
-    """Manually trigger the 2-day auto-delete cleanup routine."""
+async def cleanup_expired_sold_cars_now(
+    db: AsyncSession = Depends(get_db),
+    _admin: User = Depends(get_current_admin),
+):
+    """Manually trigger the 2-day auto-delete cleanup routine (Admin/JWT required)."""
     deleted_count = await CarService.cleanup_expired_sold_cars(db)
     return {"success": True, "deleted_count": deleted_count, "message": f"Cleaned up {deleted_count} expired sold car(s)."}
 

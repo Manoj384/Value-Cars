@@ -98,7 +98,13 @@ async def serve_uploaded_media(path: str):
     from fastapi.responses import Response
 
     clean_path = path.replace("\\", "/").strip("/")
-    local_path = os.path.join(settings.UPLOAD_DIR, clean_path)
+
+    # Resolve the UPLOAD_DIR to an absolute, symlink-free path and refuse any
+    # request that would escape it (path-traversal protection).
+    upload_root = os.path.realpath(settings.UPLOAD_DIR)
+    local_path = os.path.realpath(os.path.join(upload_root, clean_path))
+    if local_path != upload_root and not local_path.startswith(upload_root + os.sep):
+        return JSONResponse(status_code=400, content={"detail": "Invalid media path"})
 
     # 1. Fast path: If file is cached on local disk
     if os.path.exists(local_path) and os.path.isfile(local_path):

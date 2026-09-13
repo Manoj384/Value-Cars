@@ -24,21 +24,22 @@ export default function SellCarPage() {
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
   const [checkingEmail, setCheckingEmail] = useState(false);
 
-  // Form Fields
+  // Form Fields - Clean initial state with no pre-filled fake data
   const [sellerName, setSellerName] = useState('');
   const [sellerPhone, setSellerPhone] = useState('');
-  const [make, setMake] = useState('Hyundai');
-  const [model, setModel] = useState('Creta');
-  const [variant, setVariant] = useState('1.5 SX (O)');
-  const [year, setYear] = useState(2022);
-  const [kilometers, setKilometers] = useState(25000);
+  const [regNumber, setRegNumber] = useState('');
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [variant, setVariant] = useState('');
+  const [year, setYear] = useState<number | ''>('');
+  const [kilometers, setKilometers] = useState<number | ''>('');
   const [fuelType, setFuelType] = useState('PETROL');
-  const [transmission, setTransmission] = useState('AUTOMATIC');
+  const [transmission, setTransmission] = useState('MANUAL');
   const [ownership, setOwnership] = useState('FIRST');
   const [bodyType, setBodyType] = useState('SUV');
-  const [color, setColor] = useState('Polar White');
+  const [color, setColor] = useState('');
   const [city, setCity] = useState('Bangalore');
-  const [price, setPrice] = useState(1450000);
+  const [price, setPrice] = useState<number | ''>('');
   const [description, setDescription] = useState('');
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -77,14 +78,18 @@ export default function SellCarPage() {
   }, []);
 
   const handleCalculateValuation = async () => {
+    if (!make || !model || !year || !kilometers) {
+      setError('Please enter Make, Model, Year, and KM Driven to estimate valuation.');
+      return;
+    }
     try {
       const res = await apiClient.calculateValuation({
         make,
         model,
-        year,
+        year: Number(year),
         fuel_type: fuelType,
         transmission,
-        kilometers_driven: kilometers,
+        kilometers_driven: Number(kilometers),
         ownership,
         city,
       });
@@ -101,29 +106,58 @@ export default function SellCarPage() {
     setSubmitting(true);
     setError('');
     try {
+      // Auto-upload any pending image files if not already uploaded
+      let currentPending = [...pendingImages];
+      const unuploaded = currentPending.filter((img) => !img.url && img.file);
+      if (unuploaded.length > 0) {
+        setUploadingImages(true);
+        try {
+          const files = unuploaded.map((img) => img.file as File);
+          const urls = await apiClient.uploadImages(files);
+          let uIdx = 0;
+          currentPending = currentPending.map((img) => {
+            if (!img.url && img.file) {
+              const assignedUrl = urls[uIdx++] || '';
+              URL.revokeObjectURL(img.preview);
+              return { ...img, url: assignedUrl };
+            }
+            return img;
+          });
+          setPendingImages(currentPending);
+        } catch (uploadErr) {
+          throw new Error(`Image upload failed: ${uploadErr instanceof Error ? uploadErr.message : 'Network error'}`);
+        } finally {
+          setUploadingImages(false);
+        }
+      }
+
+      const imageUrls = currentPending
+        .filter((img) => img.url)
+        .sort((a, b) => Number(b.is_cover) - Number(a.is_cover))
+        .map((img) => img.url as string);
+
+      const generatedReg = regNumber.trim() || `KA-01-${Math.floor(1000 + Math.random() * 9000)}`;
+
       const res = await apiClient.submitSellerCar({
-        title: `${year} ${make} ${model} ${variant}`,
-        reg_number: `KA-05-${Math.floor(1000 + Math.random() * 9000)}`,
+        title: `${year || 2023} ${make} ${model} ${variant}`.trim(),
+        reg_number: generatedReg,
         make,
         model,
         variant,
-        year,
-        kilometers_driven: kilometers,
+        year: Number(year) || new Date().getFullYear(),
+        kilometers_driven: Number(kilometers) || 0,
         fuel_type: fuelType,
         transmission,
         ownership,
         body_type: bodyType,
-        color,
+        color: color || 'White',
         city,
-        price,
+        price: Number(price) || 0,
         seller_email: email,
         seller_name: sellerName,
         seller_phone: sellerPhone,
         description,
-        image_urls: pendingImages
-          .filter((img) => img.url)
-          .sort((a, b) => Number(b.is_cover) - Number(a.is_cover))
-          .map((img) => img.url as string),
+        image_urls: imageUrls,
       });
       setSubmittedStatus(res.status);
       track('sell', 'submit', { status: res.status, make, model, year });
@@ -341,14 +375,26 @@ export default function SellCarPage() {
             </div>
 
             {/* Vehicle Details */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Make</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Registration No.</label>
+                <input
+                  type="text"
+                  value={regNumber}
+                  onChange={(e) => setRegNumber(e.target.value.toUpperCase())}
+                  placeholder="e.g. KA-01-MJ-2022"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500 font-mono uppercase"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Make / Brand *</label>
                 <select
                   value={make}
                   onChange={(e) => setMake(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none"
+                  required
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500 font-semibold"
                 >
+                  <option value="">Select Brand</option>
                   <option>Hyundai</option>
                   <option>Tata</option>
                   <option>Mahindra</option>
@@ -358,55 +404,66 @@ export default function SellCarPage() {
                   <option>Honda</option>
                   <option>Volkswagen</option>
                   <option>Skoda</option>
+                  <option>Renault</option>
+                  <option>Nissan</option>
+                  <option>MG</option>
                 </select>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Model</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Model *</label>
                 <input
                   type="text"
                   required
                   value={model}
                   onChange={(e) => setModel(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none"
+                  placeholder="e.g. Creta / Swift / Nexon"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
                 />
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Variant</label>
                 <input
                   type="text"
-                  required
                   value={variant}
                   onChange={(e) => setVariant(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none"
+                  placeholder="e.g. 1.5 SX (O) / ZXI Plus"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Year</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Year *</label>
                 <input
                   type="number"
+                  required
+                  min={2005}
+                  max={2026}
                   value={year}
-                  onChange={(e) => setYear(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none"
+                  onChange={(e) => setYear(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="e.g. 2022"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">KM Driven</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">KM Driven *</label>
                 <input
                   type="number"
+                  required
+                  min={0}
                   value={kilometers}
-                  onChange={(e) => setKilometers(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none"
+                  onChange={(e) => setKilometers(e.target.value === '' ? '' : Number(e.target.value))}
+                  placeholder="e.g. 28500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Fuel</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Fuel Type *</label>
                 <select
                   value={fuelType}
                   onChange={(e) => setFuelType(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500 font-semibold"
                 >
                   <option>PETROL</option>
                   <option>DIESEL</option>
@@ -415,15 +472,54 @@ export default function SellCarPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Gearbox</label>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Transmission *</label>
                 <select
                   value={transmission}
                   onChange={(e) => setTransmission(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500 font-semibold"
                 >
                   <option>MANUAL</option>
                   <option>AUTOMATIC</option>
                 </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Body Type</label>
+                <select
+                  value={bodyType}
+                  onChange={(e) => setBodyType(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
+                >
+                  <option>SUV</option>
+                  <option>SEDAN</option>
+                  <option>HATCHBACK</option>
+                  <option>COUPE</option>
+                  <option>MUV</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Ownership</label>
+                <select
+                  value={ownership}
+                  onChange={(e) => setOwnership(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
+                >
+                  <option>FIRST</option>
+                  <option>SECOND</option>
+                  <option>THIRD</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Color</label>
+                <input
+                  type="text"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  placeholder="e.g. Polar White"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
+                />
               </div>
             </div>
 
@@ -452,8 +548,10 @@ export default function SellCarPage() {
               <input
                 type="number"
                 required
+                min={50000}
                 value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
+                onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                placeholder="e.g. 1250000"
                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500 font-bold"
               />
             </div>

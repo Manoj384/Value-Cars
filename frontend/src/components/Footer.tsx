@@ -15,12 +15,12 @@ export function Footer() {
               <div className="w-12 h-12 rounded-2xl bg-black border border-amber-500/30 overflow-hidden flex items-center justify-center p-1 shadow-lg shadow-amber-500/10">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="./logo-dark.jpeg"
+                  src="/logo_black_clean.png"
                   alt="Value Cars Logo"
                   className="w-full h-full object-contain rounded-xl"
                   onError={(e) => {
-                    // Fallback to logo-light if needed
-                    (e.target as HTMLImageElement).src = './logo-light.jpeg';
+                    // Fallback to logo-dark if needed
+                    (e.target as HTMLImageElement).src = '/logo-dark.jpeg';
                   }}
                 />
               </div>

@@ -44,6 +44,11 @@ export function subscribe(cb: () => void): () => void {
   };
 }
 
+const EMPTY_SET: Set<string> = new Set();
+export function getServerSnapshot(): Set<string> {
+  return EMPTY_SET;
+}
+
 export function getSnapshot(): Set<string> {
   load();
   return ids;

@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { ShieldCheck, Gauge, Fuel, Cog, MapPin, Calendar, Heart } from 'lucide-react';
 import { Car } from '../types/car';
 import { useAuth } from '../context/auth';
-import { subscribe, getSnapshot, toggleFavorite } from '../services/favoritesStore';
+import { subscribe, getSnapshot, getServerSnapshot, toggleFavorite } from '../services/favoritesStore';
+import { resolveMediaUrl } from '../services/api';
 
 interface CarCardProps {
   car: Car;
@@ -15,7 +16,7 @@ interface CarCardProps {
 
 export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserve }) => {
   const { openAuth } = useAuth();
-  const favoriteIds = useSyncExternalStore(subscribe, getSnapshot);
+  const favoriteIds = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const isFav = favoriteIds.has(car.id);
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
@@ -29,9 +30,11 @@ export const CarCard: React.FC<CarCardProps> = ({ car, onBookTestDrive, onReserv
     }
   };
 
-  const coverImage = car.images?.find((img) => img.is_cover)?.image_url ||
+  const coverImage = resolveMediaUrl(
+    car.images?.find((img) => img.is_cover)?.image_url ||
     car.images?.[0]?.image_url ||
-    'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80';
+    'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80'
+  );
 
   const formatPriceLakhs = (price: number) => {
     return (price / 100000).toFixed(2);
