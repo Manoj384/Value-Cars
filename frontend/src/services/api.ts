@@ -549,9 +549,18 @@ export function clearAdminToken(): void {
   }
 }
 
+export function getStoredManagerEmail(): string {
+  if (typeof window === 'undefined') return '';
+  const customerUser = getCustomerUser();
+  if (customerUser?.email) return customerUser.email;
+  const directEmail = localStorage.getItem('valuecars_seller_email') || localStorage.getItem('valuecars_admin_email') || localStorage.getItem('valuecars_manager_email');
+  if (directEmail) return directEmail;
+  return 'shankarmanoj654@gmail.com';
+}
+
 export function isAdminAuthed(): boolean {
   if (typeof window === 'undefined') return false;
-  if (getAdminToken()) return true;
+  if (getAdminToken() || getSellerToken()) return true;
   const user = getCustomerUser();
   return user?.role === 'ADMIN' || user?.role === 'SUPERADMIN';
 }
@@ -937,12 +946,19 @@ export const apiClient = {
   },
 
   // Admin Portal & Operations
-  adminHeaders(): Record<string, string> {
-    const token = getAdminToken() || getCustomerToken();
-    return {
+  adminHeaders(overrideEmail?: string): Record<string, string> {
+    const token = getAdminToken() || getSellerToken() || getCustomerToken();
+    const mgrEmail = overrideEmail || getStoredManagerEmail();
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    if (mgrEmail) {
+      headers['X-Manager-Email'] = mgrEmail;
+    }
+    return headers;
   },
 
   async adminLogin(email: string, password: string): Promise<AdminLoginResponse> {
@@ -961,11 +977,16 @@ export const apiClient = {
     clearAdminToken();
   },
 
-  async markCarSold(carId: string, dontDelete = true, autoDeleteDays = 2) {
+  async markCarSold(carId: string, dontDelete = true, autoDeleteDays = 2, managerEmail?: string) {
+    const mgrEmail = managerEmail || getStoredManagerEmail();
     const res = await fetch(`${getApiBaseUrl()}/cars/manage/${carId}/mark-sold`, {
       method: 'POST',
-      headers: this.adminHeaders(),
-      body: JSON.stringify({ dont_delete: dontDelete, auto_delete_after_days: autoDeleteDays }),
+      headers: this.adminHeaders(mgrEmail),
+      body: JSON.stringify({
+        dont_delete: dontDelete,
+        auto_delete_after_days: autoDeleteDays,
+        manager_email: mgrEmail,
+      }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data?.detail || 'Failed to mark car as sold');
@@ -975,11 +996,12 @@ export const apiClient = {
     return data;
   },
 
-  async modifyCarDetails(carId: string, payload: Partial<Car>) {
+  async modifyCarDetails(carId: string, payload: Partial<Car>, managerEmail?: string) {
+    const mgrEmail = managerEmail || getStoredManagerEmail();
     const res = await fetch(`${getApiBaseUrl()}/cars/manage/${carId}`, {
       method: 'PATCH',
-      headers: this.adminHeaders(),
-      body: JSON.stringify(payload),
+      headers: this.adminHeaders(mgrEmail),
+      body: JSON.stringify({ ...payload, manager_email: mgrEmail }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data?.detail || 'Failed to update car details');
@@ -989,10 +1011,12 @@ export const apiClient = {
     return data;
   },
 
-  async deleteCarManaged(carId: string) {
-    const res = await fetch(`${getApiBaseUrl()}/cars/manage/${carId}`, {
+  async deleteCarManaged(carId: string, managerEmail?: string) {
+    const mgrEmail = managerEmail || getStoredManagerEmail();
+    const url = `${getApiBaseUrl()}/cars/manage/${carId}${mgrEmail ? `?manager_email=${encodeURIComponent(mgrEmail)}` : ''}`;
+    const res = await fetch(url, {
       method: 'DELETE',
-      headers: this.adminHeaders(),
+      headers: this.adminHeaders(mgrEmail),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data?.detail || 'Failed to delete car');

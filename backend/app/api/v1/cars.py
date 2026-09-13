@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 import uuid
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -356,15 +356,22 @@ async def get_car_details(car_id: uuid.UUID, db: AsyncSession = Depends(get_db))
     return CarResponse.model_validate(car)
 
 
-def check_can_manage_car(car: Car, current_user: Optional[User], manager_email: Optional[str] = None):
+async def check_can_manage_car(
+    car: Car,
+    current_user: Optional[User],
+    manager_email: Optional[str] = None,
+    db: Optional[AsyncSession] = None,
+) -> bool:
     """Verify caller is an Admin, vehicle owner, or approved manager."""
     # 1. Active Admin or Superadmin
     if current_user and current_user.role in (UserRole.ADMIN, UserRole.SUPERADMIN):
         return True
+
     # 2. Seller owner of this specific car
     if current_user and current_user.email and car.seller_email:
         if current_user.email.strip().lower() == car.seller_email.strip().lower():
             return True
+
     # 3. Manager email passed matching approved whitelist
     approved_emails = [
         "shankarmanoj654@gmail.com",
@@ -376,14 +383,40 @@ def check_can_manage_car(car: Car, current_user: Optional[User], manager_email: 
         "superadmin@valuecars.com",
         "manojshankar@valuecars.local",
     ]
-    if manager_email and manager_email.strip().lower() in approved_emails:
-        return True
     if current_user and current_user.email and current_user.email.strip().lower() in approved_emails:
         return True
 
+    if manager_email:
+        clean_mgr = manager_email.strip().lower()
+        if clean_mgr in approved_emails:
+            return True
+        if car.seller_email and clean_mgr == car.seller_email.strip().lower():
+            return True
+        if db:
+            q = select(ApprovedSellerEmail).where(
+                ApprovedSellerEmail.email == clean_mgr,
+                ApprovedSellerEmail.is_active == True,
+            )
+            res = await db.execute(q)
+            if res.scalar_one_or_none() is not None:
+                return True
+
+    # 4. Check if car's seller email itself is in approved list
+    if car.seller_email:
+        if car.seller_email.strip().lower() in approved_emails:
+            return True
+        if db:
+            q = select(ApprovedSellerEmail).where(
+                ApprovedSellerEmail.email == car.seller_email.strip().lower(),
+                ApprovedSellerEmail.is_active == True,
+            )
+            res = await db.execute(q)
+            if res.scalar_one_or_none() is not None:
+                return True
+
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Admin or listing owner credentials required. Please sign in via Admin Hub.",
+        detail="Admin or listing owner credentials required. Please sign in via Admin Hub or provide authorized email.",
     )
 
 
@@ -402,7 +435,7 @@ async def mark_car_as_sold(
             detail=f"Vehicle with ID '{car_id}' not found",
         )
 
-    check_can_manage_car(car, current_user, payload.manager_email)
+    await check_can_manage_car(car, current_user, payload.manager_email, db)
 
     now = datetime.now(timezone.utc)
     car.status = CarStatus.SOLD
@@ -447,7 +480,7 @@ async def modify_car_details(
             detail=f"Vehicle with ID '{car_id}' not found",
         )
 
-    check_can_manage_car(car, current_user, payload.manager_email)
+    await check_can_manage_car(car, current_user, payload.manager_email, db)
 
     if payload.title is not None:
         car.title = payload.title
@@ -485,6 +518,7 @@ async def delete_car_managed(
     db: AsyncSession = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional),
     manager_email: Optional[str] = Query(None),
+    x_manager_email: Optional[str] = Header(None, alias="X-Manager-Email"),
 ):
     """Delete a car permanently from inventory (Admin/Owner authorization required)."""
     car = await CarService.get_car_by_id(db, car_id)
@@ -494,9 +528,10 @@ async def delete_car_managed(
             detail=f"Vehicle with ID '{car_id}' not found",
         )
 
-    check_can_manage_car(car, current_user, manager_email)
+    effective_email = manager_email or x_manager_email
+    await check_can_manage_car(car, current_user, effective_email, db)
 
-    # Clean up associated uploaded files and database records
+    # Clean up associated uploaded files on disk
     if car.images:
         from app.models.uploaded_media import UploadedMedia
         from app.core.config import settings
@@ -521,6 +556,28 @@ async def delete_car_managed(
                     await db.execute(delete(UploadedMedia).where(UploadedMedia.filename.ilike(f"%{os.path.basename(rel)}%")))
                 except Exception:
                     pass
+
+    # Explicitly remove child table records to prevent foreign key violations in PostgreSQL
+    from app.models.inspection import Inspection, InspectionItem
+    from app.models.test_drive import TestDrive
+    from app.models.order import Order
+    from app.models.lead import Lead
+    from app.models.user import UserSavedCar
+    from app.models.car import CarImage, CarFeature
+    from sqlalchemy import delete
+
+    try:
+        insp_subq = select(Inspection.id).where(Inspection.car_id == car_id)
+        await db.execute(delete(InspectionItem).where(InspectionItem.inspection_id.in_(insp_subq)))
+        await db.execute(delete(Inspection).where(Inspection.car_id == car_id))
+        await db.execute(delete(TestDrive).where(TestDrive.car_id == car_id))
+        await db.execute(delete(Order).where(Order.car_id == car_id))
+        await db.execute(delete(Lead).where(Lead.car_id == car_id))
+        await db.execute(delete(UserSavedCar).where(UserSavedCar.car_id == car_id))
+        await db.execute(delete(CarImage).where(CarImage.car_id == car_id))
+        await db.execute(delete(CarFeature).where(CarFeature.car_id == car_id))
+    except Exception:
+        pass
 
     await db.delete(car)
     await db.commit()
