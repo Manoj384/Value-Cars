@@ -1,5 +1,5 @@
 import { Car, InspectionReport } from '../types/car';
-import { cacheGet, cacheGetStale, cacheSet, cacheKeyHash } from '../lib/cache';
+import { cacheGet, cacheGetStale, cacheSet, cacheKeyHash, cacheClear, cacheDelete } from '../lib/cache';
 
 export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
@@ -176,6 +176,7 @@ export interface SellerCarSubmission {
   seller_name: string;
   seller_phone: string;
   description?: string;
+  video_url?: string;
   image_urls?: string[];
 }
 
@@ -220,6 +221,7 @@ const MOCK_CARS: Car[] = [
     seller_name: 'Value Cars Direct',
     seller_email: 'admin@valuecars.com',
     is_verified_seller: true,
+    video_url: 'https://www.youtube.com/watch?v=EngW7tLk6R8',
     images: [
       { id: 'img-1', image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80', tag: 'EXTERIOR', display_order: 1, is_cover: true },
       { id: 'img-2', image_url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80', tag: 'INTERIOR', display_order: 2, is_cover: false },
@@ -874,6 +876,7 @@ export const apiClient = {
       const detail = (payload && (payload as { detail?: string }).detail) || `Failed to add vehicle (${res.status})`;
       throw new Error(detail);
     }
+    cacheClear();
     return payload;
   },
 
@@ -895,6 +898,37 @@ export const apiClient = {
     const data = (await res.json()) as { url: string }[];
     // Uploads return root-relative paths (`/uploads/...`). Resolve them to the
     // absolute backend URL so the images render correctly on the Next.js host.
+    return data.map((item) => resolveMediaUrl(item.url));
+  },
+
+  // Delete Uploaded Media
+  async deleteUploadedMedia(url: string): Promise<void> {
+    if (!url) return;
+    try {
+      await fetch(`${getApiBaseUrl()}/uploads?url=${encodeURIComponent(url)}`, {
+        method: 'DELETE',
+      });
+    } catch {
+      // Ignore background cleanup failures
+    }
+  },
+
+  // Video Uploads
+  async uploadVideos(files: File[]): Promise<string[]> {
+    const formData = new FormData();
+    for (const file of files) formData.append('files', file);
+    const res = await fetch(`${getApiBaseUrl()}/uploads/videos`, {
+      method: 'POST',
+      body: formData,
+    });
+    recordSuccess(res.ok);
+    if (!res.ok) {
+      const message = await res
+        .text()
+        .catch(() => `Video upload failed (${res.status})`);
+      throw new Error(message || `Video upload failed (${res.status})`);
+    }
+    const data = (await res.json()) as { url: string }[];
     return data.map((item) => resolveMediaUrl(item.url));
   },
 
@@ -931,6 +965,9 @@ export const apiClient = {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data?.detail || 'Failed to mark car as sold');
+    cacheClear();
+    const mockCar = MOCK_CARS.find((c) => c.id === carId);
+    if (mockCar) mockCar.status = 'SOLD';
     return data;
   },
 
@@ -942,6 +979,9 @@ export const apiClient = {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data?.detail || 'Failed to update car details');
+    cacheClear();
+    const mockCar = MOCK_CARS.find((c) => c.id === carId);
+    if (mockCar) Object.assign(mockCar, payload);
     return data;
   },
 
@@ -952,6 +992,9 @@ export const apiClient = {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data?.detail || 'Failed to delete car');
+    cacheClear();
+    const mockIdx = MOCK_CARS.findIndex((c) => c.id === carId);
+    if (mockIdx >= 0) MOCK_CARS.splice(mockIdx, 1);
     return data;
   },
 
@@ -1087,6 +1130,7 @@ export const apiClient = {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data?.detail || 'Unable to update listing');
+    cacheClear();
     return data;
   },
 
@@ -1099,6 +1143,9 @@ export const apiClient = {
       const data = await res.json().catch(() => ({}));
       throw new Error(data?.detail || 'Unable to delete listing');
     }
+    cacheClear();
+    const mockIdx = MOCK_CARS.findIndex((c) => c.id === carId);
+    if (mockIdx >= 0) MOCK_CARS.splice(mockIdx, 1);
   },
 // --- Customer account (email-verification workflow) ---
   customerHeaders(): Record<string, string> {

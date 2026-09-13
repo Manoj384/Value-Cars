@@ -8,7 +8,26 @@ import { ConnectionStatus } from '../../components/ConnectionStatus';
 import { apiClient } from '../../services/api';
 import { track } from '../../lib/activity';
 import { reportError } from '../../lib/errorReporting';
-import { CheckCircle2, AlertCircle, Calculator, Sparkles, UploadCloud, ImagePlus, Trash2, Loader2, Star } from 'lucide-react';
+import { compressImage, formatFileSize } from '../../lib/imageCompression';
+import { VideoPlayer } from '../../components/VideoPlayer';
+import {
+  CheckCircle2,
+  AlertCircle,
+  Calculator,
+  Sparkles,
+  UploadCloud,
+  ImagePlus,
+  Trash2,
+  Loader2,
+  Star,
+  Zap,
+  Link2,
+  Video,
+  Film,
+  Play,
+  X,
+  Plus,
+} from 'lucide-react';
 
 interface PendingImage {
   id: string;
@@ -17,6 +36,8 @@ interface PendingImage {
   url?: string;
   tag: string;
   is_cover: boolean;
+  sizeLabel?: string;
+  savings?: number;
 }
 
 export default function SellCarPage() {
@@ -43,7 +64,19 @@ export default function SellCarPage() {
   const [description, setDescription] = useState('');
   const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [compressingImages, setCompressingImages] = useState(false);
   const [uploadError, setUploadError] = useState('');
+
+  // Image Link Insertion State
+  const [showImageLinkInput, setShowImageLinkInput] = useState(false);
+  const [imageLinkUrl, setImageLinkUrl] = useState('');
+  const [imageLinkError, setImageLinkError] = useState('');
+
+  // Video State
+  const [videoUrl, setVideoUrl] = useState('');
+  const [videoInputMode, setVideoInputMode] = useState<'link' | 'upload'>('link');
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [videoUploadError, setVideoUploadError] = useState('');
 
   // Valuation
   const [valuation, setValuation] = useState<{ min: number; max: number } | null>(null);
@@ -76,6 +109,23 @@ export default function SellCarPage() {
   useEffect(() => {
     track('sell', 'view');
   }, []);
+
+  const handleCheckEmail = async () => {
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address to verify approval.');
+      return;
+    }
+    setError('');
+    setCheckingEmail(true);
+    try {
+      const res = await apiClient.checkSellerEmail(email);
+      setIsApproved(res.is_approved);
+    } catch {
+      setIsApproved(false);
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
 
   const handleCalculateValuation = async () => {
     if (!make || !model || !year || !kilometers) {
@@ -157,6 +207,7 @@ export default function SellCarPage() {
         seller_name: sellerName,
         seller_phone: sellerPhone,
         description,
+        video_url: videoUrl.trim() || undefined,
         image_urls: imageUrls,
       });
       setSubmittedStatus(res.status);
@@ -169,31 +220,111 @@ export default function SellCarPage() {
     }
   };
 
-  const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-    setUploadError('');
-    const next: PendingImage[] = files.map((file) => ({
-      id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
-      file,
-      preview: URL.createObjectURL(file),
+  const handleAddImageLink = () => {
+    setImageLinkError('');
+    const trimmed = imageLinkUrl.trim();
+    if (!trimmed) {
+      setImageLinkError('Please enter a valid image URL');
+      return;
+    }
+    if (!/^https?:\/\//i.test(trimmed)) {
+      setImageLinkError('Image URL must start with http:// or https://');
+      return;
+    }
+
+    const newImg: PendingImage = {
+      id: `link-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      file: null,
+      preview: trimmed,
+      url: trimmed,
       tag: 'EXTERIOR',
-      is_cover: false,
-    }));
+      is_cover: pendingImages.length === 0,
+      sizeLabel: 'Web URL',
+    };
+
     setPendingImages((prev) => {
-      const combined = [...prev, ...next];
+      const combined = [...prev, newImg];
       if (combined.every((img) => !img.is_cover) && combined.length > 0) {
         combined[0].is_cover = true;
       }
       return combined;
     });
+
+    setImageLinkUrl('');
+    setShowImageLinkInput(false);
+  };
+
+  const handleUploadVideo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setVideoUploadError('');
+    setUploadingVideo(true);
     e.target.value = '';
+
+    try {
+      const urls = await apiClient.uploadVideos(files);
+      if (urls.length > 0) {
+        setVideoUrl(urls[0]);
+      }
+    } catch (err: unknown) {
+      setVideoUploadError(err instanceof Error ? err.message : 'Video upload failed. Please try a smaller video clip or paste a YouTube/video link.');
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const handleAddImages = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setUploadError('');
+    setCompressingImages(true);
+    e.target.value = '';
+
+    try {
+      const next: PendingImage[] = await Promise.all(
+        files.map(async (file) => {
+          const comp = await compressImage(file, {
+            maxWidth: 1600,
+            maxHeight: 1600,
+            quality: 0.82,
+          });
+
+          return {
+            id: `${file.name}-${file.lastModified}-${Math.random().toString(36).slice(2)}`,
+            file: comp.file,
+            preview: comp.previewUrl,
+            tag: 'EXTERIOR',
+            is_cover: false,
+            savings: comp.reductionPercentage,
+            sizeLabel: `${formatFileSize(comp.compressedSize)} (-${comp.reductionPercentage}%)`,
+          };
+        })
+      );
+
+      setPendingImages((prev) => {
+        const combined = [...prev, ...next];
+        if (combined.every((img) => !img.is_cover) && combined.length > 0) {
+          combined[0].is_cover = true;
+        }
+        return combined;
+      });
+    } catch {
+      setUploadError('Failed to process image');
+    } finally {
+      setCompressingImages(false);
+    }
   };
 
   const handleRemoveImage = (id: string) => {
     setPendingImages((prev) => {
       const removed = prev.find((img) => img.id === id);
-      if (removed) URL.revokeObjectURL(removed.preview);
+      if (removed) {
+        if (removed.preview) URL.revokeObjectURL(removed.preview);
+        if (removed.url && (removed.url.includes('/uploads/') || removed.url.startsWith('/uploads/'))) {
+          // Permanently delete file from server storage in background
+          void apiClient.deleteUploadedMedia(removed.url);
+        }
+      }
       const next = prev.filter((img) => img.id !== id);
       if (next.length > 0 && next.every((img) => !img.is_cover)) {
         next[0].is_cover = true;
@@ -299,37 +430,57 @@ export default function SellCarPage() {
             )}
 
             {/* Email Verification Section */}
-            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200">
-              <label className="text-xs font-black text-slate-800 uppercase tracking-wider block mb-1">
+            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+              <label className="text-xs font-black text-slate-800 uppercase tracking-wider block">
                 Seller Email (Approval Verification) *
               </label>
-              <div className="relative">
+              <div className="flex flex-col sm:flex-row items-stretch gap-2">
                 <input
                   type="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setIsApproved(null);
+                  }}
                   placeholder="e.g. dealer@valuecars.com"
-                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-rose-500"
+                  className="flex-1 bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-rose-500 font-medium"
                 />
-                <div className="absolute right-3 top-3 text-xs font-bold">
-                  {checkingEmail && <span className="text-slate-400">Checking...</span>}
-                  {!checkingEmail && isApproved === true && (
-                    <span className="text-emerald-600 flex items-center">
-                      <CheckCircle2 className="w-4 h-4 mr-1" /> Approved Seller (Auto-Publish)
-                    </span>
+                <button
+                  type="button"
+                  onClick={handleCheckEmail}
+                  disabled={checkingEmail || !email.includes('@')}
+                  className="px-5 py-2.5 bg-slate-900 hover:bg-rose-600 text-white font-bold text-xs rounded-xl transition shrink-0 disabled:opacity-40 flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  {checkingEmail ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Checking...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Check
+                    </>
                   )}
-                  {!checkingEmail && isApproved === false && (
-                    <span className="text-amber-600 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-1" /> Unverified (Needs Admin Review)
-                    </span>
-                  )}
-                </div>
+                </button>
               </div>
+
+              {/* Status Message rendered completely BELOW the input field */}
+              {isApproved === true && (
+                <div className="mt-2 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>✓ Approved Seller: Your vehicle will be published live instantly!</span>
+                </div>
+              )}
+              {isApproved === false && (
+                <div className="mt-2 p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-xl flex items-center gap-2 animate-fade-in">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Notice: Email not yet whitelisted. Your vehicle will be submitted for admin review.</span>
+                </div>
+              )}
             </div>
 
             {/* Seller Contact Info */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Seller Name *</label>
                 <input
@@ -583,6 +734,11 @@ export default function SellCarPage() {
                           <Star className="w-2.5 h-2.5 mr-1" /> DISPLAY
                         </span>
                       )}
+                      {img.sizeLabel && (
+                        <span className="absolute bottom-8 left-1 bg-slate-950/85 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5 rounded backdrop-blur-xs flex items-center gap-0.5">
+                          <Zap className="w-2.5 h-2.5 text-emerald-400" /> {img.sizeLabel}
+                        </span>
+                      )}
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(img.id)}
@@ -616,17 +772,41 @@ export default function SellCarPage() {
               )}
 
               <div className="flex items-center gap-3 flex-wrap">
-                <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:border-rose-500 hover:text-rose-600 cursor-pointer transition">
-                  <ImagePlus className="w-4 h-4" />
-                  Add Photos (jpg, png, webp)
+                <label className="flex-1 min-w-[200px] flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:border-rose-500 hover:text-rose-600 cursor-pointer transition">
+                  {compressingImages ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+                      Compressing Photos...
+                    </>
+                  ) : (
+                    <>
+                      <ImagePlus className="w-4 h-4 text-rose-600" />
+                      Add Photos (Auto-compressed)
+                    </>
+                  )}
                   <input
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     multiple
+                    disabled={compressingImages}
                     onChange={handleAddImages}
                     className="hidden"
                   />
                 </label>
+
+                <button
+                  type="button"
+                  onClick={() => setShowImageLinkInput((prev) => !prev)}
+                  className={`px-4 py-3 border text-xs font-bold rounded-xl transition flex items-center justify-center ${
+                    showImageLinkInput
+                      ? 'bg-rose-50 border-rose-400 text-rose-700'
+                      : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <Link2 className="w-4 h-4 mr-1.5 text-rose-600" />
+                  {showImageLinkInput ? 'Close Link Option' : 'Insert Photo Link'}
+                </button>
+
                 <button
                   type="button"
                   onClick={handleUploadImages}
@@ -644,6 +824,158 @@ export default function SellCarPage() {
                   )}
                 </button>
               </div>
+
+              {/* Image Link Input Form */}
+              {showImageLinkInput && (
+                <div className="mt-3 p-3.5 bg-white rounded-xl border border-rose-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Link2 className="w-3.5 h-3.5 text-rose-600" /> Paste Direct Image URL
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowImageLinkInput(false)}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {imageLinkError && (
+                    <p className="text-[11px] text-red-600 font-semibold">{imageLinkError}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      placeholder="e.g. https://images.unsplash.com/photo-1549399542-7e3f8b79c341"
+                      value={imageLinkUrl}
+                      onChange={(e) => {
+                        setImageLinkUrl(e.target.value);
+                        setImageLinkError('');
+                      }}
+                      className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-rose-500 font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddImageLink}
+                      className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add Link
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Car Video / Walkaround Tour (Optional) */}
+            <div className="p-5 bg-slate-50 rounded-2xl border border-slate-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Video className="w-4 h-4 text-rose-600" />
+                  <label className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                    Vehicle Walkaround Video (Optional)
+                  </label>
+                </div>
+                {videoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVideoUrl('');
+                      setVideoUploadError('');
+                    }}
+                    className="text-[10px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3 h-3" /> Remove Video
+                  </button>
+                )}
+              </div>
+
+              {videoUploadError && (
+                <div className="mb-3 p-3 bg-red-50 text-red-600 text-xs rounded-xl flex items-center">
+                  <AlertCircle className="w-3.5 h-3.5 mr-2 shrink-0" /> {videoUploadError}
+                </div>
+              )}
+
+              {videoUrl ? (
+                <div className="space-y-3">
+                  <VideoPlayer url={videoUrl} title="Vehicle Walkaround" className="max-h-80 w-full" />
+                  <div className="flex items-center justify-between gap-2 p-2.5 bg-white rounded-xl border border-slate-200 text-xs">
+                    <span className="text-slate-500 truncate flex-1 font-mono text-[11px]">{videoUrl}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVideoUrl('');
+                      }}
+                      className="text-xs font-bold text-rose-600 hover:text-rose-700 shrink-0"
+                    >
+                      Change Video
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {/* Mode Tabs */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => setVideoInputMode('link')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                        videoInputMode === 'link'
+                          ? 'bg-rose-600 text-white shadow-sm'
+                          : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                      }`}
+                    >
+                      <Link2 className="w-3.5 h-3.5" /> Video Link (YouTube / Vimeo / MP4)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setVideoInputMode('upload')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                        videoInputMode === 'upload'
+                          ? 'bg-rose-600 text-white shadow-sm'
+                          : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                      }`}
+                    >
+                      <Film className="w-3.5 h-3.5" /> Upload Video Clip
+                    </button>
+                  </div>
+
+                  {videoInputMode === 'link' ? (
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        placeholder="Paste YouTube, Shorts, Vimeo, or direct MP4 URL (e.g. https://youtu.be/...)"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        className="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs outline-none focus:border-rose-500 font-medium"
+                      />
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-dashed border-slate-300 rounded-xl text-xs font-bold text-slate-600 hover:border-rose-500 hover:text-rose-600 cursor-pointer transition">
+                      {uploadingVideo ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin text-rose-600" />
+                          Uploading Video File...
+                        </>
+                      ) : (
+                        <>
+                          <Film className="w-4 h-4 text-rose-600" />
+                          Choose Video File (.mp4, .mov, .webm)
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="video/mp4,video/quicktime,video/webm"
+                        disabled={uploadingVideo}
+                        onChange={handleUploadVideo}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                  <p className="mt-2 text-[11px] text-slate-500">
+                    Adding a walkaround video increases buyer engagement and builds confidence in your listing.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>

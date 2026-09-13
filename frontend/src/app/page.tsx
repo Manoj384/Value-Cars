@@ -12,6 +12,15 @@ import { TestDriveModal } from '../components/TestDriveModal';
 import { ReserveModal } from '../components/ReserveModal';
 import { EditCarModal } from '../components/EditCarModal';
 import { MobileFilterDrawer } from '../components/MobileFilterDrawer';
+import { CompareFloatingBar } from '../components/CompareFloatingBar';
+import { CompareModal } from '../components/CompareModal';
+import {
+  subscribeCompare,
+  getCompareSnapshot,
+  getCompareServerSnapshot,
+  removeCompareCar,
+  clearCompare,
+} from '../services/compareStore';
 import { apiClient, CarFilterOptions, isAdminAuthed } from '../services/api';
 import { Car } from '../types/car';
 import { useAuth } from '../context/auth';
@@ -67,6 +76,13 @@ export default function HomePage() {
   const [testDriveCar, setTestDriveCar] = useState<Car | null>(null);
   const [reserveCar, setReserveCar] = useState<Car | null>(null);
   const [editingCar, setEditingCar] = useState<Car | null>(null);
+  const [compareModalOpen, setCompareModalOpen] = useState(false);
+
+  const compareList = React.useSyncExternalStore(
+    subscribeCompare,
+    getCompareSnapshot,
+    getCompareServerSnapshot
+  );
 
   // Sync admin state
   useEffect(() => {
@@ -213,14 +229,6 @@ export default function HomePage() {
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Showing <strong className="text-rose-600">{totalCount}</strong> Verified Cars</span>
             </div>
-            <button
-              onClick={() => setMobileFiltersOpen(true)}
-              className="lg:hidden flex items-center gap-1.5 bg-white border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-sm hover:border-rose-500 transition"
-              aria-label="Open filter drawer"
-            >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-rose-600" />
-              <span>Filters</span>
-            </button>
             <select
               value={filters.sort_by || 'created_at'}
               onChange={(e) => setFilters((prev) => ({ ...prev, sort_by: e.target.value, page: 1 }))}
@@ -366,8 +374,8 @@ export default function HomePage() {
 
         {/* Main Grid: Sidebar + Cars */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Filter Sidebar */}
-          <div className="lg:col-span-1">
+          {/* Filter Sidebar (Desktop Only - Mobile filters reside inside 3-line hamburger menu) */}
+          <div className="hidden lg:block lg:col-span-1">
             <FilterSidebar
               filters={filters}
               onFilterChange={handleFilterChange}
@@ -462,6 +470,22 @@ export default function HomePage() {
         filters={filters}
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
+      />
+      <CompareFloatingBar onOpenCompare={() => setCompareModalOpen(true)} />
+      <CompareModal
+        cars={compareList}
+        isOpen={compareModalOpen}
+        onClose={() => setCompareModalOpen(false)}
+        onRemoveCar={removeCompareCar}
+        onClearAll={clearCompare}
+        onBookTestDrive={(c) => {
+          setCompareModalOpen(false);
+          setTestDriveCar(c);
+        }}
+        onReserve={(c) => {
+          setCompareModalOpen(false);
+          setReserveCar(c);
+        }}
       />
 
       <Footer />

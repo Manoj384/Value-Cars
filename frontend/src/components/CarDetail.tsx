@@ -12,7 +12,15 @@ import { reportError } from '../lib/errorReporting';
 import { addRecentCar } from '../lib/uiState';
 import { useAuth } from '../context/auth';
 import { subscribe, getSnapshot, getServerSnapshot, toggleFavorite } from '../services/favoritesStore';
-import { ShieldCheck, ArrowLeft, Award, Loader2, X, ChevronLeft, ChevronRight, Maximize2, Heart, Check } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Award, Loader2, X, ChevronLeft, ChevronRight, Maximize2, Heart, Check, Share2, Scale, MessageCircle, Sparkles, Film, Video } from 'lucide-react';
+import { EmiCalculator } from './EmiCalculator';
+import { VideoPlayer } from './VideoPlayer';
+import {
+  subscribeCompare,
+  getCompareSnapshot,
+  getCompareServerSnapshot,
+  toggleCompareCar,
+} from '../services/compareStore';
 
 interface CarDetailProps {
   carId: string;
@@ -292,6 +300,31 @@ export default function CarDetail({ carId }: CarDetailProps) {
               )}
             </div>
           )}
+
+          {/* Car Walkaround Video Tour (Optional) */}
+          {car.video_url && (
+            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-rose-600 uppercase tracking-widest flex items-center">
+                    <Film className="w-4 h-4 mr-1.5" /> Virtual Experience
+                  </span>
+                  <h2 className="text-xl font-black text-slate-900 mt-0.5">360° Walkaround & Video Tour</h2>
+                </div>
+                <span className="px-2.5 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-lg border border-rose-100 flex items-center gap-1">
+                  <Video className="w-3.5 h-3.5" /> HD Video
+                </span>
+              </div>
+              <VideoPlayer url={car.video_url} title={`${car.year} ${car.make} ${car.model} Video Tour`} />
+            </div>
+          )}
+
+          {/* Interactive EMI Calculator */}
+          <EmiCalculator
+            carPrice={car.price}
+            carTitle={`${car.year} ${car.make} ${car.model}`}
+            regNumber={car.reg_number}
+          />
         </div>
 
         {/* Right Column: Pricing & Booking Action Card */}
@@ -344,18 +377,29 @@ export default function CarDetail({ carId }: CarDetailProps) {
 
             {/* CTA Action Buttons */}
             <div className="space-y-3 pt-2">
-              <button
-                onClick={handleToggleFavorite}
-                disabled={favBusy}
-                className={`w-full py-3 font-black text-sm rounded-xl transition flex items-center justify-center gap-2 border-2 ${
-                  isFav
-                    ? 'bg-rose-50 border-rose-600 text-rose-700 hover:bg-rose-100'
-                    : 'bg-white border-slate-200 text-slate-700 hover:border-rose-400 hover:text-rose-600'
-                }`}
-              >
-                {isFav ? <Check className="w-4 h-4" /> : <Heart className="w-4 h-4" />}
-                {isFav ? 'Saved to Favourites' : 'Save to Favourites'}
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleToggleFavorite}
+                  disabled={favBusy}
+                  className={`py-2.5 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 border-2 ${
+                    isFav
+                      ? 'bg-rose-50 border-rose-600 text-rose-700 hover:bg-rose-100'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-rose-400 hover:text-rose-600'
+                  }`}
+                >
+                  {isFav ? <Check className="w-3.5 h-3.5" /> : <Heart className="w-3.5 h-3.5" />}
+                  {isFav ? 'Saved' : 'Save'}
+                </button>
+
+                <button
+                  onClick={() => toggleCompareCar(car)}
+                  className="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"
+                >
+                  <Scale className="w-3.5 h-3.5 text-rose-600" />
+                  Compare
+                </button>
+              </div>
+
               <button
                 onClick={() => setShowTestDrive(true)}
                 className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-sm rounded-xl shadow-lg shadow-rose-600/30 transition transform active:scale-98 flex items-center justify-center gap-2"
@@ -368,14 +412,27 @@ export default function CarDetail({ carId }: CarDetailProps) {
               >
                 <span>📞</span> Schedule Hub Viewing & Call
               </button>
-              <a
-                href={`https://wa.me/918050966025?text=${encodeURIComponent(`Hi Value Cars! I am interested in viewing / purchasing this ${car.year} ${car.make} ${car.model} (${car.variant}, Reg: ${car.reg_number}). Please share details.`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-emerald-700/20"
-              >
-                <span>💬</span> Chat on WhatsApp (8050966025)
-              </a>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href={`https://wa.me/918050966025?text=${encodeURIComponent(`Hi Value Cars! I am interested in viewing / purchasing this ${car.year} ${car.make} ${car.model} (${car.variant}, Reg: ${car.reg_number}). Please share details.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <MessageCircle className="w-4 h-4" /> WhatsApp
+                </a>
+                <button
+                  onClick={() => {
+                    const url = typeof window !== 'undefined' ? window.location.href : '';
+                    const text = encodeURIComponent(`Check out this ${car.year} ${car.make} ${car.model} on Value Cars for ₹${(car.price / 100000).toFixed(2)} Lakh!\n${url}`);
+                    window.open(`https://wa.me/?text=${text}`, '_blank');
+                  }}
+                  className="py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5"
+                >
+                  <Share2 className="w-4 h-4 text-slate-600" /> Share Car
+                </button>
+              </div>
             </div>
 
             {/* Experience Hub & Google Maps */}

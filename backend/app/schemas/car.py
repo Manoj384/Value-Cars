@@ -74,6 +74,7 @@ class CarBase(BaseModel):
     seller_phone: Optional[str] = None
     seller_name: Optional[str] = None
     is_verified_seller: bool = False
+    video_url: Optional[str] = None
 
 
 class CarCreate(CarBase):
@@ -93,6 +94,7 @@ class CarUpdate(BaseModel):
     sold_at: Optional[datetime] = None
     auto_delete_at: Optional[datetime] = None
     dont_delete: Optional[bool] = None
+    video_url: Optional[str] = None
 
 
 class CarModifyRequest(BaseModel):
@@ -108,6 +110,7 @@ class CarModifyRequest(BaseModel):
     description: Optional[str] = None
     status: Optional[CarStatus] = None
     inspection_score: Optional[float] = None
+    video_url: Optional[str] = None
 
 
 class MarkCarSoldRequest(BaseModel):
@@ -178,6 +181,7 @@ class SellerCarSubmitRequest(BaseModel):
     city: str
     price: float
     description: Optional[str] = None
+    video_url: Optional[str] = None
     image_urls: Optional[List[str]] = []
     features: Optional[List[str]] = []
 

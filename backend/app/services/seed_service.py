@@ -39,6 +39,7 @@ SAMPLE_CARS = [
         "seller_name": "Value Cars Direct",
         "seller_phone": "8050966025",
         "is_verified_seller": True,
+        "video_url": "https://www.youtube.com/watch?v=EngW7tLk6R8",
         "description": "Pristine single owner Hyundai Creta SX(O) top model with Panoramic Sunroof, ventilated seats, Bose audio, and full service history at authorized Hyundai service center.",
         "images": [
             {"image_url": "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80", "tag": "EXTERIOR", "display_order": 1, "is_cover": True},

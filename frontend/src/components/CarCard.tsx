@@ -2,10 +2,16 @@
 
 import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Gauge, Fuel, Cog, MapPin, Calendar, Heart } from 'lucide-react';
+import { ShieldCheck, Gauge, Fuel, Cog, MapPin, Heart, Share2, Scale, Sparkles, MessageCircle } from 'lucide-react';
 import { Car } from '../types/car';
 import { useAuth } from '../context/auth';
 import { subscribe, getSnapshot, getServerSnapshot, toggleFavorite } from '../services/favoritesStore';
+import {
+  subscribeCompare,
+  getCompareSnapshot,
+  getCompareServerSnapshot,
+  toggleCompareCar,
+} from '../services/compareStore';
 import { resolveMediaUrl } from '../services/api';
 
 interface CarCardProps {
@@ -32,6 +38,13 @@ export const CarCard: React.FC<CarCardProps> = ({
   const isFav = favoriteIds.has(car.id);
   const isSold = car.status === 'SOLD';
 
+  const compareList = useSyncExternalStore(
+    subscribeCompare,
+    getCompareSnapshot,
+    getCompareServerSnapshot
+  );
+  const isCompared = compareList.some((c) => c.id === car.id);
+
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -40,6 +53,22 @@ export const CarCard: React.FC<CarCardProps> = ({
     } catch (err) {
       openAuth();
     }
+  };
+
+  const handleToggleCompare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleCompareCar(car);
+  };
+
+  const handleWhatsAppShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const currentUrl = typeof window !== 'undefined' ? `${window.location.origin}/cars?id=${car.id}` : '';
+    const text = encodeURIComponent(
+      `🚗 Check out this verified ${car.year} ${car.make} ${car.model} (${car.variant}) on Value Cars for ₹${(car.price / 100000).toFixed(2)} Lakh!\n${currentUrl}`
+    );
+    window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
   const coverImage = resolveMediaUrl(
@@ -52,8 +81,13 @@ export const CarCard: React.FC<CarCardProps> = ({
     return (price / 100000).toFixed(2);
   };
 
+  // Smart Best Value calculation
+  const savings = car.original_price && car.original_price > car.price ? car.original_price - car.price : 0;
+  const isTopScore = car.inspection_score >= 9.2;
+  const isBestValue = (savings >= 25000 || isTopScore) && !isSold;
+
   return (
-    <div className={`bg-white rounded-2xl border ${isSold ? 'border-amber-300' : 'border-slate-200'} overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative`}>
+    <div className={`bg-white rounded-2xl border ${isSold ? 'border-amber-300' : isCompared ? 'border-rose-500 ring-2 ring-rose-500/30' : 'border-slate-200'} overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative`}>
       {/* Image Container */}
       <div className="relative h-52 overflow-hidden bg-slate-100">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -89,6 +123,14 @@ export const CarCard: React.FC<CarCardProps> = ({
           </div>
         )}
 
+        {/* Smart Best Deal Badge */}
+        {isBestValue && (
+          <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-rose-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 animate-pulse">
+            <Sparkles className="w-3 h-3" />
+            <span>{savings >= 25000 ? `₹${(savings / 1000).toFixed(0)}k OFF` : '★ BEST VALUE'}</span>
+          </div>
+        )}
+
         {/* Inspection Score Badge */}
         <div className="absolute top-3 right-3 bg-slate-900/90 backdrop-blur-md text-white text-xs font-black px-2.5 py-1 rounded-lg border border-slate-700 flex items-center">
           <span className="text-emerald-400 mr-1">★</span> {car.inspection_score.toFixed(1)}/10
@@ -99,16 +141,41 @@ export const CarCard: React.FC<CarCardProps> = ({
           <MapPin className="w-2.5 h-2.5 mr-1 text-rose-400" /> {car.city}
         </div>
 
-        {/* Favorite Heart */}
-        <button
-          onClick={handleToggleFavorite}
-          aria-label={isFav ? `Remove ${car.title} from saved` : `Save ${car.title}`}
-          className={`absolute bottom-3 right-3 w-9 h-9 rounded-full backdrop-blur-md flex items-center justify-center transition shadow-md active:scale-90 ${
-            isFav ? 'bg-rose-600 text-white' : 'bg-black/60 text-white hover:bg-rose-600'
-          }`}
-        >
-          <Heart className={`w-5 h-5 ${isFav ? 'fill-current' : ''}`} />
-        </button>
+        {/* Action icons: Share, Compare, Favorite */}
+        <div className="absolute bottom-3 right-3 flex items-center gap-1.5">
+          {/* Compare Toggle */}
+          <button
+            onClick={handleToggleCompare}
+            aria-label={isCompared ? 'Remove from compare' : 'Add to compare'}
+            className={`w-8 h-8 rounded-full backdrop-blur-md flex items-center justify-center transition shadow-md ${
+              isCompared ? 'bg-rose-600 text-white' : 'bg-black/60 text-white hover:bg-slate-900'
+            }`}
+            title={isCompared ? 'Comparing' : 'Compare with other cars'}
+          >
+            <Scale className="w-4 h-4" />
+          </button>
+
+          {/* WhatsApp Share */}
+          <button
+            onClick={handleWhatsAppShare}
+            aria-label="Share on WhatsApp"
+            className="w-8 h-8 rounded-full bg-black/60 hover:bg-emerald-600 text-white backdrop-blur-md flex items-center justify-center transition shadow-md"
+            title="Share on WhatsApp"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Favorite Heart */}
+          <button
+            onClick={handleToggleFavorite}
+            aria-label={isFav ? `Remove ${car.title} from saved` : `Save ${car.title}`}
+            className={`w-8 h-8 rounded-full backdrop-blur-md flex items-center justify-center transition shadow-md active:scale-90 ${
+              isFav ? 'bg-rose-600 text-white' : 'bg-black/60 text-white hover:bg-rose-600'
+            }`}
+          >
+            <Heart className={`w-4 h-4 ${isFav ? 'fill-current' : ''}`} />
+          </button>
+        </div>
       </div>
 
       {/* Content */}

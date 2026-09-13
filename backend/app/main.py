@@ -22,11 +22,18 @@ async def lifespan(app: FastAPI):
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            from sqlalchemy import text
             if engine.dialect.name == "postgresql":
-                from sqlalchemy import text
-                for table_name in Base.metadata.tables.keys():
-                    await conn.execute(text(f'ALTER TABLE public."{table_name}" ENABLE ROW LEVEL SECURITY;'))
-        print("Connected to database successfully. Tables initialized with RLS policy check.")
+                try:
+                    await conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS video_url VARCHAR(500);"))
+                except Exception as ex:
+                    print(f"Notice during column migration: {ex}")
+            elif "sqlite" in engine.dialect.name:
+                try:
+                    await conn.execute(text("ALTER TABLE cars ADD COLUMN video_url VARCHAR(500);"))
+                except Exception:
+                    pass
+        print("Connected to database successfully. Schema verified.")
     except Exception as e:
         print(f"Warning during database table sync on startup: {e}")
 

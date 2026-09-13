@@ -87,11 +87,11 @@ class Car(Base):
     seller_name: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
     is_verified_seller: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    # Operational Status
     status: Mapped[CarStatus] = mapped_column(
         Enum(CarStatus), default=CarStatus.PUBLISHED, index=True, nullable=False
     )
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    video_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
 
     # Sale & Lifecycle Tracking
     sold_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)

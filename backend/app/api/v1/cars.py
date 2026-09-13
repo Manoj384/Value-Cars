@@ -261,6 +261,7 @@ async def submit_car_online(payload: SellerCarSubmitRequest, db: AsyncSession = 
         seller_name=payload.seller_name,
         seller_phone=payload.seller_phone,
         is_verified_seller=is_approved,
+        video_url=payload.video_url,
         description=payload.description or f"{payload.year} {payload.make} {payload.model} in great condition.",
     )
     db.add(car)
@@ -440,6 +441,8 @@ async def modify_car_details(
         car.status = payload.status
     if payload.inspection_score is not None:
         car.inspection_score = float(payload.inspection_score)
+    if payload.video_url is not None:
+        car.video_url = payload.video_url
 
     await db.commit()
     await db.refresh(car)
@@ -460,9 +463,35 @@ async def delete_car_managed(
             detail=f"Vehicle with ID '{car_id}' not found",
         )
 
+    # Clean up associated uploaded files and database records
+    if car.images:
+        from app.models.uploaded_media import UploadedMedia
+        from app.core.config import settings
+        from sqlalchemy import delete
+        for img in car.images:
+            if img.image_url and "/uploads/" in img.image_url:
+                rel = img.image_url.split("/uploads/")[-1].split("?")[0].lstrip("/\\")
+                disk_path = os.path.join(settings.UPLOAD_DIR, rel)
+                if os.path.exists(disk_path):
+                    try:
+                        os.remove(disk_path)
+                    except Exception:
+                        pass
+                if rel.endswith(".webp"):
+                    thumb_path = disk_path.replace(".webp", "_thumb.webp")
+                    if os.path.exists(thumb_path):
+                        try:
+                            os.remove(thumb_path)
+                        except Exception:
+                            pass
+                try:
+                    await db.execute(delete(UploadedMedia).where(UploadedMedia.filename.ilike(f"%{os.path.basename(rel)}%")))
+                except Exception:
+                    pass
+
     await db.delete(car)
     await db.commit()
-    return {"success": True, "message": f"Vehicle '{car.title}' deleted successfully."}
+    return {"success": True, "message": f"Vehicle '{car.title}' and all photos deleted permanently."}
 
 
 @router.post("/manage/cleanup-expired", summary="Manager/Admin: Run Expired Sold Cars Cleanup")

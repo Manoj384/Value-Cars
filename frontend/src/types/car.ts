@@ -39,6 +39,7 @@ export interface Car {
   seller_email?: string;
   seller_name?: string;
   is_verified_seller: boolean;
+  video_url?: string;
   images: CarImage[];
   features: CarFeature[];
 }

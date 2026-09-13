@@ -298,3 +298,54 @@ async def upload_videos(
         )
 
     return results
+
+
+@router.delete(
+    "",
+    summary="Delete uploaded media file permanently from disk and database",
+)
+async def delete_uploaded_media(
+    url: str = Query(..., description="The media URL or relative filename to delete"),
+    db: AsyncSession = Depends(get_db),
+):
+    """Permanently delete an uploaded media file and its database record."""
+    clean_url = url.strip()
+    # Strip leading /uploads/ or full host
+    if clean_url.startswith("http://") or clean_url.startswith("https://"):
+        clean_url = clean_url.split("/uploads/")[-1]
+    elif clean_url.startswith("/uploads/"):
+        clean_url = clean_url[len("/uploads/"):]
+
+    # Remove any query params or dangerous path traversal
+    clean_url = clean_url.split("?")[0].lstrip("/\\")
+    clean_url = os.path.normpath(clean_url).replace("\\", "/")
+    if clean_url.startswith("..") or "/" in clean_url and not any(clean_url.startswith(b) for b in ["maruti", "hyundai", "tata", "mahindra", "toyota", "kia", "honda", "skoda", "volkswagen", "nissan", "renault", "general"]):
+        # allow only relative paths within upload dir
+        clean_url = os.path.basename(clean_url)
+
+    # 1. Delete physical file on disk
+    filepath = os.path.join(UPLOAD_DIR, clean_url)
+    if os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+        except Exception:
+            pass
+
+    # Also attempt to remove thumb if it's an image
+    if clean_url.endswith(".webp") and not clean_url.endswith("_thumb.webp"):
+        thumb_path = filepath.replace(".webp", "_thumb.webp")
+        if os.path.exists(thumb_path):
+            try:
+                os.remove(thumb_path)
+            except Exception:
+                pass
+
+    # 2. Delete from DB UploadedMedia
+    from sqlalchemy import delete
+    try:
+        await db.execute(delete(UploadedMedia).where(UploadedMedia.filename.ilike(f"%{os.path.basename(clean_url)}%")))
+        await db.commit()
+    except Exception:
+        await db.rollback()
+
+    return {"success": True, "message": f"Deleted {clean_url}"}

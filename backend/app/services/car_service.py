@@ -33,7 +33,6 @@ class CarService:
     @staticmethod
     async def get_car_by_id(db: AsyncSession, car_id: uuid.UUID) -> Optional[Car]:
         """Fetch single car with loaded images and features."""
-        await CarService.cleanup_expired_sold_cars(db)
         query = (
             select(Car)
             .where(Car.id == car_id)
@@ -48,7 +47,6 @@ class CarService:
         filters: CarFilterParams,
     ) -> Tuple[List[Car], int, int]:
         """Query cars with dynamic multi-criteria filtering and pagination."""
-        await CarService.cleanup_expired_sold_cars(db)
 
         # Filters — build the shared predicate list so the count and the page
         # always see exactly the same filtering (previously the count omitted several).
