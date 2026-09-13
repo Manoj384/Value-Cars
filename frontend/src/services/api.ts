@@ -2,26 +2,30 @@ import { Car, InspectionReport } from '../types/car';
 import { cacheGet, cacheGetStale, cacheSet, cacheKeyHash, cacheClear, cacheDelete } from '../lib/cache';
 
 export function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
   if (typeof window !== 'undefined') {
     if (window.location.port === '3000') {
-      return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+      return 'http://127.0.0.1:8000/api/v1';
     }
     return '/api/v1';
   }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+  return 'http://127.0.0.1:8000/api/v1';
 }
 
 /**
  * Resolve a possibly root-relative media URL (e.g. `/uploads/...` or `/static/...`).
  * On localhost:3000, points to local backend on port 8000.
- * On production / Render, points to same origin.
+ * On production / Render, points to same origin or NEXT_PUBLIC_API_URL base.
  */
 export function resolveMediaUrl(url?: string | null): string {
   if (!url) return '';
   if (/^https?:\/\//i.test(url)) return url;
   if (url.startsWith('/')) {
     if (typeof window !== 'undefined' && window.location.port === '3000') {
-      return `http://127.0.0.1:8000${url}`;
+      const base = (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1').replace(/\/api\/v1\/?$/, '');
+      return `${base}${url}`;
     }
     return url;
   }

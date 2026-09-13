@@ -68,7 +68,6 @@ export default function HomePage() {
     city: '',
     page: 1,
     page_size: 12,
-    ...loadFilters(),
   }));
   const [recentCars, setRecentCars] = useState<RecentCar[]>(() => getRecentCars());
 

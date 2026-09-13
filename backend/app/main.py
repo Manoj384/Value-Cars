@@ -97,6 +97,12 @@ if os.path.exists(next_dir):
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
+# Health check endpoints
+@app.get("/health", summary="Root Health Check")
+@app.get("/api/health", summary="API Health Check")
+async def root_health_check():
+    return JSONResponse(status_code=200, content={"status": "healthy", "service": settings.PROJECT_NAME})
+
 # Include API v1 router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 

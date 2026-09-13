@@ -47,6 +47,7 @@ from app.services.notification_service import NotificationService
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
+oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token", auto_error=False)
 
 # In-memory OTP store used ONLY by the dev-mode send-otp / verify-otp endpoints.
 # Maps phone_number -> OTP string.  Never enables a fixed backdoor code.
@@ -114,6 +115,29 @@ async def get_current_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Account is inactive or disabled. Please contact administrator.",
         )
+    return user
+
+
+async def get_current_user_optional(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    db: AsyncSession = Depends(get_db),
+) -> Optional[User]:
+    """Optional JWT authentication — returns None if token is absent or invalid."""
+    if not token:
+        return None
+    payload = decode_access_token(token)
+    if not payload or not payload.get("sub"):
+        return None
+    try:
+        user_uuid = uuid.UUID(payload["sub"])
+    except ValueError:
+        return None
+
+    query = select(User).where(User.id == user_uuid)
+    result = await db.execute(query)
+    user = result.scalar_one_or_none()
+    if not user or not user.is_active or user.account_status == AccountStatus.DISABLED.value:
+        return None
     return user
 
 

@@ -6,10 +6,10 @@ from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.api.v1.auth import get_current_admin
+from app.api.v1.auth import get_current_admin, get_current_user_optional
 from app.models.car import BodyType, Car, CarFeature, CarImage, CarStatus, FuelType, OwnershipType, TransmissionType
 from app.models.inspection import CheckpointCondition, Inspection, InspectionItem, InspectionStatus
-from app.models.user import ApprovedSellerEmail, User
+from app.models.user import ApprovedSellerEmail, User, UserRole
 from app.schemas.car import (
     ApproveEmailRequest,
     ApprovedEmailResponse,
@@ -356,25 +356,53 @@ async def get_car_details(car_id: uuid.UUID, db: AsyncSession = Depends(get_db))
     return CarResponse.model_validate(car)
 
 
+def check_can_manage_car(car: Car, current_user: Optional[User], manager_email: Optional[str] = None):
+    """Verify caller is an Admin, vehicle owner, or approved manager."""
+    # 1. Active Admin or Superadmin
+    if current_user and current_user.role in (UserRole.ADMIN, UserRole.SUPERADMIN):
+        return True
+    # 2. Seller owner of this specific car
+    if current_user and current_user.email and car.seller_email:
+        if current_user.email.strip().lower() == car.seller_email.strip().lower():
+            return True
+    # 3. Manager email passed matching approved whitelist
+    approved_emails = [
+        "shankarmanoj654@gmail.com",
+        "abhiprakash.gowda@gmail.com",
+        "gowdaharshith1432@gmail.com",
+        "admin@valuecars.com",
+        "admin2@valuecars.com",
+        "seller@dealer.com",
+        "superadmin@valuecars.com",
+        "manojshankar@valuecars.local",
+    ]
+    if manager_email and manager_email.strip().lower() in approved_emails:
+        return True
+    if current_user and current_user.email and current_user.email.strip().lower() in approved_emails:
+        return True
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Admin or listing owner credentials required. Please sign in via Admin Hub.",
+    )
+
+
 @router.post("/manage/{car_id}/mark-sold", summary="Manager/Admin: Mark Car as Sold (Optionally Auto-delete after 2 days)")
 async def mark_car_as_sold(
     car_id: uuid.UUID,
     payload: MarkCarSoldRequest,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(get_current_admin),
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ):
-    """Marks a car as SOLD (Admin/JWT required).
-
-    Options:
-    - auto_delete_after_days (default 2): Automatically deletes car from database after 2 days.
-    - dont_delete (bool): Keep car listing permanently with SOLD badge.
-    """
+    """Marks a car as SOLD (Admin/Owner/JWT required)."""
     car = await CarService.get_car_by_id(db, car_id)
     if not car:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Vehicle with ID '{car_id}' not found",
         )
+
+    check_can_manage_car(car, current_user, payload.manager_email)
 
     now = datetime.now(timezone.utc)
     car.status = CarStatus.SOLD
@@ -409,15 +437,17 @@ async def modify_car_details(
     car_id: uuid.UUID,
     payload: CarModifyRequest,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(get_current_admin),
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ):
-    """Modify details of any car (price, km, year, title, description, status, fuel, etc.) — Admin/JWT required."""
+    """Modify details of any car (price, km, year, title, description, status, fuel, etc.) — Admin/Owner required."""
     car = await CarService.get_car_by_id(db, car_id)
     if not car:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Vehicle with ID '{car_id}' not found",
         )
+
+    check_can_manage_car(car, current_user, payload.manager_email)
 
     if payload.title is not None:
         car.title = payload.title
@@ -453,15 +483,18 @@ async def modify_car_details(
 async def delete_car_managed(
     car_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
-    _admin: User = Depends(get_current_admin),
+    current_user: Optional[User] = Depends(get_current_user_optional),
+    manager_email: Optional[str] = Query(None),
 ):
-    """Delete a car permanently from inventory (Admin/JWT required)."""
+    """Delete a car permanently from inventory (Admin/Owner authorization required)."""
     car = await CarService.get_car_by_id(db, car_id)
     if not car:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Vehicle with ID '{car_id}' not found",
         )
+
+    check_can_manage_car(car, current_user, manager_email)
 
     # Clean up associated uploaded files and database records
     if car.images:
