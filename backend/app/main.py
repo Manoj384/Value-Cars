@@ -81,6 +81,11 @@ app.add_middleware(
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# Mount Next.js _next assets if present
+next_dir = os.path.join(STATIC_DIR, "_next")
+if os.path.exists(next_dir):
+    app.mount("/_next", StaticFiles(directory=next_dir), name="next_static")
+
 # Mount static files if directory exists
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -144,19 +149,43 @@ async def serve_uploaded_media(path: str):
     return JSONResponse(status_code=404, content={"detail": "Media file not found"})
 
 
-@app.get("/", summary="Web Application Home")
-async def root():
-    """Serves the Value Cars Interactive Web Application UI."""
-    index_file = os.path.join(STATIC_DIR, "index.html")
-    if os.path.exists(index_file):
-        return FileResponse(index_file)
-    return JSONResponse(
-        content={
-            "app": settings.PROJECT_NAME,
-            "version": settings.VERSION,
-            "status": "online",
-            "docs_url": "/docs",
-            "api_v1": settings.API_V1_STR,
-            "health_check": f"{settings.API_V1_STR}/health",
-        }
-    )
+@app.get("/{full_path:path}", summary="Web Application UI & SPA Router")
+async def root(full_path: str = ""):
+    """Serves the Value Cars Next.js Web Application UI for all routes."""
+    clean = full_path.strip("/")
+    if not clean:
+        index_file = os.path.join(STATIC_DIR, "index.html")
+        if os.path.exists(index_file):
+            return FileResponse(index_file)
+        return JSONResponse(
+            content={
+                "app": settings.PROJECT_NAME,
+                "version": settings.VERSION,
+                "status": "online",
+                "docs_url": "/docs",
+                "api_v1": settings.API_V1_STR,
+                "health_check": f"{settings.API_V1_STR}/health",
+            }
+        )
+
+    # 1. Direct file check (e.g. logo_black_clean.png, favicon.ico)
+    direct_file = os.path.join(STATIC_DIR, clean)
+    if os.path.isfile(direct_file):
+        return FileResponse(direct_file)
+
+    # 2. Directory index check (e.g. sell/index.html, cars/index.html, admin/index.html)
+    dir_index = os.path.join(STATIC_DIR, clean, "index.html")
+    if os.path.isfile(dir_index):
+        return FileResponse(dir_index)
+
+    # 3. Direct HTML file check (e.g. 404.html)
+    html_file = os.path.join(STATIC_DIR, f"{clean}.html")
+    if os.path.isfile(html_file):
+        return FileResponse(html_file)
+
+    # 4. Fallback to index.html for client-side routing
+    root_index = os.path.join(STATIC_DIR, "index.html")
+    if os.path.exists(root_index):
+        return FileResponse(root_index)
+
+    return JSONResponse(status_code=404, content={"detail": "Not found"})
