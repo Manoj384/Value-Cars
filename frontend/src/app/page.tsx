@@ -88,6 +88,7 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col">
       <Navbar
         selectedCity={filters.city}
+        initialSearch={filters.model || ''}
         onCityChange={(city) => setFilters((prev) => ({ ...prev, city }))}
         onSearchChange={(model) => setFilters((prev) => ({ ...prev, model }))}
       />

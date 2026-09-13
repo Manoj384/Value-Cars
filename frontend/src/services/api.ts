@@ -462,7 +462,10 @@ const MOCK_CARS: Car[] = [
 
 const APPROVED_SELLER_EMAILS = [
   'shankarmanoj654@gmail.com',
+  'abhiprakash.gowda@gmail.com',
+  'gowdaharshith1432@gmail.com',
   'admin@valuecars.com',
+  'admin2@valuecars.com',
   'seller@dealer.com',
   'superadmin@valuecars.com',
   'manojshankar@valuecars.local',

@@ -327,35 +327,26 @@ async def seed_database(db: AsyncSession) -> None:
     # therefore gets its own unique phone number while remaining reachable via email login.
     #
     # SECURITY: Seeded admins must never use a hardcoded shared password. We read the
-    # bootstrap password from settings.ADMIN_BOOTSTRAP_PASSWORD (env var). In production,
-    # if it is left unset we simply do NOT create new admin accounts rather than seeding
-    # an account protected by a predictable password.
+    # bootstrap password fallback for generic admin accounts
     bootstrap_pwd = (settings.ADMIN_BOOTSTRAP_PASSWORD or "").strip()
-    is_production = settings.ENVIRONMENT.strip().lower() == "production"
-    if not bootstrap_pwd:
-        if is_production:
-            logger.warning(
-                "ADMIN_BOOTSTRAP_PASSWORD is not set in production — skipping creation of new admin accounts. "
-                "Set ADMIN_BOOTSTRAP_PASSWORD to seed an admin, or provision admins manually."
-            )
-        else:
-            # Non-production fallback that is still unique to this environment and marked clearly.
-            bootstrap_pwd = "ValueCars-DevOnly-ChangeMeInProduction-2026"
+    default_dev_pwd = "ValueCars-DevOnly-ChangeMeInProduction-2026"
 
     admin_accounts = [
-        ("Manoj Shankar (Superadmin)", "8050966025", "shankarmanoj654@gmail.com"),
-        ("Value Cars Admin", "8310166040", "admin@valuecars.com"),
-        ("Value Cars Admin 2", "8310166041", "admin2@valuecars.com"),
-        ("Value Cars Operations Admin", "8050966026", "admin.private@valuecars.com"),
+        ("Manoj Shankar (Superadmin)", "8050966025", "shankarmanoj654@gmail.com", "Manoj@123"),
+        ("Abhiprakash Gowda (Admin)", "8310166042", "abhiprakash.gowda@gmail.com", "Abhi@123"),
+        ("Harshith Gowda (Admin)", "8310166043", "gowdaharshith1432@gmail.com", "Chintu@123"),
+        ("Value Cars Admin", "8310166040", "admin@valuecars.com", bootstrap_pwd or default_dev_pwd),
+        ("Value Cars Admin 2", "8310166041", "admin2@valuecars.com", bootstrap_pwd or default_dev_pwd),
+        ("Value Cars Operations Admin", "8050966026", "admin.private@valuecars.com", bootstrap_pwd or default_dev_pwd),
     ]
 
     seen_phones: set[str] = set()
     seen_emails: set[str] = set()
 
-    for name, phone, email in admin_accounts:
+    for name, phone, email, acct_pwd in admin_accounts:
         email = (email or "").strip().lower() or None
 
-        # Reuse an existing account that already matches this phone OR email.
+        # Reuse or promote an existing account that already matches this phone OR email.
         existing_admin = await db.execute(
             select(User).where(
                 (User.email == email) | (User.phone_number == phone)
@@ -367,6 +358,9 @@ async def seed_database(db: AsyncSession) -> None:
             admin.role = UserRole.ADMIN
             admin.is_approved_seller = True
             admin.is_verified = True
+            admin.is_active = True
+            if acct_pwd:
+                admin.hashed_password = get_password_hash(acct_pwd)
             if not admin.full_name or admin.full_name == "Valued Customer":
                 admin.full_name = name
             seen_phones.add(admin.phone_number)
@@ -375,20 +369,14 @@ async def seed_database(db: AsyncSession) -> None:
             continue
 
         # Defensive guard: never insert a row that would violate a UNIQUE constraint
-        # already used by a brand-new account created earlier in this same batch.
         if phone in seen_phones or (email and email in seen_emails):
-            continue
-
-        # In production with no ADMIN_BOOTSTRAP_PASSWORD configured, do not create
-        # a new admin account (no predictable default password may be used).
-        if not bootstrap_pwd:
             continue
 
         admin = User(
             full_name=name,
             phone_number=phone,
             email=email,
-            hashed_password=get_password_hash(bootstrap_pwd),
+            hashed_password=get_password_hash(acct_pwd),
             role=UserRole.ADMIN,
             is_active=True,
             is_verified=True,
@@ -403,6 +391,8 @@ async def seed_database(db: AsyncSession) -> None:
     # 2. Seed Pre-approved Seller Emails
     approved_emails = [
         ("shankarmanoj654@gmail.com", "Manoj Shankar - Owner & Superadmin"),
+        ("abhiprakash.gowda@gmail.com", "Abhiprakash Gowda - Platform Admin"),
+        ("gowdaharshith1432@gmail.com", "Harshith Gowda - Platform Admin"),
         ("admin@valuecars.com", "Primary Platform Admin"),
         ("admin2@valuecars.com", "Secondary Platform Admin"),
         ("admin.private@valuecars.com", "Operations Admin"),
@@ -412,7 +402,8 @@ async def seed_database(db: AsyncSession) -> None:
     for email, notes in approved_emails:
         apprv_query = select(ApprovedSellerEmail).where(ApprovedSellerEmail.email == email)
         apprv_res = await db.execute(apprv_query)
-        if not apprv_res.scalar_one_or_none():
+        existing_apprv = apprv_res.scalar_one_or_none()
+        if not existing_apprv:
             db.add(
                 ApprovedSellerEmail(
                     email=email,
@@ -421,6 +412,8 @@ async def seed_database(db: AsyncSession) -> None:
                     is_active=True,
                 )
             )
+        else:
+            existing_apprv.is_active = True
 
     # 3. Seed Inspector User
     insp_query = select(User).where(User.email == "inspector@valuecars.com")

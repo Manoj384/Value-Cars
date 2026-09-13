@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
 import { ShieldCheck, RotateCcw, Truck, PlusCircle, LayoutDashboard, Search, MapPin, Phone, Menu, X, UserCircle2, MessageCircle, Heart, LogOut } from 'lucide-react';
 import { useAuth } from '../context/auth';
 
@@ -9,17 +10,29 @@ interface NavbarProps {
   onCityChange?: (city: string) => void;
   onSearchChange?: (term: string) => void;
   selectedCity?: string;
+  initialSearch?: string;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, selectedCity = '' }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, selectedCity = '', initialSearch = '' }) => {
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, displayName, openAuth, logout } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+    const val = e.target.value;
+    setSearchTerm(val);
     if (onSearchChange) {
-      onSearchChange(e.target.value);
+      onSearchChange(val);
+    }
+  };
+
+  const submitSearch = (term: string) => {
+    if (pathname !== '/') {
+      router.push(`/?search=${encodeURIComponent(term)}`);
+    } else if (onSearchChange) {
+      onSearchChange(term);
     }
   };
 
@@ -145,6 +158,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
               type="text"
               value={searchTerm}
               onChange={handleSearch}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  submitSearch(searchTerm);
+                }
+              }}
               placeholder="Search make, model, variant (e.g. Creta, Thar, Swift, Nexon, City)..."
               className="w-full bg-slate-100/90 hover:bg-slate-50 border border-slate-300 focus:border-rose-500 focus:bg-white focus:ring-4 focus:ring-rose-500/15 pl-11 pr-10 py-3 rounded-full text-sm outline-none transition-all duration-200 font-bold text-slate-900 placeholder:text-slate-400 placeholder:font-medium shadow-inner"
             />
@@ -197,6 +216,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
               type="text"
               value={searchTerm}
               onChange={handleSearch}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  setMobileOpen(false);
+                  submitSearch(searchTerm);
+                }
+              }}
               placeholder="Search cars (Creta, Thar, Swift)..."
               className="w-full bg-slate-100 border border-slate-200 focus:border-rose-500 focus:bg-white pl-10 pr-9 py-2.5 rounded-full text-sm outline-none transition font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-normal"
             />

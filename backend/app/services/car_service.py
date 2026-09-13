@@ -56,7 +56,32 @@ class CarService:
         if filters.make:
             where_clauses.append(Car.make.ilike(f"%{filters.make.strip()}%"))
         if filters.model:
-            where_clauses.append(Car.model.ilike(f"%{filters.model.strip()}%"))
+            terms = filters.model.strip().split()
+            from sqlalchemy import or_, and_
+            if len(terms) > 1:
+                term_clauses = []
+                for t in terms:
+                    term_clauses.append(
+                        or_(
+                            Car.make.ilike(f"%{t}%"),
+                            Car.model.ilike(f"%{t}%"),
+                            Car.variant.ilike(f"%{t}%"),
+                            Car.title.ilike(f"%{t}%"),
+                            Car.city.ilike(f"%{t}%"),
+                        )
+                    )
+                where_clauses.append(and_(*term_clauses))
+            else:
+                t = terms[0]
+                where_clauses.append(
+                    or_(
+                        Car.make.ilike(f"%{t}%"),
+                        Car.model.ilike(f"%{t}%"),
+                        Car.variant.ilike(f"%{t}%"),
+                        Car.title.ilike(f"%{t}%"),
+                        Car.city.ilike(f"%{t}%"),
+                    )
+                )
         if filters.city:
             where_clauses.append(Car.city.ilike(f"%{filters.city.strip()}%"))
         if filters.fuel_type:

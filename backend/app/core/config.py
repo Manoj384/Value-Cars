@@ -68,9 +68,15 @@ class Settings(BaseSettings):
     SMS_PROVIDER: str = "mock"
     WHATSAPP_PROVIDER: str = "mock"
     ADMIN_ALERT_PHONE: str = "8050966025"
-    ADMIN_ALERT_PHONES: List[str] = ["8050966025", "8310166040"]
-    ADMIN_AUTHORIZED_PHONES: List[str] = ["8050966025", "8310166040"]
+    ADMIN_ALERT_PHONES: List[str] = ["8050966025", "8310166040", "8310166042", "8310166043"]
+    ADMIN_AUTHORIZED_PHONES: List[str] = ["8050966025", "8310166040", "8310166042", "8310166043"]
     ADMIN_ALERT_EMAIL: str = "shankarmanoj654@gmail.com"
+    ADMIN_ALERT_EMAILS: List[str] = [
+        "shankarmanoj654@gmail.com",
+        "abhiprakash.gowda@gmail.com",
+        "gowdaharshith1432@gmail.com",
+        "admin@valuecars.com",
+    ]
     
     # SMTP / Email Service
     SMTP_HOST: str = ""
