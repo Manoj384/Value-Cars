@@ -61,9 +61,9 @@ export const MobileFilterDrawer: React.FC<MobileFilterDrawerProps> = ({
             <input
               type="range"
               min="300000"
-              max="3500000"
+              max="5000000"
               step="50000"
-              value={filters.max_price || 3500000}
+              value={filters.max_price || 5000000}
               onChange={(e) => onFilterChange({ max_price: Number(e.target.value) })}
               aria-label="Max Budget"
               className="w-full accent-rose-600"

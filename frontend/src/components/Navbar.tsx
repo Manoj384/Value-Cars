@@ -91,35 +91,35 @@ export const Navbar: React.FC<NavbarProps> = ({ onCityChange, onSearchChange, se
           <span className="hidden md:flex items-center"><RotateCcw className="w-3.5 h-3.5 text-amber-400 mr-1.5" /> Quality • Trust • Great Deals</span>
           <span className="hidden lg:flex items-center"><Truck className="w-3.5 h-3.5 text-sky-400 mr-1.5" /> Free Home Test Drive</span>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-3 text-slate-300">
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-3 text-slate-300">
             <a href="tel:8050966025" className="hover:text-amber-400 transition flex items-center">
               <Phone className="w-3 h-3 mr-1 text-amber-400" /> <strong className="text-white">8050966025</strong>
             </a>
-            <span className="text-slate-600 hidden sm:inline">|</span>
-            <a href="tel:8310166040" className="hover:text-amber-400 transition hidden sm:flex items-center">
+            <span className="text-slate-600">|</span>
+            <a href="tel:8310166040" className="hover:text-amber-400 transition flex items-center">
               <strong className="text-slate-200">8310166040</strong>
             </a>
             <a
               href="https://wa.me/918050966025?text=Hello%20Value%20Cars,%20I%20am%20interested%20in%20buying/viewing%20a%20car"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-bold ml-2"
+              className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 font-bold ml-1 sm:ml-2"
             >
-              <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+              <MessageCircle className="w-3.5 h-3.5" /> <span className="hidden sm:inline">WhatsApp</span>
             </a>
             <a
               href="https://maps.google.com/?q=Near+Bangalore+university,+Kengunte,+Mallathahalli,+Bengaluru,+Karnataka+560056"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 font-semibold ml-2"
+              className="hidden md:inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 font-semibold ml-2"
               title="Near Bangalore university, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056"
             >
-              <MapPin className="w-3.5 h-3.5 text-sky-400" /> Mallathahalli (Location)
+              <MapPin className="w-3.5 h-3.5 text-sky-400" /> Mallathahalli
             </a>
           </div>
-          <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold flex items-center border-l border-slate-700 pl-3">
-            <LayoutDashboard className="w-3 h-3 mr-1" /> Admin Hub
+          <Link href="/admin" className="text-amber-400 hover:text-amber-300 font-semibold flex items-center border-l border-slate-700 pl-2 sm:pl-3 shrink-0">
+            <LayoutDashboard className="w-3 h-3 mr-1" /> Admin
           </Link>
         </div>
       </div>

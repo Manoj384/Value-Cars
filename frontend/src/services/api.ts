@@ -1,28 +1,30 @@
 import { Car, InspectionReport } from '../types/car';
 import { cacheGet, cacheGetStale, cacheSet, cacheKeyHash } from '../lib/cache';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
-
-const API_BASE_ORIGIN = (() => {
-  try {
-    return new URL(API_BASE_URL).origin;
-  } catch {
-    return '';
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    if (window.location.port === '3000') {
+      return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+    }
+    return '/api/v1';
   }
-})();
+  return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
+}
 
 /**
- * Resolve a possibly root-relative media URL (e.g. `/uploads/general/abc.webp`
- * returned by the upload API, or `/static/...`) to an absolute URL on the backend
- * host. The Next.js front-end runs on a different origin (localhost:3000) than the
- * FastAPI backend (localhost:8000), so relative paths otherwise point at the wrong
- * host and car images silently break. Absolute http(s) URLs (e.g. Unsplash seed
- * images) pass through unchanged.
+ * Resolve a possibly root-relative media URL (e.g. `/uploads/...` or `/static/...`).
+ * On localhost:3000, points to local backend on port 8000.
+ * On production / Render, points to same origin.
  */
 export function resolveMediaUrl(url?: string | null): string {
   if (!url) return '';
   if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith('/')) return `${API_BASE_ORIGIN}${url}`;
+  if (url.startsWith('/')) {
+    if (typeof window !== 'undefined' && window.location.port === '3000') {
+      return `http://127.0.0.1:8000${url}`;
+    }
+    return url;
+  }
   return url;
 }
 
@@ -37,7 +39,7 @@ export function isBackendReachable(): boolean {
 /** Helper that pre-emptively checks backend connectivity (used on mount). */
 export async function probeBackend(): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE_URL}/health`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/health`, { cache: 'no-store' });
     backendReachable = res.ok;
   } catch {
     backendReachable = false;
@@ -673,7 +675,7 @@ export const apiClient = {
     });
 
     const key = cacheKeyHash('cars', query.toString());
-    const url = `${API_BASE_URL}/cars?${query.toString()}`;
+    const url = `${getApiBaseUrl()}/cars?${query.toString()}`;
 
     // 1) Fresh cache hit -> return instantly, no network.
     const cached = cacheGet<PaginatedCars>(key);
@@ -707,7 +709,7 @@ export const apiClient = {
 
   async getCarById(id: string): Promise<Car> {
     const key = cacheKeyHash('car', id);
-    const url = `${API_BASE_URL}/cars/${id}`;
+    const url = `${getApiBaseUrl()}/cars/${id}`;
 
     const cached = cacheGet<Car>(key);
     if (cached) return cached.value;
@@ -737,7 +739,7 @@ export const apiClient = {
 
   async getCarInspection(carId: string): Promise<InspectionReport> {
     const key = cacheKeyHash('inspection', carId);
-    const url = `${API_BASE_URL}/inspections/car/${carId}`;
+    const url = `${getApiBaseUrl()}/inspections/car/${carId}`;
 
     const cached = cacheGet<InspectionReport>(key);
     if (cached) return cached.value;
@@ -778,7 +780,7 @@ export const apiClient = {
   // Valuation Engine
   async calculateValuation(data: ValuationRequest): Promise<ValuationResponse> {
     try {
-      const res = await fetch(`${API_BASE_URL}/leads/valuation`, {
+      const res = await fetch(`${getApiBaseUrl()}/leads/valuation`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -802,7 +804,7 @@ export const apiClient = {
   // Test Drives & Reservations
   async bookTestDrive(data: TestDriveRequest) {
     try {
-      const res = await fetch(`${API_BASE_URL}/test-drives`, {
+      const res = await fetch(`${getApiBaseUrl()}/test-drives`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -816,7 +818,7 @@ export const apiClient = {
 
   async reserveCar(data: TokenReservationRequest) {
     try {
-      const res = await fetch(`${API_BASE_URL}/orders/reserve`, {
+      const res = await fetch(`${getApiBaseUrl()}/orders/reserve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -837,7 +839,7 @@ export const apiClient = {
   // Seller Online Addition
   async checkSellerEmail(email: string): Promise<{ email: string; is_approved: boolean }> {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/check-seller-email?email=${encodeURIComponent(email)}`);
+      const res = await fetch(`${getApiBaseUrl()}/cars/check-seller-email?email=${encodeURIComponent(email)}`);
       if (res.ok) return res.json();
     } catch {
       // Fallback
@@ -849,7 +851,7 @@ export const apiClient = {
   async submitSellerCar(data: SellerCarSubmission) {
     let res: Response;
     try {
-      res = await fetch(`${API_BASE_URL}/cars/submit`, {
+      res = await fetch(`${getApiBaseUrl()}/cars/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -872,7 +874,7 @@ export const apiClient = {
   async uploadImages(files: File[]): Promise<string[]> {
     const formData = new FormData();
     for (const file of files) formData.append('files', file);
-    const res = await fetch(`${API_BASE_URL}/uploads/images`, {
+    const res = await fetch(`${getApiBaseUrl()}/uploads/images`, {
       method: 'POST',
       body: formData,
     });
@@ -899,7 +901,7 @@ export const apiClient = {
   },
 
   async adminLogin(email: string, password: string): Promise<AdminLoginResponse> {
-    const res = await fetch(`${API_BASE_URL}/admin/login`, {
+    const res = await fetch(`${getApiBaseUrl()}/admin/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -916,7 +918,7 @@ export const apiClient = {
 
   async getAdminMetrics(): Promise<AdminMetrics> {
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/metrics`, { headers: this.adminHeaders(), cache: 'no-store' });
+      const res = await fetch(`${getApiBaseUrl()}/admin/metrics`, { headers: this.adminHeaders(), cache: 'no-store' });
       if (res.ok) return res.json();
     } catch {
       // Fallback
@@ -937,7 +939,7 @@ export const apiClient = {
 
   async getPendingCars(): Promise<Car[]> {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/admin/pending`, { headers: this.adminHeaders(), cache: 'no-store' });
+      const res = await fetch(`${getApiBaseUrl()}/cars/admin/pending`, { headers: this.adminHeaders(), cache: 'no-store' });
       recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
@@ -948,7 +950,7 @@ export const apiClient = {
 
   async approveCar(carId: string) {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/admin/approve/${carId}`, { method: 'POST', headers: this.adminHeaders() });
+      const res = await fetch(`${getApiBaseUrl()}/cars/admin/approve/${carId}`, { method: 'POST', headers: this.adminHeaders() });
       recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
@@ -959,7 +961,7 @@ export const apiClient = {
 
   async whitelistSellerEmail(email: string, approvedBy = 'Superadmin', notes = 'Verified Online') {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/admin/approve-seller-email`, {
+      const res = await fetch(`${getApiBaseUrl()}/cars/admin/approve-seller-email`, {
         method: 'POST',
         headers: this.adminHeaders(),
         // Backend ApproveEmailRequest only accepts email + notes
@@ -978,7 +980,7 @@ export const apiClient = {
 
   async getApprovedEmails() {
     try {
-      const res = await fetch(`${API_BASE_URL}/cars/admin/approved-seller-emails`, { headers: this.adminHeaders(), cache: 'no-store' });
+      const res = await fetch(`${getApiBaseUrl()}/cars/admin/approved-seller-emails`, { headers: this.adminHeaders(), cache: 'no-store' });
       recordSuccess(res.ok);
       if (res.ok) return res.json();
     } catch {
@@ -1001,7 +1003,7 @@ export const apiClient = {
   },
 
   async sellerRegister(input: { full_name: string; email: string; phone_number: string; password: string }): Promise<SellerLoginResponse> {
-    const res = await fetch(`${API_BASE_URL}/sellers/register`, {
+    const res = await fetch(`${getApiBaseUrl()}/sellers/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
@@ -1013,7 +1015,7 @@ export const apiClient = {
   },
 
   async sellerLogin(email: string, password: string): Promise<SellerLoginResponse> {
-    const res = await fetch(`${API_BASE_URL}/sellers/login`, {
+    const res = await fetch(`${getApiBaseUrl()}/sellers/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -1025,21 +1027,21 @@ export const apiClient = {
   },
 
   async getSellerProfile(): Promise<SellerProfile> {
-    const res = await fetch(`${API_BASE_URL}/sellers/me`, { headers: this.authHeaders(), cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/sellers/me`, { headers: this.authHeaders(), cache: 'no-store' });
     const data = await res.json();
     if (!res.ok) throw new Error(data?.detail || 'Unable to load profile');
     return data;
   },
 
   async getMyListings(): Promise<Car[]> {
-    const res = await fetch(`${API_BASE_URL}/sellers/me/cars`, { headers: this.authHeaders(), cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/sellers/me/cars`, { headers: this.authHeaders(), cache: 'no-store' });
     const data = await res.json();
     if (!res.ok) throw new Error(data?.detail || 'Unable to load listings');
     return data;
   },
 
   async updateMyListing(carId: string, patch: { price?: number; description?: string; status?: string }): Promise<Car> {
-    const res = await fetch(`${API_BASE_URL}/sellers/cars/${carId}`, {
+    const res = await fetch(`${getApiBaseUrl()}/sellers/cars/${carId}`, {
       method: 'PATCH',
       headers: this.authHeaders(),
       body: JSON.stringify(patch),
@@ -1050,7 +1052,7 @@ export const apiClient = {
   },
 
   async deleteMyListing(carId: string): Promise<void> {
-    const res = await fetch(`${API_BASE_URL}/sellers/cars/${carId}`, {
+    const res = await fetch(`${getApiBaseUrl()}/sellers/cars/${carId}`, {
       method: 'DELETE',
       headers: this.authHeaders(),
     });
@@ -1069,7 +1071,7 @@ export const apiClient = {
   },
 
   async checkEmail(email: string): Promise<CheckEmailResult> {
-    const res = await fetch(`${API_BASE_URL}/auth/check-email`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/check-email`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -1080,7 +1082,7 @@ export const apiClient = {
   },
 
   async requestVerification(payload: RequestVerificationPayload) {
-    const res = await fetch(`${API_BASE_URL}/auth/request-verification`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/request-verification`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -1091,7 +1093,7 @@ export const apiClient = {
   },
 
   async customerLogin(email: string, password: string): Promise<AuthTokenResponse> {
-    const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -1104,7 +1106,7 @@ export const apiClient = {
   },
 
   async getCustomerMe(token = getCustomerToken()): Promise<CustomerProfile> {
-    const res = await fetch(`${API_BASE_URL}/auth/me`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     });
@@ -1113,7 +1115,7 @@ export const apiClient = {
   },
 
   async createPassword(token: string, password: string): Promise<AuthTokenResponse> {
-    const res = await fetch(`${API_BASE_URL}/auth/create-password`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/create-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, password, confirm_password: password }),
@@ -1126,7 +1128,7 @@ export const apiClient = {
   },
 
   async forgotPassword(email: string): Promise<void> {
-    const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -1136,7 +1138,7 @@ export const apiClient = {
   },
 
   async resetPassword(token: string, newPassword: string): Promise<AuthTokenResponse> {
-    const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+    const res = await fetch(`${getApiBaseUrl()}/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token, new_password: newPassword, confirm_password: newPassword }),
@@ -1155,7 +1157,7 @@ export const apiClient = {
   async toggleFavorite(carId: string): Promise<{ is_favorited: boolean }> {
     const token = getCustomerToken();
     if (!token) throw new Error('Please sign in to save cars');
-    const res = await fetch(`${API_BASE_URL}/favorites/${carId}`, {
+    const res = await fetch(`${getApiBaseUrl()}/favorites/${carId}`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -1168,7 +1170,7 @@ export const apiClient = {
   async listFavorites(): Promise<Car[]> {
     const token = getCustomerToken();
     if (!token) return [];
-    const res = await fetch(`${API_BASE_URL}/favorites`, {
+    const res = await fetch(`${getApiBaseUrl()}/favorites`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: 'no-store',
     });

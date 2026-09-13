@@ -37,17 +37,17 @@ export const FilterSidebar: React.FC<FilterSidebarProps> = ({ filters, onFilterC
         <input
           type="range"
           min="300000"
-          max="3500000"
+          max="5000000"
           step="50000"
-          value={filters.max_price || 3500000}
+          value={filters.max_price || 5000000}
           onChange={(e) => onFilterChange({ max_price: Number(e.target.value) })}
           aria-label="Max Budget Range"
           className="w-full accent-rose-600 cursor-pointer"
         />
         <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-semibold">
           <span>₹3L</span>
-          <span>₹15L</span>
-          <span>₹35L+</span>
+          <span>₹25L</span>
+          <span>₹50L+</span>
         </div>
       </div>
 
