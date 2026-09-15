@@ -3,7 +3,7 @@ import { ShieldCheck, Phone, Mail, MapPin, MessageCircle, ExternalLink } from 'l
 
 export function Footer() {
   const year = new Date().getFullYear();
-  const mapsUrl = "https://maps.google.com/?q=Near+Bangalore+university,+Kengunte,+Mallathahalli,+Bengaluru,+Karnataka+560056";
+  const mapsUrl = "https://maps.app.goo.gl/5HxTaYTxcxhpmAyp6";
 
   return (
     <footer className="bg-slate-950 text-slate-300 mt-16 border-t border-slate-800">
@@ -67,7 +67,7 @@ export function Footer() {
           <ul className="space-y-2.5 text-sm">
             <li className="flex items-center"><ShieldCheck className="w-4 h-4 text-emerald-400 mr-2" /> 200-Point Inspection</li>
             <li className="flex items-center"><ShieldCheck className="w-4 h-4 text-emerald-400 mr-2" /> 1-Year Comprehensive Warranty</li>
-            <li className="flex items-center"><ShieldCheck className="w-4 h-4 text-emerald-400 mr-2" /> Free Home Test Drives</li>
+            <li className="flex items-center"><ShieldCheck className="w-4 h-4 text-emerald-400 mr-2" /> Free Test Drives</li>
             <li className="flex items-center"><ShieldCheck className="w-4 h-4 text-emerald-400 mr-2" /> Verified Direct Seller Deals</li>
           </ul>
         </div>
@@ -89,8 +89,8 @@ export function Footer() {
             </li>
             <li className="pt-1">
               <span className="text-slate-400 block text-[10px] uppercase font-bold">Bangalore Experience Hub:</span>
-              <div className="mt-1 text-slate-300 leading-relaxed">
-                Near Bangalore university, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056
+              <div className="mt-1 text-slate-300 leading-relaxed font-medium">
+                Value Cars, Near Bangalore University, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056 (Plus Code: XG73+XR Bengaluru)
               </div>
               <a
                 href={mapsUrl}
@@ -99,7 +99,7 @@ export function Footer() {
                 className="mt-2 inline-flex items-center text-amber-400 hover:text-amber-300 font-bold text-xs transition underline decoration-amber-400/50 underline-offset-2"
               >
                 <MapPin className="w-3.5 h-3.5 mr-1 text-rose-400" />
-                View on Google Maps <ExternalLink className="w-3 h-3 ml-1" />
+                View on Google Maps (XG73+XR) <ExternalLink className="w-3 h-3 ml-1" />
               </a>
             </li>
           </ul>

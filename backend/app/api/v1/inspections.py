@@ -8,9 +8,68 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.models.car import Car
 from app.models.inspection import Inspection, InspectionItem, InspectionStatus
-from app.schemas.inspection import InspectionCreate, InspectionResponse
+from app.schemas.inspection import InspectionCreate, InspectionResponse, InspectionUpdate
 
 router = APIRouter()
+
+
+@router.put("/car/{car_id}", response_model=InspectionResponse, summary="Admin: Update Car Inspection Scores")
+async def update_car_inspection(
+    car_id: uuid.UUID,
+    insp_in: InspectionUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin updates quality assurance scores and inspector remarks for a car."""
+    car_res = await db.execute(select(Car).where(Car.id == car_id))
+    car = car_res.scalar_one_or_none()
+    if not car:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Vehicle not found")
+
+    query = (
+        select(Inspection)
+        .where(Inspection.car_id == car_id)
+        .order_by(desc(Inspection.created_at))
+    )
+    result = await db.execute(query)
+    insp = result.scalars().first()
+
+    if not insp:
+        insp = Inspection(
+            car_id=car_id,
+            overall_score=insp_in.overall_score or 8.8,
+            status=InspectionStatus.APPROVED,
+            summary_notes="Digital quality assurance rating updated by Admin.",
+        )
+        db.add(insp)
+        await db.flush()
+
+    if insp_in.overall_score is not None:
+        insp.overall_score = insp_in.overall_score
+        car.inspection_score = insp_in.overall_score
+    if insp_in.engine_score is not None:
+        insp.engine_score = insp_in.engine_score
+    if insp_in.exterior_score is not None:
+        insp.exterior_score = insp_in.exterior_score
+    if insp_in.interior_score is not None:
+        insp.interior_score = insp_in.interior_score
+    if insp_in.transmission_score is not None:
+        insp.transmission_score = insp_in.transmission_score
+    if insp_in.suspension_score is not None:
+        insp.suspension_score = insp_in.suspension_score
+    if insp_in.ac_score is not None:
+        insp.ac_score = insp_in.ac_score
+    if insp_in.summary_notes is not None:
+        insp.summary_notes = insp_in.summary_notes
+
+    await db.commit()
+
+    query_full = (
+        select(Inspection)
+        .where(Inspection.id == insp.id)
+        .options(selectinload(Inspection.items))
+    )
+    res = await db.execute(query_full)
+    return InspectionResponse.model_validate(res.scalar_one())
 
 
 @router.get("/car/{car_id}", response_model=Optional[InspectionResponse], summary="Get Car Inspection Report")

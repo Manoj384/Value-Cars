@@ -2,7 +2,7 @@
 
 import React, { useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Gauge, Fuel, Cog, MapPin, Heart, Share2, Scale, Sparkles, MessageCircle } from 'lucide-react';
+import { ShieldCheck, Gauge, Fuel, Cog, MapPin, Heart, Share2, Scale, MessageCircle } from 'lucide-react';
 import { Car } from '../types/car';
 import { useAuth } from '../context/auth';
 import { subscribe, getSnapshot, getServerSnapshot, toggleFavorite } from '../services/favoritesStore';
@@ -81,11 +81,6 @@ export const CarCard: React.FC<CarCardProps> = ({
     return (price / 100000).toFixed(2);
   };
 
-  // Smart Best Value calculation
-  const savings = car.original_price && car.original_price > car.price ? car.original_price - car.price : 0;
-  const isTopScore = car.inspection_score >= 9.2;
-  const isBestValue = (savings >= 25000 || isTopScore) && !isSold;
-
   return (
     <div className={`bg-white rounded-2xl border ${isSold ? 'border-amber-300' : isCompared ? 'border-rose-500 ring-2 ring-rose-500/30' : 'border-slate-200'} overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col group relative`}>
       {/* Image Container */}
@@ -123,13 +118,6 @@ export const CarCard: React.FC<CarCardProps> = ({
           </div>
         )}
 
-        {/* Smart Best Deal Badge */}
-        {isBestValue && (
-          <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-rose-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center gap-1 animate-pulse">
-            <Sparkles className="w-3 h-3" />
-            <span>{savings >= 25000 ? `₹${(savings / 1000).toFixed(0)}k OFF` : '★ BEST VALUE'}</span>
-          </div>
-        )}
 
         {/* Inspection Score Badge */}
         <div className="absolute top-3 right-3 bg-slate-900/90 backdrop-blur-md text-white text-xs font-black px-2.5 py-1 rounded-lg border border-slate-700 flex items-center">

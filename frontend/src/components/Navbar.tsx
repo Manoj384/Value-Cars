@@ -137,7 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="flex items-center space-x-4">
           <span className="flex items-center"><ShieldCheck className="w-3.5 h-3.5 text-emerald-400 mr-1.5" /> 200-Point Inspection</span>
           <span className="hidden md:flex items-center"><RotateCcw className="w-3.5 h-3.5 text-amber-400 mr-1.5" /> Quality • Trust • Great Deals</span>
-          <span className="hidden lg:flex items-center"><Truck className="w-3.5 h-3.5 text-sky-400 mr-1.5" /> Free Home Test Drive</span>
+          <span className="hidden lg:flex items-center"><Truck className="w-3.5 h-3.5 text-sky-400 mr-1.5" /> Free Test Drive</span>
         </div>
         <div className="flex items-center space-x-2 sm:space-x-4">
           <div className="flex items-center space-x-2 sm:space-x-3 text-slate-300">
@@ -157,13 +157,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               <MessageCircle className="w-3.5 h-3.5" /> <span className="hidden sm:inline">WhatsApp</span>
             </a>
             <a
-              href="https://maps.google.com/?q=Near+Bangalore+university,+Kengunte,+Mallathahalli,+Bengaluru,+Karnataka+560056"
+              href="https://maps.app.goo.gl/5HxTaYTxcxhpmAyp6"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden md:inline-flex items-center gap-1 text-sky-400 hover:text-sky-300 font-semibold ml-2"
-              title="Near Bangalore university, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056"
+              title="Value Cars, Near Bangalore university, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056 (XG73+XR Bengaluru, Karnataka)"
             >
-              <MapPin className="w-3.5 h-3.5 text-sky-400" /> Mallathahalli
+              <MapPin className="w-3.5 h-3.5 text-sky-400" /> Mallathahalli (XG73+XR)
             </a>
           </div>
         </div>

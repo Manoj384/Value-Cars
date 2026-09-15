@@ -23,7 +23,7 @@ ALLOWED_IMAGE_TYPES = {
     "image/webp": ".webp",
 }
 MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB per file
-MAX_FILES_PER_REQUEST = 8
+MAX_FILES_PER_REQUEST = 25
 
 # Target dimensions
 MAX_DISPLAY_SIZE = (1200, 800)

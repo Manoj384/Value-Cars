@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 
 interface BrandLogoProps {
   brand: string;
@@ -8,13 +8,45 @@ interface BrandLogoProps {
   ariaLabel?: string;
 }
 
+const BRAND_IMAGES: Record<string, string> = {
+  maruti: '/brands/suzuki-logo.png',
+  suzuki: '/brands/suzuki-logo.png',
+  'maruti suzuki': '/brands/suzuki-logo.png',
+  hyundai: '/brands/hyundai-logo.png',
+  tata: '/brands/tata-logo.png',
+  mahindra: '/brands/mahindra-logo.png',
+  toyota: '/brands/toyota-logo-2020.png',
+  kia: '/brands/kia-logo.png',
+  honda: '/brands/honda-logo-2000-3d.png',
+  skoda: '/brands/skoda-logo.png',
+  volkswagen: '/brands/volkswagen-logo.png',
+  vw: '/brands/volkswagen-logo.png',
+  nissan: '/brands/nissan-logo.png',
+  renault: '/brands/renault-logo.png',
+  bmw: '/brands/bmw-logo-2020-1.png',
+  mercedes: '/brands/mercedes-benz-logo.png',
+  'mercedes-benz': '/brands/mercedes-benz-logo.png',
+  benz: '/brands/mercedes-benz-logo.png',
+  audi: '/brands/audi-logo.png',
+  mg: '/brands/mg-logo.png',
+  jeep: '/brands/jeep-logo.png',
+  ford: '/brands/ford-logo-2017.png',
+  chevrolet: '/brands/chevrolet-logo.png',
+  jaguar: '/brands/jaguar-logo.png',
+  'land rover': '/brands/land-rover-logo.png',
+  volvo: '/brands/volvo-logo.png',
+  isuzu: '/brands/isuzu-logo.png',
+  lexus: '/brands/lexus-logo.png',
+  subaru: '/brands/subaru-logo.png',
+  tesla: '/brands/tesla-logo-2007.png',
+  bharatbenz: '/brands/bharatbenz-logo.png',
+};
+
 interface BrandSvg {
   viewBox: string;
   svg: JSX.Element;
 }
 
-// Official-style SVG marks for each car brand. These are embedded inline so the
-// brand grid loads reliably even with no network (no external image dependency).
 const BRAND_SVGS: Record<string, BrandSvg> = {
   Maruti: {
     viewBox: '0 0 100 100',
@@ -53,9 +85,7 @@ const BRAND_SVGS: Record<string, BrandSvg> = {
   },
   Mahindra: {
     viewBox: '0 0 100 100',
-    svg: (
-      <path d="M22 68L42 32l8 14-6 10 12-24 14 24-6-10 8-14 20 36H22z" fill="#d32f2f" />
-    ),
+    svg: <path d="M22 68L42 32l8 14-6 10 12-24 14 24-6-10 8-14 20 36H22z" fill="#d32f2f" />,
   },
   Toyota: {
     viewBox: '0 0 100 100',
@@ -143,17 +173,29 @@ const BRAND_SVGS: Record<string, BrandSvg> = {
   },
 };
 
-/**
- * Renders a car brand's mark as an inline SVG.
- * Falls back to a neutral placeholder when the brand isn't known.
- */
 export const BrandLogo: React.FC<BrandLogoProps> = ({ brand, className = 'w-9 h-9', ariaLabel }) => {
-  const entry = BRAND_SVGS[brand];
+  const [imgError, setImgError] = useState(false);
+  const normalizedKey = (brand || '').trim().toLowerCase();
+  const imagePath = BRAND_IMAGES[normalizedKey];
+
+  if (imagePath && !imgError) {
+    return (
+      /* eslint-disable-next-line @next/next/no-img-element */
+      <img
+        src={imagePath}
+        alt={ariaLabel ?? `${brand} logo`}
+        className={`${className} object-contain p-0.5`}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  const entry = BRAND_SVGS[brand] || BRAND_SVGS[brand.split(' ')[0]];
 
   if (!entry) {
     return (
       <div
-        className={`${className} rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 font-black text-[10px] uppercase`}
+        className={`${className} rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-black text-[10px] uppercase`}
         aria-label={brand}
         role="img"
       >
@@ -173,4 +215,4 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ brand, className = 'w-9 h-
       {entry.svg}
     </svg>
   );
-};
+};

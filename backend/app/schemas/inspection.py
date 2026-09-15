@@ -45,6 +45,17 @@ class InspectionCreate(InspectionBase):
     items: Optional[List[InspectionItemCreate]] = []
 
 
+class InspectionUpdate(BaseModel):
+    overall_score: Optional[float] = Field(None, ge=0.0, le=10.0)
+    engine_score: Optional[float] = Field(None, ge=0.0, le=10.0)
+    exterior_score: Optional[float] = Field(None, ge=0.0, le=10.0)
+    interior_score: Optional[float] = Field(None, ge=0.0, le=10.0)
+    transmission_score: Optional[float] = Field(None, ge=0.0, le=10.0)
+    suspension_score: Optional[float] = Field(None, ge=0.0, le=10.0)
+    ac_score: Optional[float] = Field(None, ge=0.0, le=10.0)
+    summary_notes: Optional[str] = None
+
+
 class InspectionResponse(InspectionBase):
     model_config = ConfigDict(from_attributes=True)
 
@@ -52,3 +63,4 @@ class InspectionResponse(InspectionBase):
     created_at: datetime
     updated_at: datetime
     items: List[InspectionItemResponse] = []
+

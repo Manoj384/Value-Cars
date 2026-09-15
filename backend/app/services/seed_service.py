@@ -1,6 +1,6 @@
 import logging
 import uuid
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -26,7 +26,7 @@ SAMPLE_CARS = [
         "body_type": BodyType.SUV,
         "color": "Polar White",
         "city": "Bangalore",
-        "hub_location": "Value Cars Hub, Near Bangalore University, Kengunte, Mallathahalli, Bengaluru 560056",
+        "hub_location": "Value Cars Hub, Near Bangalore University, Kengunte, Mallathahalli, Bengaluru 560056 (Plus Code: XG73+XR Bengaluru)",
         "price": 1475000.0,
         "original_price": 1850000.0,
         "estimated_market_min": 1420000.0,
@@ -435,63 +435,66 @@ async def seed_database(db: AsyncSession) -> None:
 
     await db.flush()
 
-    # 4. Seed all missing sample cars
-    for raw_car in SAMPLE_CARS:
-        car_data = dict(raw_car)
-        reg_num = car_data.get("reg_number")
-        existing_car = await db.execute(select(Car).where(Car.reg_number == reg_num))
-        if existing_car.scalar_one_or_none():
-            continue
+    # 4. Seed sample cars ONLY if DB is completely empty (prevents deleted cars from reappearing on restart)
+    car_count_res = await db.execute(select(func.count(Car.id)))
+    car_count = car_count_res.scalar() or 0
+    if car_count == 0:
+        for raw_car in SAMPLE_CARS:
+            car_data = dict(raw_car)
+            reg_num = car_data.get("reg_number")
+            existing_car = await db.execute(select(Car).where(Car.reg_number == reg_num))
+            if existing_car.scalar_one_or_none():
+                continue
 
-        images = car_data.pop("images", [])
-        features = car_data.pop("features", [])
+            images = car_data.pop("images", [])
+            features = car_data.pop("features", [])
 
-        car = Car(**car_data)
-        db.add(car)
-        await db.flush()
+            car = Car(**car_data)
+            db.add(car)
+            await db.flush()
 
-        for img in images:
-            db.add(CarImage(car_id=car.id, **img))
+            for img in images:
+                db.add(CarImage(car_id=car.id, **img))
 
-        for feat in features:
-            db.add(CarFeature(car_id=car.id, **feat))
+            for feat in features:
+                db.add(CarFeature(car_id=car.id, **feat))
 
-        # Create an inspection record for the car
-        inspection = Inspection(
-            car_id=car.id,
-            inspector_id=inspector.id if inspector else None,
-            overall_score=car.inspection_score,
-            status=InspectionStatus.APPROVED,
-            engine_score=9.4,
-            exterior_score=9.1,
-            interior_score=9.3,
-            transmission_score=9.5,
-            suspension_score=9.0,
-            electrical_score=9.6,
-            tyre_score=8.8,
-            ac_score=9.5,
-            summary_notes="Vehicle is in superb mechanical and cosmetic condition. No structural damage detected.",
-        )
-        db.add(inspection)
-        await db.flush()
-
-        # Add sample checkpoints
-        checkpoints = [
-            ("ENGINE", "Engine Oil Condition", CheckpointCondition.PERFECT, "Clean engine oil at optimal level"),
-            ("ENGINE", "Coolant & Radiator", CheckpointCondition.GOOD, "No coolant leaks detected"),
-            ("EXTERIOR", "Front Bumper & Grille", CheckpointCondition.GOOD, "Minor superficial stone chip"),
-            ("INTERIOR", "Dashboard & Upholstery", CheckpointCondition.PERFECT, "No tears or dashboard fading"),
-            ("TYRES", "Tyre Tread Depth", CheckpointCondition.GOOD, "Approx 75% tread life remaining"),
-        ]
-        for cat, name, cond, notes in checkpoints:
-            db.add(
-                InspectionItem(
-                    inspection_id=inspection.id,
-                    category=cat,
-                    checkpoint_name=name,
-                    condition=cond,
-                    notes=notes,
-                )
+            # Create an inspection record for the car
+            inspection = Inspection(
+                car_id=car.id,
+                inspector_id=inspector.id if inspector else None,
+                overall_score=car.inspection_score,
+                status=InspectionStatus.APPROVED,
+                engine_score=9.4,
+                exterior_score=9.1,
+                interior_score=9.3,
+                transmission_score=9.5,
+                suspension_score=9.0,
+                electrical_score=9.6,
+                tyre_score=8.8,
+                ac_score=9.5,
+                summary_notes="Vehicle is in superb mechanical and cosmetic condition. No structural damage detected.",
             )
+            db.add(inspection)
+            await db.flush()
+
+            # Add sample checkpoints
+            checkpoints = [
+                ("ENGINE", "Engine Oil Condition", CheckpointCondition.PERFECT, "Clean engine oil at optimal level"),
+                ("ENGINE", "Coolant & Radiator", CheckpointCondition.GOOD, "No coolant leaks detected"),
+                ("EXTERIOR", "Front Bumper & Grille", CheckpointCondition.GOOD, "Minor superficial stone chip"),
+                ("INTERIOR", "Dashboard & Upholstery", CheckpointCondition.PERFECT, "No tears or dashboard fading"),
+                ("TYRES", "Tyre Tread Depth", CheckpointCondition.GOOD, "Approx 75% tread life remaining"),
+            ]
+            for cat, name, cond, notes in checkpoints:
+                db.add(
+                    InspectionItem(
+                        inspection_id=inspection.id,
+                        category=cat,
+                        checkpoint_name=name,
+                        condition=cond,
+                        notes=notes,
+                    )
+                )
 
     await db.commit()

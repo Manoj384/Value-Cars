@@ -799,6 +799,20 @@ export const apiClient = {
     };
   },
 
+  async updateCarInspection(carId: string, updates: Partial<InspectionReport>): Promise<InspectionReport> {
+    const url = `${getApiBaseUrl()}/inspections/car/${carId}`;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: this.adminHeaders(),
+      body: JSON.stringify(updates),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.detail || 'Failed to update inspection report');
+    cacheClear();
+    return data;
+  },
+
+
   // Valuation Engine
   async calculateValuation(data: ValuationRequest): Promise<ValuationResponse> {
     try {

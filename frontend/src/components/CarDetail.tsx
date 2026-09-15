@@ -4,8 +4,7 @@ import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { TestDriveModal } from './TestDriveModal';
 import { ReserveModal } from './ReserveModal';
-import { apiClient } from '../services/api';
-import { resolveMediaUrl } from '../services/api';
+import { apiClient, resolveMediaUrl, isAdminAuthed } from '../services/api';
 import { Car, InspectionReport } from '../types/car';
 import { track } from '../lib/activity';
 import { reportError } from '../lib/errorReporting';
@@ -36,7 +35,66 @@ export default function CarDetail({ carId }: CarDetailProps) {
   const [showTestDrive, setShowTestDrive] = useState(false);
   const [showReserve, setShowReserve] = useState(false);
 
-  const { openAuth } = useAuth();
+  const { user, openAuth } = useAuth();
+  const isAdmin = !!(user && (user.role === 'ADMIN' || user.role === 'SUPERADMIN')) || isAdminAuthed();
+
+  // Admin Quality Assurance edit state
+  const [editingInsp, setEditingInsp] = useState(false);
+  const [inspScores, setInspScores] = useState({
+    overall_score: '',
+    engine_score: '',
+    exterior_score: '',
+    interior_score: '',
+    suspension_score: '',
+    ac_score: '',
+    summary_notes: '',
+  });
+  const [savingInsp, setSavingInsp] = useState(false);
+  const [inspMsg, setInspMsg] = useState('');
+
+  const handleStartEditInsp = () => {
+    if (!inspection) return;
+    setInspScores({
+      overall_score: String(inspection.overall_score || 8.8),
+      engine_score: String(inspection.engine_score || 9.0),
+      exterior_score: String(inspection.exterior_score || 8.7),
+      interior_score: String(inspection.interior_score || 8.9),
+      suspension_score: String(inspection.suspension_score || 8.5),
+      ac_score: String(inspection.ac_score || 9.0),
+      summary_notes: inspection.summary_notes || '',
+    });
+    setEditingInsp(true);
+    setInspMsg('');
+  };
+
+  const handleSaveInsp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingInsp(true);
+    setInspMsg('');
+    try {
+      const updated = await apiClient.updateCarInspection(carId, {
+        overall_score: Number(inspScores.overall_score),
+        engine_score: Number(inspScores.engine_score),
+        exterior_score: Number(inspScores.exterior_score),
+        interior_score: Number(inspScores.interior_score),
+        suspension_score: Number(inspScores.suspension_score),
+        ac_score: Number(inspScores.ac_score),
+        summary_notes: inspScores.summary_notes,
+      });
+      setInspection(updated);
+      if (car) {
+        setCar({ ...car, inspection_score: Number(inspScores.overall_score) });
+      }
+      setEditingInsp(false);
+      setInspMsg('Quality Assurance ratings updated successfully!');
+      setTimeout(() => setInspMsg(''), 4000);
+    } catch (err: any) {
+      setInspMsg(err?.message || 'Failed to update inspection report');
+    } finally {
+      setSavingInsp(false);
+    }
+  };
+
   const favoriteIds = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const isFav = favoriteIds.has(carId);
 
@@ -144,191 +202,325 @@ export default function CarDetail({ carId }: CarDetailProps) {
         <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back to All Cars
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left 2 Columns: Image Gallery + Inspection Scorecard */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Gallery View */}
-          <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-sm overflow-hidden">
-            <div className="relative h-96 sm:h-[420px] rounded-2xl overflow-hidden bg-slate-100 group">
-              <button
-                type="button"
-                onClick={() => {
-                  if (active) {
-                    setLightboxOpen(true);
-                    track('car', 'gallery_open', { carId });
-                  }
-                }}
-                className="block w-full h-full cursor-zoom-in"
-                aria-label="Open fullscreen image viewer"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={resolveMediaUrl(active?.image_url || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80')}
-                  alt={car.title}
-                  width={1200}
-                  height={800}
-                  fetchPriority="high"
-                  className="w-full h-full object-cover"
-                />
-              </button>
-
-              {/* Photo counter + expand */}
-              {images.length > 0 && (
+      <div className="flex flex-col lg:grid lg:grid-cols-3 lg:items-start gap-6 lg:gap-8">
+        {/* Left 2 Columns on Desktop, Flex Children on Mobile */}
+        <div className="contents lg:flex lg:flex-col lg:col-span-2 space-y-6">
+          {/* 1. Gallery View - Order 1 on Mobile */}
+          <div className="order-1 lg:order-none">
+            <div className="bg-white rounded-3xl p-4 border border-slate-200 shadow-sm overflow-hidden">
+              <div className="relative h-96 sm:h-[420px] rounded-2xl overflow-hidden bg-slate-100 group">
                 <button
                   type="button"
                   onClick={() => {
-                    setLightboxOpen(true);
-                    track('car', 'gallery_open', { carId });
+                    if (active) {
+                      setLightboxOpen(true);
+                      track('car', 'gallery_open', { carId });
+                    }
                   }}
-                  className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-black/60 hover:bg-black/75 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur transition"
+                  className="block w-full h-full cursor-zoom-in"
                   aria-label="Open fullscreen image viewer"
                 >
-                  <Maximize2 className="w-3.5 h-3.5" />
-                  {activeIdx + 1} / {images.length}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={resolveMediaUrl(active?.image_url || 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=1200&q=80')}
+                    alt={car.title}
+                    width={1200}
+                    height={800}
+                    fetchPriority="high"
+                    className="w-full h-full object-cover"
+                  />
                 </button>
-              )}
 
-              {/* Certified badge + tag */}
-              <div className="absolute top-4 left-4 flex items-center gap-2">
-                {car.is_spinny_certified && (
-                  <span className="bg-emerald-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg flex items-center">
-                    <ShieldCheck className="w-4 h-4 mr-1.5" /> 200-POINT CERTIFIED
-                  </span>
+                {/* Photo counter + expand */}
+                {images.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLightboxOpen(true);
+                      track('car', 'gallery_open', { carId });
+                    }}
+                    className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-black/60 hover:bg-black/75 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur transition"
+                    aria-label="Open fullscreen image viewer"
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" />
+                    {activeIdx + 1} / {images.length}
+                  </button>
                 )}
-                {active?.tag && (
-                  <span className="bg-black/55 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur">
-                    {active.tag}
-                  </span>
+
+                {/* Certified badge + tag */}
+                <div className="absolute top-4 left-4 flex items-center gap-2">
+                  {car.is_spinny_certified && (
+                    <span className="bg-emerald-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-lg flex items-center">
+                      <ShieldCheck className="w-4 h-4 mr-1.5" /> 200-POINT CERTIFIED
+                    </span>
+                  )}
+                  {active?.tag && (
+                    <span className="bg-black/55 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider backdrop-blur">
+                      {active.tag}
+                    </span>
+                  )}
+                </div>
+
+                {/* Prev / Next on the hero */}
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => navigateImage(-1)}
+                      className="absolute top-1/2 -translate-y-1/2 left-3 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-slate-800 flex items-center justify-center shadow-md transition"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigateImage(1)}
+                      className="absolute top-1/2 -translate-y-1/2 right-3 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-slate-800 flex items-center justify-center shadow-md transition"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
                 )}
               </div>
 
-              {/* Prev / Next on the hero */}
+              {/* Thumbnails */}
               {images.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => navigateImage(-1)}
-                    className="absolute top-1/2 -translate-y-1/2 left-3 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-slate-800 flex items-center justify-center shadow-md transition"
-                    aria-label="Previous image"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateImage(1)}
-                    className="absolute top-1/2 -translate-y-1/2 right-3 w-9 h-9 rounded-full bg-white/85 hover:bg-white text-slate-800 flex items-center justify-center shadow-md transition"
-                    aria-label="Next image"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </>
+                <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
+                  {images.map((img, i) => (
+                    <button
+                      key={img.id || img.image_url}
+                      onClick={() => setActiveIdx(i)}
+                      className={`relative w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition ${
+                        i === activeIdx ? 'border-rose-600 ring-2 ring-rose-600/30' : 'border-transparent opacity-70 hover:opacity-100'
+                      }`}
+                      aria-label={`View image ${i + 1}`}
+                    >
+                      {img.is_cover && (
+                        <span className="absolute bottom-1 right-1 bg-rose-600 text-white text-[7px] font-bold px-1 py-0.5 rounded">
+                          COVER
+                        </span>
+                      )}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={resolveMediaUrl(img.image_url)} alt="thumbnail" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
+          </div>
 
-            {/* Thumbnails */}
-            {images.length > 1 && (
-              <div className="flex gap-3 mt-4 overflow-x-auto pb-2">
-                {images.map((img, i) => (
-                  <button
-                    key={img.id || img.image_url}
-                    onClick={() => setActiveIdx(i)}
-                    className={`relative w-20 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition ${
-                      i === activeIdx ? 'border-rose-600 ring-2 ring-rose-600/30' : 'border-transparent opacity-70 hover:opacity-100'
-                    }`}
-                    aria-label={`View image ${i + 1}`}
-                  >
-                    {img.is_cover && (
-                      <span className="absolute bottom-1 right-1 bg-rose-600 text-white text-[7px] font-bold px-1 py-0.5 rounded">
-                        COVER
-                      </span>
+          {/* 3. EMI Calculator - Order 3 on Mobile */}
+          <div className="order-3 lg:order-none">
+            <EmiCalculator
+              carPrice={car.price}
+              carTitle={`${car.year} ${car.make} ${car.model}`}
+              regNumber={car.reg_number}
+            />
+          </div>
+
+          {/* 4. Quality Assurance (200-Point Digital Inspection Report) - Order 4 on Mobile */}
+          <div className="order-4 lg:order-none">
+            {inspection && (
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest flex items-center">
+                      <Award className="w-4 h-4 mr-1" /> Quality Assurance
+                    </span>
+                    <h2 className="text-xl font-black text-slate-900 mt-0.5">200-Point Digital Inspection Report</h2>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {isAdmin && !editingInsp && (
+                      <button
+                        onClick={handleStartEditInsp}
+                        className="px-3 py-1.5 bg-amber-50 border border-amber-300 text-amber-900 hover:bg-amber-100 text-xs font-bold rounded-xl transition shadow-xs"
+                      >
+                        ✏️ Edit Rating (Admin)
+                      </button>
                     )}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={resolveMediaUrl(img.image_url)} alt="thumbnail" className="w-full h-full object-cover" />
-                  </button>
-                ))}
+                    <div className="text-right">
+                      <span className="text-3xl font-black text-emerald-600">{inspection.overall_score.toFixed(1)}</span>
+                      <span className="text-xs font-bold text-slate-400 block">/ 10 Rating</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Admin Inline Score Editor Form */}
+                {isAdmin && editingInsp && (
+                  <form onSubmit={handleSaveInsp} className="bg-amber-50/50 p-4 rounded-2xl border border-amber-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-amber-900 uppercase">Edit Inspection Scores (Admin)</span>
+                      {inspMsg && <span className="text-xs font-bold text-emerald-600">{inspMsg}</span>}
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Overall (/10)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="1"
+                          max="10"
+                          value={inspScores.overall_score}
+                          onChange={(e) => setInspScores({ ...inspScores, overall_score: e.target.value })}
+                          className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-bold outline-none focus:border-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Engine (/10)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="1"
+                          max="10"
+                          value={inspScores.engine_score}
+                          onChange={(e) => setInspScores({ ...inspScores, engine_score: e.target.value })}
+                          className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-bold outline-none focus:border-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Exterior (/10)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="1"
+                          max="10"
+                          value={inspScores.exterior_score}
+                          onChange={(e) => setInspScores({ ...inspScores, exterior_score: e.target.value })}
+                          className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-bold outline-none focus:border-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Interior (/10)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="1"
+                          max="10"
+                          value={inspScores.interior_score}
+                          onChange={(e) => setInspScores({ ...inspScores, interior_score: e.target.value })}
+                          className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-bold outline-none focus:border-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Suspension (/10)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="1"
+                          max="10"
+                          value={inspScores.suspension_score}
+                          onChange={(e) => setInspScores({ ...inspScores, suspension_score: e.target.value })}
+                          className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-bold outline-none focus:border-rose-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-0.5">AC (/10)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="1"
+                          max="10"
+                          value={inspScores.ac_score}
+                          onChange={(e) => setInspScores({ ...inspScores, ac_score: e.target.value })}
+                          className="w-full bg-white border border-slate-300 rounded-lg p-1.5 text-xs font-bold outline-none focus:border-rose-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-600 mb-0.5">Inspector Summary Remarks</label>
+                      <textarea
+                        rows={2}
+                        value={inspScores.summary_notes}
+                        onChange={(e) => setInspScores({ ...inspScores, summary_notes: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:border-rose-500 font-medium"
+                      />
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingInsp(false)}
+                        className="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={savingInsp}
+                        className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-md transition"
+                      >
+                        {savingInsp ? 'Saving...' : 'Save Rating Changes'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {!editingInsp && (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span className="text-xs font-bold text-slate-400 block">Engine & Transmission</span>
+                        <span className="text-base font-black text-slate-800">{inspection.engine_score}/10</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span className="text-xs font-bold text-slate-400 block">Body & Exterior</span>
+                        <span className="text-base font-black text-slate-800">{inspection.exterior_score}/10</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span className="text-xs font-bold text-slate-400 block">Interior & Electrical</span>
+                        <span className="text-base font-black text-slate-800">{inspection.interior_score}/10</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span className="text-xs font-bold text-slate-400 block">Suspension & Brakes</span>
+                        <span className="text-base font-black text-slate-800">{inspection.suspension_score}/10</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span className="text-xs font-bold text-slate-400 block">Air Conditioning</span>
+                        <span className="text-base font-black text-slate-800">{inspection.ac_score}/10</span>
+                      </div>
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span className="text-xs font-bold text-slate-400 block">Documentation</span>
+                        <span className="text-base font-black text-emerald-600">Verified 100%</span>
+                      </div>
+                    </div>
+
+                    {inspection.summary_notes && (
+                      <div className="mt-4 p-4 bg-emerald-50/60 rounded-xl border border-emerald-100 text-xs text-slate-700">
+                        <strong>Inspector Remarks:</strong> {inspection.summary_notes}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </div>
 
-          {/* 200-Point Digital Inspection Scorecard */}
-          {inspection && (
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <span className="text-xs font-bold text-emerald-600 uppercase tracking-widest flex items-center">
-                    <Award className="w-4 h-4 mr-1" /> Quality Assurance
-                  </span>
-                  <h2 className="text-xl font-black text-slate-900 mt-0.5">200-Point Digital Inspection Report</h2>
-                </div>
-                <div className="text-right">
-                  <span className="text-3xl font-black text-emerald-600">{inspection.overall_score.toFixed(1)}</span>
-                  <span className="text-xs font-bold text-slate-400 block">/ 10 Rating</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-xs font-bold text-slate-400 block">Engine & Transmission</span>
-                  <span className="text-base font-black text-slate-800">{inspection.engine_score}/10</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-xs font-bold text-slate-400 block">Body & Exterior</span>
-                  <span className="text-base font-black text-slate-800">{inspection.exterior_score}/10</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-xs font-bold text-slate-400 block">Interior & Electrical</span>
-                  <span className="text-base font-black text-slate-800">{inspection.interior_score}/10</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-xs font-bold text-slate-400 block">Suspension & Brakes</span>
-                  <span className="text-base font-black text-slate-800">{inspection.suspension_score}/10</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-xs font-bold text-slate-400 block">Air Conditioning</span>
-                  <span className="text-base font-black text-slate-800">{inspection.ac_score}/10</span>
-                </div>
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-xs font-bold text-slate-400 block">Documentation</span>
-                  <span className="text-base font-black text-emerald-600">Verified 100%</span>
-                </div>
-              </div>
-
-              {inspection.summary_notes && (
-                <div className="mt-4 p-4 bg-emerald-50/60 rounded-xl border border-emerald-100 text-xs text-slate-700">
-                  <strong>Inspector Remarks:</strong> {inspection.summary_notes}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Car Walkaround Video Tour (Optional) */}
+          {/* 5. Video Tour - Order 5 on Mobile */}
           {car.video_url && (
-            <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-bold text-rose-600 uppercase tracking-widest flex items-center">
-                    <Film className="w-4 h-4 mr-1.5" /> Virtual Experience
+            <div className="order-5 lg:order-none">
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-rose-600 uppercase tracking-widest flex items-center">
+                      <Film className="w-4 h-4 mr-1.5" /> Virtual Experience
+                    </span>
+                    <h2 className="text-xl font-black text-slate-900 mt-0.5">360° Walkaround & Video Tour</h2>
+                  </div>
+                  <span className="px-2.5 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-lg border border-rose-100 flex items-center gap-1">
+                    <Video className="w-3.5 h-3.5" /> HD Video
                   </span>
-                  <h2 className="text-xl font-black text-slate-900 mt-0.5">360° Walkaround & Video Tour</h2>
                 </div>
-                <span className="px-2.5 py-1 bg-rose-50 text-rose-700 text-xs font-bold rounded-lg border border-rose-100 flex items-center gap-1">
-                  <Video className="w-3.5 h-3.5" /> HD Video
-                </span>
+                <VideoPlayer url={car.video_url} title={`${car.year} ${car.make} ${car.model} Video Tour`} />
               </div>
-              <VideoPlayer url={car.video_url} title={`${car.year} ${car.make} ${car.model} Video Tour`} />
             </div>
           )}
-
-          {/* Interactive EMI Calculator */}
-          <EmiCalculator
-            carPrice={car.price}
-            carTitle={`${car.year} ${car.make} ${car.model}`}
-            regNumber={car.reg_number}
-          />
         </div>
 
-        {/* Right Column: Pricing & Booking Action Card */}
-        <div className="space-y-6">
+        {/* Right Column on Desktop: Pricing & Booking Action Card (Order 2 on Mobile) */}
+        <div className="order-2 lg:order-none lg:col-span-1 w-full space-y-6">
           <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm sticky top-28 space-y-6">
             <div>
               <span className="text-xs font-bold text-slate-400 uppercase">{car.make} • {car.city}</span>
@@ -344,7 +536,7 @@ export default function CarDetail({ carId }: CarDetailProps) {
                 <span className="text-3xl font-black text-slate-900">
                   ₹{(car.price / 100000).toFixed(2)} <span className="text-base font-bold text-slate-400">Lakh</span>
                 </span>
-                {car.original_price && (
+                {car.original_price && car.original_price > car.price && (
                   <span className="text-sm text-slate-400 line-through">
                     ₹{(car.original_price / 100000).toFixed(2)} L
                   </span>
@@ -404,7 +596,7 @@ export default function CarDetail({ carId }: CarDetailProps) {
                 onClick={() => setShowTestDrive(true)}
                 className="w-full py-3.5 bg-rose-600 hover:bg-rose-700 text-white font-black text-sm rounded-xl shadow-lg shadow-rose-600/30 transition transform active:scale-98 flex items-center justify-center gap-2"
               >
-                <span>🚗</span> Book Free Home Test Drive
+                <span>🚗</span> Book Free Test Drive
               </button>
               <button
                 onClick={() => setShowReserve(true)}
@@ -441,17 +633,17 @@ export default function CarDetail({ carId }: CarDetailProps) {
                 <span className="font-bold text-slate-800 uppercase tracking-wider text-[10px]">📍 Experience Hub</span>
                 <span className="text-emerald-600 font-bold text-[10px]">Open 9 AM - 8 PM</span>
               </div>
-              <p className="text-slate-600 text-xs leading-relaxed">
-                Near Bangalore university, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056
+              <p className="text-slate-600 text-xs leading-relaxed font-medium">
+                Value Cars, Near Bangalore University, Kengunte, Mallathahalli, Bengaluru, Karnataka 560056 (Plus Code: XG73+XR Bengaluru)
               </p>
               <div className="pt-1 flex items-center justify-between">
                 <a
-                  href="https://maps.google.com/?q=Near+Bangalore+university,+Kengunte,+Mallathahalli,+Bengaluru,+Karnataka+560056"
+                  href="https://maps.app.goo.gl/5HxTaYTxcxhpmAyp6"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-rose-600 hover:text-rose-700 font-black text-xs inline-flex items-center gap-1 underline underline-offset-2"
                 >
-                  View on Google Maps →
+                  View on Google Maps (XG73+XR) →
                 </a>
                 <a href="tel:8050966025" className="text-slate-700 font-bold hover:text-slate-900 text-xs">
                   Call: 8050966025

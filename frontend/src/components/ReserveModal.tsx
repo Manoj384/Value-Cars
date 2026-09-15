@@ -37,7 +37,7 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
       `🚗 *Vehicle:* ${car.year} ${car.make} ${car.model} (${car.variant})\n` +
       `💰 *Price:* ₹${(car.price / 100000).toFixed(2)} Lakh\n` +
       `📅 *Date & Slot:* ${preferredDate} (${timeSlot})\n` +
-      `📍 *Location:* Near Bangalore University, Mallathahalli Hub\n` +
+      `📍 *Location:* Value Cars, Near Bangalore University, Kengunte, Mallathahalli, Bengaluru 560056 (Plus Code: XG73+XR Bengaluru)\n` +
       `📝 *Notes:* ${notes || 'Interested in test driving & inspection'}\n\n` +
       `👉 *Please confirm viewing appointment.*`;
 
@@ -77,7 +77,7 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
       `🚗 *Vehicle:* ${car.year} ${car.make} ${car.model} (${car.variant})\n` +
       `💰 *Price:* ₹${(car.price / 100000).toFixed(2)} Lakh\n` +
       `📅 *Date & Slot:* ${preferredDate} (${timeSlot})\n` +
-      `📍 *Location:* Near Bangalore University, Mallathahalli Hub\n` +
+      `📍 *Location:* Value Cars, Near Bangalore University, Kengunte, Mallathahalli, Bengaluru 560056 (Plus Code: XG73+XR Bengaluru)\n` +
       `📝 *Notes:* ${notes || 'Interested in test driving & inspection'}\n\n` +
       `👉 *Please confirm viewing appointment.*`;
     return `https://wa.me/918050966025?text=${encodeURIComponent(waMsg)}`;
@@ -122,7 +122,7 @@ export const ReserveModal: React.FC<ReserveModalProps> = ({ car, onClose }) => {
             </div>
 
             <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600">
-              📍 Hub: <strong>Near Bangalore University, Mallathahalli, Bengaluru</strong>
+              📍 Hub: <strong>Value Cars, Near Bangalore University, Mallathahalli (XG73+XR Bengaluru)</strong>
             </div>
 
             <button
