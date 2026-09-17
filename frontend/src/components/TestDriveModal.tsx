@@ -16,9 +16,7 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [city, setCity] = useState(car?.city || 'Bangalore');
-  const [locationType, setLocationType] = useState<'HOME_DELIVERY' | 'HUB_VISIT'>('HOME_DELIVERY');
-  const [address, setAddress] = useState('');
+  const [city] = useState(car?.city || 'Bangalore');
   const [bookingDate, setBookingDate] = useState(new Date().toISOString().split('T')[0]);
   const [timeSlot, setTimeSlot] = useState('11:00 AM - 01:00 PM');
   const [loading, setLoading] = useState(false);
@@ -38,7 +36,7 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
       `📱 *Phone Number:* ${phone}\n` +
       `🚗 *Vehicle:* ${car.year} ${car.make} ${car.model} (${car.variant})\n` +
       `📅 *Date & Slot:* ${bookingDate} (${timeSlot})\n` +
-      `📍 *Location:* ${locationType === 'HOME_DELIVERY' ? `Home Delivery (${address})` : `Value Cars Hub (${city})`}\n\n` +
+      `📍 *Location:* Value Cars Hub (Mallathahalli, Bengaluru - XG73+XR)\n\n` +
       `👉 *Please confirm test drive appointment.*`;
 
     const waUrl = `https://wa.me/918050966025?text=${encodeURIComponent(waMsg)}`;
@@ -50,13 +48,12 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
         customer_phone: phone,
         customer_email: email || undefined,
         city,
-        location_type: locationType,
-        address: locationType === 'HOME_DELIVERY' ? address : undefined,
+        location_type: 'HUB_VISIT',
         booking_date: bookingDate,
         time_slot: timeSlot,
       });
       setSuccess(true);
-      track('test_drive', 'request', { carId: car.id, locationType });
+      track('test_drive', 'request', { carId: car.id, locationType: 'HUB_VISIT' });
       if (typeof window !== 'undefined') {
         window.open(waUrl, '_blank');
       }
@@ -75,7 +72,7 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
       `📱 *Phone Number:* ${phone}\n` +
       `🚗 *Vehicle:* ${car.year} ${car.make} ${car.model} (${car.variant})\n` +
       `📅 *Date & Slot:* ${bookingDate} (${timeSlot})\n` +
-      `📍 *Location:* ${locationType === 'HOME_DELIVERY' ? `Home Delivery (${address})` : `Value Cars Hub (${city})`}\n\n` +
+      `📍 *Location:* Value Cars Hub (Mallathahalli, Bengaluru - XG73+XR)\n\n` +
       `👉 *Please confirm test drive appointment.*`;
     return `https://wa.me/918050966025?text=${encodeURIComponent(waMsg)}`;
   };
@@ -97,7 +94,7 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
             </div>
             <h3 className="text-2xl font-black text-slate-900">Test Drive Confirmed!</h3>
             <p className="text-sm text-slate-600 mt-2">
-              Representative will bring <strong>{car.year} {car.make} {car.model}</strong> to your location on <strong>{bookingDate} ({timeSlot})</strong>.
+              Appointment scheduled for <strong>{car.year} {car.make} {car.model}</strong> on <strong>{bookingDate} ({timeSlot})</strong> at Value Cars Hub.
             </p>
             <p className="text-xs text-slate-500 mt-1">
               Customer Phone: <strong className="text-slate-800">{phone}</strong>
@@ -118,6 +115,10 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
               </a>
             </div>
 
+            <div className="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600">
+              📍 Hub: <strong>Value Cars, Near Bangalore University, Mallathahalli (XG73+XR Bengaluru)</strong>
+            </div>
+
             <button
               onClick={onClose}
               className="mt-4 px-6 py-2.5 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-rose-600 transition"
@@ -128,7 +129,7 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Free Home Delivery</span>
+              <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Verified Test Drive</span>
               <h3 className="text-xl font-black text-slate-900">Book Test Drive</h3>
               <p className="text-xs text-slate-500">{car.year} {car.make} {car.model} ({car.variant})</p>
             </div>
@@ -164,48 +165,6 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
               </div>
             </div>
 
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">Test Drive Mode</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setLocationType('HOME_DELIVERY')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold border transition ${
-                    locationType === 'HOME_DELIVERY'
-                      ? 'border-rose-600 bg-rose-50 text-rose-700'
-                      : 'border-slate-200 bg-slate-50 text-slate-600'
-                  }`}
-                >
-                  🏡 Home Test Drive
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLocationType('HUB_VISIT')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold border transition ${
-                    locationType === 'HUB_VISIT'
-                      ? 'border-rose-600 bg-rose-50 text-rose-700'
-                      : 'border-slate-200 bg-slate-50 text-slate-600'
-                  }`}
-                >
-                  🏢 Visit Hub
-                </button>
-              </div>
-            </div>
-
-            {locationType === 'HOME_DELIVERY' && (
-              <div>
-                <label className="text-xs font-bold text-slate-700 block mb-1">Delivery Address *</label>
-                <input
-                  type="text"
-                  required
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Street, Landmark, Area"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-rose-500"
-                />
-              </div>
-            )}
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Preferred Date</label>
@@ -231,10 +190,15 @@ export const TestDriveModal: React.FC<TestDriveModalProps> = ({ car, onClose }) 
               </div>
             </div>
 
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>Location: <strong>Value Cars Hub (Mallathahalli, Bengaluru)</strong></span>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-4 py-3 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-lg shadow-rose-600/30 transition transform active:scale-98 disabled:opacity-50"
+              className="w-full mt-2 py-3 bg-rose-600 hover:bg-rose-700 text-white font-black rounded-xl shadow-lg shadow-rose-600/30 transition transform active:scale-98 disabled:opacity-50"
             >
               {loading ? 'Booking...' : 'Confirm Free Test Drive'}
             </button>

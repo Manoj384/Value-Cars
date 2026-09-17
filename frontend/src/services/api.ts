@@ -1076,10 +1076,12 @@ export const apiClient = {
     try {
       const res = await fetch(`${getApiBaseUrl()}/cars/admin/approve/${carId}`, { method: 'POST', headers: this.adminHeaders() });
       recordSuccess(res.ok);
+      cacheClear();
       if (res.ok) return res.json();
     } catch {
       // Fallback
     }
+    cacheClear();
     return { id: carId, status: 'PUBLISHED' };
   },
 

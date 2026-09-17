@@ -42,13 +42,22 @@ class GUID(TypeDecorator):
                 return value
 
 
-# SQLAlchemy Async Engine
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=False,
-    future=True,
-    pool_pre_ping=True if "sqlite" not in settings.DATABASE_URL else False,
-)
+# SQLAlchemy Async Engine with bounded pool to prevent Supabase pool exhaustion crashes
+is_sqlite = "sqlite" in settings.DATABASE_URL
+engine_kwargs = {
+    "echo": False,
+    "future": True,
+}
+if not is_sqlite:
+    engine_kwargs.update({
+        "pool_size": 4,
+        "max_overflow": 4,
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+        "pool_timeout": 20,
+    })
+
+engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
 
 # Async Session Factory
 AsyncSessionLocal = async_sessionmaker(
